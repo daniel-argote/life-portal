@@ -1,0 +1,31 @@
+import Icon from '../components/Icon';
+
+const Log = ({ logs, input, setInput, addLog, deleteItem }) => {
+    return (
+        <div className="space-y-10 max-w-2xl mx-auto">
+            <h2 className="text-4xl font-black text-center">Daily Log</h2>
+            <div className="relative">
+                <input value={input} onChange={e => setInput(e.target.value)} className="w-full pl-8 pr-24 py-6 bg-white border border-slate-100 rounded-[2.5rem] outline-none shadow-xl shadow-slate-200/50 font-bold text-lg" placeholder="New update..." onKeyPress={e => e.key === 'Enter' && addLog()} />
+                <button onClick={addLog} className="absolute right-3 top-3 bottom-3 aspect-square bg-slate-900 text-white rounded-[1.8rem] flex items-center justify-center hover:bg-black transition-all active:scale-95"><Icon name="Plus" size={28} /></button>
+            </div>
+            <div className="space-y-6 relative before:absolute before:left-4 before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-100">
+                {logs.map(l => (
+                    <div key={l.id} className="group relative pl-12">
+                        <div className="absolute left-0 top-6 w-8 h-8 rounded-full bg-white border-4 border-[#F8FAFC] shadow-sm flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full bg-indigo-600"></div>
+                        </div>
+                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 flex justify-between items-center group shadow-sm transition-all hover:shadow-md">
+                            <div>
+                                <p className="font-bold text-slate-700 text-lg leading-tight">{l.content}</p>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2 block">{new Date(l.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <button onClick={() => deleteItem('logs', l.id)} className="opacity-0 group-hover:opacity-100 text-slate-200 hover:text-red-500 transition-all"><Icon name="Trash2" size={16} /></button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export default Log;
