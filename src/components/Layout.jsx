@@ -6,14 +6,27 @@ import MobileNav from './MobileNav';
 import Command from '../pages/Command';
 import Brain from '../pages/Brain';
 import Log from '../pages/Log';
+import Money from '../pages/Money';
+import Health from '../pages/Health';
 
 const Layout = ({ user }) => {
     const [tab, setTab] = useState('command');
+    const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
     const [logs, setLogs] = useState([]);
     const [vault, setVault] = useState([]);
     const [input, setInput] = useState("");
     const [noteForm, setNoteForm] = useState({ title: '', content: '' });
     const [msg, setMsg] = useState(null);
+
+    useEffect(() => {
+        if (darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+    }, [darkMode]);
 
     const notify = (text, type = 'success') => {
         setMsg({ text, type });
@@ -59,7 +72,7 @@ const Layout = ({ user }) => {
         <div className="min-h-screen md:pl-64 pb-20 md:pb-0 fade-in">
             {msg && <div className={`fixed top-6 right-6 z-[100] px-8 py-4 rounded-2xl text-white font-black shadow-2xl animate-in slide-in-from-top-4 duration-300 ${msg.type === 'error' ? 'bg-red-500' : 'bg-slate-900'}`}>{msg.text}</div>}
 
-            <Sidebar tab={tab} setTab={setTab} />
+            <Sidebar tab={tab} setTab={setTab} darkMode={darkMode} setDarkMode={setDarkMode} />
 
             <main className="p-6 md:p-16 max-w-5xl mx-auto">
                 {tab === 'command' && (
@@ -85,6 +98,9 @@ const Layout = ({ user }) => {
                         deleteItem={deleteItem}
                     />
                 )}
+
+                {tab === 'money' && <Money />}
+                {tab === 'health' && <Health />}
             </main>
 
             <MobileNav tab={tab} setTab={setTab} />
