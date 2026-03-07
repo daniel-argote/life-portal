@@ -154,10 +154,16 @@
 
                 const { error } = authMode === 'login' 
                     ? await sb.auth.signInWithPassword({ email, password })
-                    : await sb.auth.signUp({ email, password });
+                    : await sb.auth.signUp({ 
+                        email, 
+                        password,
+                        options: {
+                            emailRedirectTo: window.location.origin + window.location.pathname
+                        }
+                    });
 
                 if (error) notify(error.message, 'error');
-                else if (authMode === 'signup') notify("Account created! Log in now.", "success");
+                else if (authMode === 'signup') notify("Account created! Check email if required.", "success");
                 setLoading(false);
             };
 
