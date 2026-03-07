@@ -35,6 +35,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug - Check Source
+        run: |
+          echo "Checking public directory..."
+          ls -R public || echo "Public directory missing!"
+
       - name: Build
         run: |
           npm run build
@@ -42,6 +47,11 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Debug - Check Build Output
+        run: |
+          echo "Checking dist directory..."
+          ls -R dist
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
