@@ -5,7 +5,8 @@ const navItems = [
     { id: 'brain', icon: 'Brain' },
     { id: 'log', icon: 'BookText' },
     { id: 'money', icon: 'Wallet' },
-    { id: 'health', icon: 'Activity' }
+    { id: 'health', icon: 'Activity' },
+    { id: 'calendar', icon: 'Calendar' }
 ];
 
 const MobileNav = ({ tab, setTab }) => {

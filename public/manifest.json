@@ -1,7 +1,7 @@
 {
   "name": "Life Portal",
   "short_name": "Portal",
-  "start_url": ".",
+  "start_url": "/life-portal/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#4f46e5",

@@ -6,7 +6,8 @@ const navItems = [
     { id: 'brain', icon: 'Brain', label: 'Brain' },
     { id: 'log', icon: 'BookText', label: 'Log' },
     { id: 'money', icon: 'Wallet', label: 'Money' },
-    { id: 'health', icon: 'Activity', label: 'Health' }
+    { id: 'health', icon: 'Activity', label: 'Health' },
+    { id: 'calendar', icon: 'Calendar', label: 'Calendar' }
 ];
 
 const Sidebar = ({ tab, setTab, darkMode, setDarkMode }) => {

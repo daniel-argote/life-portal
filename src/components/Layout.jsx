@@ -8,6 +8,7 @@ import Brain from '../pages/Brain';
 import Log from '../pages/Log';
 import Money from '../pages/Money';
 import Health from '../pages/Health';
+import Calendar from '../pages/Calendar';
 
 const Layout = ({ user }) => {
     const [tab, setTab] = useState('command');
@@ -101,6 +102,7 @@ const Layout = ({ user }) => {
 
                 {tab === 'money' && <Money />}
                 {tab === 'health' && <Health />}
+                {tab === 'calendar' && <Calendar />}
             </main>
 
             <MobileNav tab={tab} setTab={setTab} />
