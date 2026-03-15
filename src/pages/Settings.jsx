@@ -139,37 +139,48 @@ const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeade
                     </div>
                 </div>
 
-                {/* Feature Management */}
-                <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+                {/* Portal Structure Management */}
+                <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm lg:col-span-2">
                     <h3 className="font-bold text-xl mb-6 dark:text-white flex items-center gap-3">
-                        <Icon name="LayoutGrid" size={24} className="text-indigo-500" /> Features
+                        <Icon name="Network" size={24} className="text-indigo-500" /> Portal Structure
                     </h3>
-                    <p className="text-xs text-slate-600 font-bold uppercase tracking-widest mb-6 px-2">Enable or hide modules</p>
-                    <div className="grid grid-cols-1 gap-3">
-                        {featureList.map(feature => {
-                            const isHidden = config.hiddenFeatures.includes(feature.id);
-                            return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest mb-6 px-2">Sidebar Preferences</p>
+                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-indigo-500/30 transition-all group">
+                                <div>
+                                    <p className="font-bold dark:text-white">Show Sub-features</p>
+                                    <p className="text-xs text-slate-600 font-medium mt-1">Always show nested items in sidebar (Alt+S)</p>
+                                </div>
                                 <button 
-                                    key={feature.id}
-                                    onClick={() => toggleFeature(feature.id)}
-                                    className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all group
-                                        ${isHidden ? 'bg-slate-50 dark:bg-slate-900 border-transparent opacity-60' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-500/30'}`}
+                                    onClick={() => updateConfig('showSubFeatures', !config.showSubFeatures)}
+                                    className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showSubFeatures ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'}`}
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-2 rounded-xl ${isHidden ? 'bg-slate-200 dark:bg-slate-800 text-slate-600' : 'bg-indigo-500/10 text-indigo-500'}`}>
-                                            <Icon name={feature.icon} size={18} />
-                                        </div>
-                                        <div className="text-left">
-                                            <p className={`font-bold ${isHidden ? 'text-slate-600' : 'dark:text-white'}`}>{feature.label}</p>
-                                            <p className="text-[10px] text-slate-600 font-medium uppercase tracking-tighter">{isHidden ? 'Inactive' : 'Active'}</p>
-                                        </div>
-                                    </div>
-                                    <div className={`w-10 h-6 rounded-full transition-all flex items-center px-1 ${!isHidden ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-                                        <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${!isHidden ? 'translate-x-4' : 'translate-x-0'}`} />
-                                    </div>
+                                    <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showSubFeatures ? 'translate-x-6' : 'translate-x-0'}`} />
                                 </button>
-                            );
-                        })}
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest mb-6 px-2">Quick Promotion</p>
+                            <p className="text-[10px] text-slate-500 font-medium mb-4 px-2">Tip: Use "Arrange Tabs" in the sidebar to drag features into or out of groups.</p>
+                            <div className="space-y-2">
+                                {featureList.map(feature => (
+                                    <div key={feature.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                        <div className="flex items-center gap-3">
+                                            <Icon name={feature.icon} size={16} className="text-indigo-500" />
+                                            <span className="font-bold text-sm dark:text-white">{feature.label}</span>
+                                        </div>
+                                        <button 
+                                            onClick={() => toggleFeature(feature.id)}
+                                            className={`text-[10px] font-black uppercase tracking-tighter px-3 py-1 rounded-lg ${config.hiddenFeatures.includes(feature.id) ? 'bg-slate-200 text-slate-500' : 'bg-indigo-500/10 text-indigo-500'}`}
+                                        >
+                                            {config.hiddenFeatures.includes(feature.id) ? 'Hidden' : 'Visible'}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 

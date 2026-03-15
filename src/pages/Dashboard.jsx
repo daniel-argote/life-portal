@@ -6,9 +6,10 @@ import EditableHeader from '../components/EditableHeader';
 import { format } from 'date-fns';
 import { getWeatherIcon } from './Weather';
 
-const Dashboard = ({ vault, logs, todos, events, user, pageName, setPageName, showHeaders, config }) => {
-    const [widgets, setWidgets] = useState(() => {
-        const saved = localStorage.getItem('dashboardOrder');
+const Dashboard = ({ vault, logs, todos, events, user, pageName, setPageName, showHeaders, config, dashboardWidgets, updateDashboardWidgets }) => {
+    const [widgets, setWidgets] = useState([]);
+
+    useEffect(() => {
         const defaults = [
             { id: 'weather', title: 'Weather', icon: 'CloudSun', fullWidth: false },
             { id: 'brain', title: 'Knowledge Links', icon: 'Link', fullWidth: false },
@@ -16,12 +17,13 @@ const Dashboard = ({ vault, logs, todos, events, user, pageName, setPageName, sh
             { id: 'actions', title: 'Pending Objectives', icon: 'CheckSquare', fullWidth: false },
             { id: 'calendar', title: 'Upcoming', icon: 'Calendar', fullWidth: false }
         ];
-        if (saved) {
-            try { return JSON.parse(saved); }
-            catch (e) { return defaults; }
+        
+        if (dashboardWidgets && dashboardWidgets.length > 0) {
+            setWidgets(dashboardWidgets);
+        } else {
+            setWidgets(defaults);
         }
-        return defaults;
-    });
+    }, [dashboardWidgets]);
 
     const [showWidgetStore, setShowWidgetStore] = useState(false);
     const [weatherData, setWeatherData] = useState([]); // Array of { loc, forecast }
@@ -47,11 +49,7 @@ const Dashboard = ({ vault, logs, todos, events, user, pageName, setPageName, sh
             }));
             setWeatherData(forecasts);
         }
-    }, [user]);
-
-    useEffect(() => {
-        localStorage.setItem('dashboardOrder', JSON.stringify(widgets));
-    }, [widgets]);
+    }, [user, config?.weatherUnit]);
 
     useEffect(() => {
         fetchWeather();
@@ -63,19 +61,26 @@ const Dashboard = ({ vault, logs, todos, events, user, pageName, setPageName, sh
         const [reorderedItem] = newItems.splice(result.source.index, 1);
         newItems.splice(result.destination.index, 0, reorderedItem);
         setWidgets(newItems);
+        updateDashboardWidgets(newItems);
     };
 
     const toggleFullWidth = (id) => {
-        setWidgets(widgets.map(w => w.id === id ? { ...w, fullWidth: !w.fullWidth } : w));
+        const newWidgets = widgets.map(w => w.id === id ? { ...w, fullWidth: !w.fullWidth } : w);
+        setWidgets(newWidgets);
+        updateDashboardWidgets(newWidgets);
     };
 
     const removeWidget = (id) => {
-        setWidgets(widgets.filter(w => w.id !== id));
+        const newWidgets = widgets.filter(w => w.id !== id);
+        setWidgets(newWidgets);
+        updateDashboardWidgets(newWidgets);
     };
 
     const addWidget = (widget) => {
         if (!widgets.find(w => w.id === widget.id)) {
-            setWidgets([...widgets, { ...widget, fullWidth: false }]);
+            const newWidgets = [...widgets, { ...widget, fullWidth: false }];
+            setWidgets(newWidgets);
+            updateDashboardWidgets(newWidgets);
         }
         setShowWidgetStore(false);
     };

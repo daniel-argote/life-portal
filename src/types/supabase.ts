@@ -441,18 +441,27 @@ export type Database = {
       }
       profiles: {
         Row: {
+          feature_hierarchy: Json | null
           gemini_api_key: string | null
           id: string
+          page_names: Json | null
+          portal_config: Json | null
           updated_at: string
         }
         Insert: {
+          feature_hierarchy?: Json | null
           gemini_api_key?: string | null
           id: string
+          page_names?: Json | null
+          portal_config?: Json | null
           updated_at?: string
         }
         Update: {
+          feature_hierarchy?: Json | null
           gemini_api_key?: string | null
           id?: string
+          page_names?: Json | null
+          portal_config?: Json | null
           updated_at?: string
         }
         Relationships: []
