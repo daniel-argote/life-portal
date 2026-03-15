@@ -62,3 +62,28 @@ Follow these steps to make and apply schema changes.
     ```bash
     npx supabase gen types typescript --linked > src/types/supabase.ts
     ```
+
+## Troubleshooting Common Errors
+
+If you see these errors in the browser console, follow these steps.
+
+### 400 Bad Request / PGRST204 (Column Not Found)
+**Problem:** The app is trying to use a column (e.g., `description`) that the database API doesn't know about yet.
+
+**Solution:**
+1.  **Check Local:** Run `npx supabase db reset` to ensure your local Postgres has all migrations applied.
+2.  **Check Remote:** Run `npx supabase db push` to ensure your production database has the same schema.
+3.  **Check Types:** Run the `gen types` command above to ensure your code matches the new schema.
+
+### 404 Not Found (Table Not Found)
+**Problem:** The table (e.g., `todos`) exists in your migrations but not in the active database.
+
+**Solution:**
+1.  Run `npx supabase db reset` to rebuild the local database from your migration files.
+2.  **Restart:** If resetting doesn't help, run `npx supabase stop` and then `npx supabase start` to clear the API's schema cache.
+
+### Authentication Failures after `db reset`
+**Problem:** You're logged in, but getting "JWT expired" or "User not found" errors.
+
+**Solution:**
+1.  **Sign Out and Sign In:** `db reset` wipes the local Auth users. You must re-authenticate to create a fresh user and session.
