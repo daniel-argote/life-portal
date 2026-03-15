@@ -5,10 +5,17 @@ import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 import Dashboard from '../pages/Dashboard';
 import Knowledge from '../pages/Knowledge';
+import KnowledgeVault from '../pages/KnowledgeVault';
+import KnowledgeReadingList from '../pages/KnowledgeReadingList';
 import Actions from '../pages/Actions';
 import Log from '../pages/Log';
 import Money from '../pages/Money';
+import MoneyLedger from '../pages/MoneyLedger';
+import MoneyAccounts from '../pages/MoneyAccounts';
+import MoneyBills from '../pages/MoneyBills';
 import Health from '../pages/Health';
+import HealthMetrics from '../pages/HealthMetrics';
+import HealthAppointments from '../pages/HealthAppointments';
 import Food from '../pages/Food';
 import FoodJournal from '../pages/FoodJournal';
 import FoodPlanner from '../pages/FoodPlanner';
@@ -16,6 +23,8 @@ import FoodRecipes from '../pages/FoodRecipes';
 import FoodInventory from '../pages/FoodInventory';
 import Calendar from '../pages/Calendar';
 import Vehicles from '../pages/Vehicles';
+import VehicleFleet from '../pages/VehicleFleet';
+import VehicleServiceLog from '../pages/VehicleServiceLog';
 import Weather from '../pages/Weather';
 import Assistant from '../pages/Assistant';
 import Settings from '../pages/Settings';
@@ -41,10 +50,35 @@ const PAGE_MAP = {
 
 const DEFAULT_HIERARCHY = [
     { id: 'actions', icon: 'CheckSquare', label: 'Actions' },
-    { id: 'money', icon: 'Wallet', label: 'Money' },
-    { id: 'knowledge', icon: 'Brain', label: 'Knowledge' },
+    { 
+        id: 'money', 
+        icon: 'Wallet', 
+        label: 'Money',
+        children: [
+            { id: 'money_ledger', icon: 'BookText', label: 'Ledger' },
+            { id: 'money_accounts', icon: 'Wallet', label: 'Accounts' },
+            { id: 'money_bills', icon: 'CreditCard', label: 'Bills' }
+        ]
+    },
+    { 
+        id: 'knowledge', 
+        icon: 'Brain', 
+        label: 'Knowledge',
+        children: [
+            { id: 'knowledge_vault', icon: 'Brain', label: 'Vault' },
+            { id: 'knowledge_reading', icon: 'BookOpen', label: 'Reading List' }
+        ]
+    },
     { id: 'log', icon: 'BookText', label: 'Journal' },
-    { id: 'health', icon: 'Activity', label: 'Health' },
+    { 
+        id: 'health', 
+        icon: 'Activity', 
+        label: 'Health',
+        children: [
+            { id: 'health_metrics', icon: 'Activity', label: 'Biometrics' },
+            { id: 'health_appointments', icon: 'CalendarDays', label: 'Appointments' }
+        ]
+    },
     { 
         id: 'food', 
         icon: 'Utensils', 
@@ -57,7 +91,15 @@ const DEFAULT_HIERARCHY = [
         ]
     },
     { id: 'calendar', icon: 'Calendar', label: 'Calendar' },
-    { id: 'vehicles', icon: 'Car', label: 'Vehicles' },
+    { 
+        id: 'vehicles', 
+        icon: 'Car', 
+        label: 'Vehicles',
+        children: [
+            { id: 'vehicle_fleet', icon: 'Car', label: 'The Fleet' },
+            { id: 'vehicle_service', icon: 'Wrench', label: 'Service Log' }
+        ]
+    },
     { id: 'weather', icon: 'CloudSun', label: 'Weather' },
     { id: 'assistant', icon: 'Bot', label: 'Assistant' }
 ];
