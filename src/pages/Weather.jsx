@@ -21,10 +21,30 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
     const [search, setSearch] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState(null);
-    const [forecast, setForecast] = useState(null);
+    const [forecasts, setForecasts] = useState({});
     const [loading, setLoading] = useState(false);
 
     const unit = config?.weatherUnit || 'fahrenheit';
+
+    const fetchForecasts = useCallback(async (locs) => {
+        if (!locs || locs.length === 0) return;
+        setLoading(true);
+        try {
+            const promises = locs.map(async (loc) => {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&temperature_unit=${unit}`);
+                const data = await res.json();
+                return { id: loc.id, data };
+            });
+            const results = await Promise.all(promises);
+            const newForecasts = {};
+            results.forEach(r => { newForecasts[r.id] = r.data; });
+            setForecasts(newForecasts);
+        } catch (e) {
+            console.error(e);
+            if (notify) notify('Failed to fetch forecasts', 'error');
+        }
+        setLoading(false);
+    }, [notify, unit]);
 
     const fetchLocations = useCallback(async () => {
         if (!user) return;
@@ -35,33 +55,16 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
         
         if (!error) {
             setLocations(data || []);
-            if (data?.length > 0 && !selectedLocation) {
-                setSelectedLocation(data[0]);
+            if (data?.length > 0) {
+                fetchForecasts(data);
+                if (!selectedLocation) setSelectedLocation(data[0]);
             }
         }
-    }, [user, selectedLocation]);
-
-    const fetchForecast = useCallback(async (loc) => {
-        if (!loc) return;
-        setLoading(true);
-        try {
-            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&temperature_unit=${unit}`);
-            const data = await res.json();
-            setForecast(data);
-        } catch (e) {
-            console.error(e);
-            if (notify) notify('Failed to fetch forecast', 'error');
-        }
-        setLoading(false);
-    }, [notify, unit]);
+    }, [user, selectedLocation, fetchForecasts]);
 
     useEffect(() => {
         fetchLocations();
-    }, [fetchLocations]);
-
-    useEffect(() => {
-        if (selectedLocation) fetchForecast(selectedLocation);
-    }, [selectedLocation, fetchForecast]);
+    }, [user]); // Only fetch on mount or user change
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -121,129 +124,139 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
                 <EditableHeader 
                     value={pageName} 
                     onSave={setPageName} 
-                    subtext="Global Forecasts" 
+                    subtext="Atmospheric Intelligence" 
                 />
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left: Location List & Search */}
-                <div className="space-y-6">
-                    <div className="bg-base-200 p-6 rounded-[2.5rem] border border-base-300 shadow-sm space-y-4">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 ml-2">Locales</h3>
-                        <div className="space-y-2">
-                            {locations.map(loc => (
-                                <div 
-                                    key={loc.id} 
-                                    onClick={() => setSelectedLocation(loc)}
-                                    className={`p-4 rounded-2xl border-2 transition-all cursor-pointer group flex items-center justify-between
-                                        ${selectedLocation?.id === loc.id ? 'bg-primary/10 border-primary text-primary' : 'bg-base-100 border-transparent text-base-content hover:border-primary/30'}`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); togglePrimary(loc); }}
-                                            className={`p-1.5 rounded-lg transition-colors ${loc.is_primary ? 'bg-primary text-primary-content' : 'bg-base-200 text-slate-300 hover:text-primary'}`}
-                                            title="Show on Dashboard"
-                                        >
-                                            <Icon name="LayoutDashboard" size={14} />
-                                        </button>
-                                        <span className="font-bold truncate max-w-[120px]">{loc.name}</span>
-                                    </div>
-                                    <button onClick={(e) => { e.stopPropagation(); deleteLocation(loc.id); }} className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-danger p-1">
-                                        <Icon name="Trash2" size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-
-                        <form onSubmit={handleSearch} className="relative mt-6">
-                            <input 
-                                placeholder="Search city..." 
-                                className="w-full bg-base-100 p-4 pr-12 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary transition-all"
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                            />
-                            <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary">
-                                <Icon name="Search" size={20} />
-                            </button>
-                        </form>
-
-                        {searchResults.length > 0 && (
-                            <div className="bg-base-100 border border-base-300 rounded-xl overflow-hidden mt-2 divide-y divide-base-300">
-                                {searchResults.map(res => (
-                                    <button 
-                                        key={`${res.latitude}-${res.longitude}`}
-                                        onClick={() => addLocation(res)}
-                                        className="w-full p-4 text-left hover:bg-primary/5 font-bold text-sm transition-colors flex justify-between items-center group"
-                                    >
-                                        <span>{res.name}, {res.admin1 || res.country}</span>
-                                        <Icon name="Plus" size={16} className="text-slate-300 group-hover:text-primary" />
-                                    </button>
-                                ))}
+            {/* Locations Dashboard Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {locations.map(loc => {
+                    const forecast = forecasts[loc.id];
+                    const isSelected = selectedLocation?.id === loc.id;
+                    
+                    return (
+                        <div 
+                            key={loc.id}
+                            onClick={() => setSelectedLocation(loc)}
+                            className={`bg-base-200 p-6 rounded-[2.5rem] border-2 transition-all cursor-pointer relative overflow-hidden group
+                                ${isSelected ? 'border-primary shadow-xl scale-[1.02]' : 'border-transparent hover:border-primary/20 shadow-sm'}`}
+                        >
+                            {/* Card Background Decoration */}
+                            <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Icon name={forecast ? getWeatherIcon(forecast.current_weather.weathercode) : 'Cloud'} size={120} />
                             </div>
-                        )}
-                    </div>
-                </div>
 
-                {/* Right: Selected Location Detail */}
-                <div className="lg:col-span-2 space-y-6">
-                    {selectedLocation ? (
-                        <div className="bg-base-200 p-10 rounded-[3rem] border border-base-300 shadow-sm relative overflow-hidden">
-                            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-                                <div>
-                                    <h3 className="text-4xl font-black text-base-content tracking-tighter">{selectedLocation.name}</h3>
-                                    <p className="text-sm font-bold text-slate-400 mt-1">Current Conditions</p>
+                            <div className="relative z-10 space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex-1">
+                                        <h3 className="text-2xl font-black text-base-content tracking-tighter truncate pr-2">{loc.name}</h3>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); togglePrimary(loc); }}
+                                                className={`p-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${loc.is_primary ? 'bg-primary text-primary-content' : 'bg-base-300 text-slate-400 hover:text-primary'}`}
+                                            >
+                                                <Icon name="LayoutDashboard" size={12} />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">{loc.is_primary ? 'Primary' : 'Set Primary'}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {forecast && (
+                                        <div className="bg-primary/10 p-4 rounded-2xl text-primary">
+                                            <Icon name={getWeatherIcon(forecast.current_weather.weathercode)} size={32} />
+                                        </div>
+                                    )}
                                 </div>
-                                {forecast && (
-                                    <div className="flex items-center gap-6">
-                                        <div className="text-right">
-                                            <div className="text-6xl font-black text-primary leading-none">
+
+                                {forecast ? (
+                                    <div className="flex items-end justify-between pt-2">
+                                        <div>
+                                            <div className="text-5xl font-black text-primary leading-none">
                                                 {Math.round(forecast.current_weather.temperature)}°
                                             </div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mt-2">
-                                                {unit.charAt(0).toUpperCase() + unit.slice(1)}
-                                            </p>
+                                            <div className="flex gap-2 mt-2">
+                                                <span className="text-xs font-black text-slate-400">H: {Math.round(forecast.daily.temperature_2m_max[0])}°</span>
+                                                <span className="text-xs font-black text-slate-400 text-opacity-50">L: {Math.round(forecast.daily.temperature_2m_min[0])}°</span>
+                                            </div>
                                         </div>
-                                        <div className="bg-primary/10 p-6 rounded-[2rem] text-primary">
-                                            <Icon name={getWeatherIcon(forecast.current_weather.weathercode)} size={48} strokeWidth={2.5} />
-                                        </div>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); deleteLocation(loc.id); }}
+                                            className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-danger transition-all rounded-xl hover:bg-danger/10"
+                                        >
+                                            <Icon name="Trash2" size={18} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="h-16 flex items-center justify-center">
+                                        <div className="animate-pulse text-slate-300 font-black text-xs uppercase tracking-widest">Updating...</div>
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    );
+                })}
 
-                            {forecast && (
-                                <div className="mt-12 pt-12 border-t border-base-300/50">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">7-Day Forecast</h4>
-                                        <a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="text-[10px] font-bold text-primary hover:underline">Weather data by Open-Meteo</a>
-                                    </div>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
-                                        {forecast.daily.time.map((date, i) => (
-                                            <div key={date} className="bg-base-100/50 p-4 rounded-2xl flex flex-col items-center text-center group hover:bg-base-100 transition-colors border border-transparent hover:border-primary/20">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-3">
-                                                    {i === 0 ? 'Today' : format(new Date(date.replace(/-/g, '\/')), 'EEE')}
-                                                </p>
-                                                <Icon name={getWeatherIcon(forecast.daily.weathercode[i])} size={24} className="text-primary mb-3" />
-                                                <div className="space-y-0.5">
-                                                    <p className="text-sm font-black text-base-content">{Math.round(forecast.daily.temperature_2m_max[i])}°</p>
-                                                    <p className="text-[10px] font-bold text-slate-400">{Math.round(forecast.daily.temperature_2m_min[i])}°</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                {/* Add New Location Card */}
+                <div className="bg-base-200/50 p-6 rounded-[2.5rem] border-2 border-dashed border-base-300 flex flex-col justify-center gap-4">
+                    <form onSubmit={handleSearch} className="relative">
+                        <input 
+                            placeholder="Add city..." 
+                            className="w-full bg-base-100 p-4 pr-12 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-primary transition-all text-sm"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                        <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary">
+                            <Icon name="Search" size={18} />
+                        </button>
+                    </form>
+
+                    {searchResults.length > 0 ? (
+                        <div className="bg-base-100 border border-base-300 rounded-2xl overflow-hidden divide-y divide-base-300">
+                            {searchResults.map(res => (
+                                <button 
+                                    key={`${res.latitude}-${res.longitude}`}
+                                    onClick={() => addLocation(res)}
+                                    className="w-full p-3 text-left hover:bg-primary/5 font-bold text-xs transition-colors flex justify-between items-center group"
+                                >
+                                    <span>{res.name}, {res.admin1 || res.country}</span>
+                                    <Icon name="Plus" size={14} className="text-slate-300 group-hover:text-primary" />
+                                </button>
+                            ))}
                         </div>
                     ) : (
-                        <div className="bg-base-200 p-20 rounded-[3rem] border border-base-300 border-dashed flex flex-col items-center text-center">
-                            <div className="w-20 h-20 rounded-[2rem] bg-base-300 flex items-center justify-center text-slate-400 mb-6">
-                                <Icon name="CloudSun" size={40} />
-                            </div>
-                            <h3 className="text-xl font-black text-base-content mb-2">No Locale Selected</h3>
-                            <p className="text-sm font-bold text-slate-400 max-w-xs">Select or search for a location to view the forecast.</p>
+                        <div className="text-center py-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Search to add more</p>
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Detailed Forecast for Selected Location */}
+            {selectedLocation && forecasts[selectedLocation.id] && (
+                <div className="fade-in bg-base-200 p-10 rounded-[3rem] border border-base-300 shadow-sm relative overflow-hidden animate-in slide-in-from-bottom duration-500">
+                    <div className="flex justify-between items-center mb-10">
+                        <div className="space-y-1">
+                            <h4 className="text-xs font-black uppercase tracking-widest text-primary">Strategic 7-Day Outlook</h4>
+                            <h3 className="text-3xl font-black text-base-content">{selectedLocation.name}</h3>
+                        </div>
+                        <a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">Data: Open-Meteo</a>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
+                        {forecasts[selectedLocation.id].daily.time.map((date, i) => (
+                            <div key={date} className="bg-base-100/50 p-6 rounded-3xl flex flex-col items-center text-center group hover:bg-base-100 transition-all border border-transparent hover:border-primary/20 shadow-sm">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-4">
+                                    {i === 0 ? 'Today' : format(new Date(date.replace(/-/g, '\/')), 'EEE')}
+                                </p>
+                                <Icon name={getWeatherIcon(forecasts[selectedLocation.id].daily.weathercode[i])} size={32} className="text-primary mb-4" />
+                                <div className="space-y-1">
+                                    <p className="text-lg font-black text-base-content leading-none">{Math.round(forecasts[selectedLocation.id].daily.temperature_2m_max[i])}°</p>
+                                    <p className="text-[10px] font-bold text-slate-400">{Math.round(forecasts[selectedLocation.id].daily.temperature_2m_min[i])}°</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
