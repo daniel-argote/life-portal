@@ -33,6 +33,10 @@ const supabase = {
     console.log('Pushing local changes to remote database...');
     return runCommand('npx supabase db push');
   },
+  reset: () => {
+    console.log('Resetting local database to sync with migrations...');
+    return runCommand('npx supabase db reset');
+  },
   gen_types: () => {
     console.log('Generating TypeScript types from schema...');
     return runCommand('npx supabase gen types typescript --linked > src/types/supabase.ts');
