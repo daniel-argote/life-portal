@@ -240,6 +240,14 @@ const Layout = ({ user }) => {
         saveProfileUpdate({ style: newStyle });
     };
 
+    const resetHierarchy = () => {
+        if (window.confirm("Reset portal structure to defaults? This will undo your custom organization.")) {
+            setHierarchy(DEFAULT_HIERARCHY);
+            saveProfileUpdate({ feature_hierarchy: DEFAULT_HIERARCHY });
+            notify("Structure reset");
+        }
+    };
+
     useEffect(() => {
         if (darkMode) {
             document.documentElement.classList.add('dark');

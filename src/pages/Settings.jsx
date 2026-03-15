@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import EditableHeader from '../components/EditableHeader';
 
-const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeaders, featureList, profile, fetchData, notify, darkMode, setDarkMode, style, setStyle }) => {
+const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeaders, featureList, profile, fetchData, notify, darkMode, setDarkMode, style, setStyle, resetHierarchy }) => {
     const [email, setEmail] = useState(user?.email || '');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -157,6 +157,20 @@ const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeade
                                     className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showSubFeatures ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'}`}
                                 >
                                     <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showSubFeatures ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+                            <div className="mt-6 flex flex-col gap-3">
+                                <button 
+                                    onClick={resetHierarchy}
+                                    className="w-full p-4 rounded-xl border-2 border-indigo-500/20 text-indigo-500 font-black text-xs uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Icon name="RefreshCw" size={14} /> Reset Structure to Defaults
+                                </button>
+                                <button 
+                                    onClick={() => { if(window.confirm("Clear all locally cached settings? This will force a fresh sync from the database.")) { localStorage.clear(); window.location.reload(); } }}
+                                    className="w-full p-4 rounded-xl border-2 border-slate-200 text-slate-400 font-black text-xs uppercase tracking-widest hover:border-danger hover:text-danger transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Icon name="Trash2" size={14} /> Clear Local Cache
                                 </button>
                             </div>
                         </div>
