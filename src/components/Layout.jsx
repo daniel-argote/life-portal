@@ -375,6 +375,7 @@ const Layout = ({ user }) => {
                     setDarkMode={setDarkMode}
                     style={style}
                     setStyle={setStyle}
+                    resetHierarchy={resetHierarchy}
                     featureList={DEFAULT_HIERARCHY} // For settings
                     // Legacy props for specific pages
                     input={input}
