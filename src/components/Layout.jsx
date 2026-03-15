@@ -10,6 +10,10 @@ import Log from '../pages/Log';
 import Money from '../pages/Money';
 import Health from '../pages/Health';
 import Food from '../pages/Food';
+import FoodJournal from '../pages/FoodJournal';
+import FoodPlanner from '../pages/FoodPlanner';
+import FoodRecipes from '../pages/FoodRecipes';
+import FoodInventory from '../pages/FoodInventory';
 import Calendar from '../pages/Calendar';
 import Vehicles from '../pages/Vehicles';
 import Weather from '../pages/Weather';
@@ -24,6 +28,10 @@ const PAGE_MAP = {
     log: Log,
     health: Health,
     food: Food,
+    food_journal: FoodJournal,
+    food_planner: FoodPlanner,
+    food_recipes: FoodRecipes,
+    food_inventory: FoodInventory,
     calendar: Calendar,
     vehicles: Vehicles,
     weather: Weather,
@@ -37,7 +45,17 @@ const DEFAULT_HIERARCHY = [
     { id: 'knowledge', icon: 'Brain', label: 'Knowledge' },
     { id: 'log', icon: 'BookText', label: 'Journal' },
     { id: 'health', icon: 'Activity', label: 'Health' },
-    { id: 'food', icon: 'Utensils', label: 'Food' },
+    { 
+        id: 'food', 
+        icon: 'Utensils', 
+        label: 'Food',
+        children: [
+            { id: 'food_journal', icon: 'BookText', label: 'Journal' },
+            { id: 'food_planner', icon: 'CalendarDays', label: 'Planner' },
+            { id: 'food_recipes', icon: 'Salad', label: 'Recipes' },
+            { id: 'food_inventory', icon: 'Library', label: 'Inventory' }
+        ]
+    },
     { id: 'calendar', icon: 'Calendar', label: 'Calendar' },
     { id: 'vehicles', icon: 'Car', label: 'Vehicles' },
     { id: 'weather', icon: 'CloudSun', label: 'Weather' },
@@ -246,7 +264,7 @@ const Layout = ({ user }) => {
                 setNavItems={updateHierarchy}
                 portalName={pageNames.dashboard || 'Portal'}
                 autoHide={config.autoHideSidebar}
-                showSubFeatures={config.showSubFeatures}
+                config={config}
             />
 
             <main className="p-6 md:p-16 max-w-5xl mx-auto">
@@ -268,6 +286,8 @@ const Layout = ({ user }) => {
                 <ActiveComponent
                     user={user}
                     notify={notify}
+                    tab={tab}
+                    setTab={setTab}
                     pageName={pageNames[tab] || (tab === 'dashboard' ? 'Portal' : (DEFAULT_HIERARCHY.find(h => h.id === tab)?.label || tab))}
                     setPageName={(val) => updatePageName(tab, val)}
                     showHeaders={config.showHeaders}
