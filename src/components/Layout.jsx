@@ -375,6 +375,10 @@ const Layout = ({ user }) => {
                         profile={profile}
                         fetchData={fetchData}
                         notify={notify}
+                        darkMode={darkMode}
+                        setDarkMode={setDarkMode}
+                        style={style}
+                        setStyle={setStyle}
                     />
                 )}
             </main>

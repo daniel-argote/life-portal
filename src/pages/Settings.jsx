@@ -3,12 +3,19 @@ import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import EditableHeader from '../components/EditableHeader';
 
-const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeaders, featureList, profile, fetchData, notify }) => {
+const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeaders, featureList, profile, fetchData, notify, darkMode, setDarkMode, style, setStyle }) => {
     const [email, setEmail] = useState(user?.email || '');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState(null);
     const [geminiKey, setGeminiKey] = useState(profile?.gemini_api_key || '');
+
+    const toggleStyle = () => {
+        const themes = ['default', 'nautical', 'forest'];
+        const currentIndex = themes.indexOf(style);
+        const nextIndex = (currentIndex + 1) % themes.length;
+        setStyle(themes[nextIndex]);
+    };
 
     const handleUpdateGeminiKey = async (e) => {
         e.preventDefault();
@@ -255,6 +262,45 @@ const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeade
                             </button>
                         </div>
                     </div>
+                </div>
+
+                {/* Mobile-Only Theme & Style Section */}
+                <div className="md:hidden space-y-8">
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+                        <h3 className="font-bold text-xl mb-6 dark:text-white flex items-center gap-3">
+                            <Icon name="Palette" size={24} className="text-pink-500" /> Interface
+                        </h3>
+                        <div className="space-y-4">
+                            <button 
+                                onClick={() => setDarkMode(!darkMode)}
+                                className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl font-bold dark:text-white"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <Icon name={darkMode ? "Sun" : "Moon"} size={20} />
+                                    <span>{darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
+                                </div>
+                            </button>
+
+                            <button 
+                                onClick={toggleStyle}
+                                className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl font-bold dark:text-white"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <Icon name="Layers" size={20} />
+                                    <span>Style: {style.charAt(0).toUpperCase() + style.slice(1)}</span>
+                                </div>
+                                <Icon name="RefreshCw" size={16} className="text-slate-400" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={() => supabase.auth.signOut()}
+                        className="w-full p-6 rounded-[2rem] bg-danger/10 text-danger font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-danger hover:text-white transition-all"
+                    >
+                        <Icon name="LogOut" size={20} />
+                        End Session
+                    </button>
                 </div>
             </div>
 
