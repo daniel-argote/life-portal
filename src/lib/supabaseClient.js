@@ -9,4 +9,4 @@ const clientKey = supabaseAnonKey || "placeholder"
 
 export const supabase = createClient(clientUrl, clientKey)
 
-export const isConfigured = supabaseUrl && supabaseUrl.includes("supabase.co") && supabaseAnonKey && supabaseAnonKey.length > 20;
+export const isConfigured = supabaseUrl && (supabaseUrl.includes("supabase.co") || supabaseUrl.includes("127.0.0.1") || supabaseUrl.includes("localhost")) && supabaseAnonKey && supabaseAnonKey.length > 10;

@@ -1,18 +1,108 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
 
+:root {
+  /* Default Light Theme */
+  --primary: 244 81% 59%;       /* Indigo 600 */
+  --primary-focus: 244 81% 54%;
+  --primary-content: 0 0% 100%;
+  --secondary: 210 40% 96%;     /* Slate 100 */
+  --secondary-focus: 210 40% 90%;
+  --secondary-content: 215 25% 27%;
+  --accent: 158 79% 41%;        /* Emerald 500 */
+  --accent-focus: 158 79% 36%;
+  --accent-content: 0 0% 100%;
+  --neutral: 219 14% 24%;       /* Slate 800 */
+  --neutral-focus: 220 13% 18%;
+  --neutral-content: 210 40% 98%;
+  --base-100: 210 40% 98%;      /* Slate 50 */
+  --base-200: 0 0% 100%;        /* White */
+  --base-300: 210 40% 96%;      /* Slate 100 */
+  --base-content: 222 47% 11%;  /* Slate 900 */
+  --success: 158 79% 41%;
+  --danger: 348 83% 47%;
+}
+
+.dark {
+  /* Default Dark Theme */
+  --primary: 243 100% 74%;      /* Indigo 400 */
+  --primary-focus: 243 100% 69%;
+  --primary-content: 222 47% 11%;
+  --secondary: 217 33% 17%;     /* Slate 800 */
+  --secondary-focus: 217 33% 12%;
+  --secondary-content: 210 40% 98%;
+  --accent: 158 79% 41%;
+  --accent-focus: 158 79% 36%;
+  --accent-content: 0 0% 100%;
+  --neutral: 210 40% 98%;
+  --neutral-focus: 210 40% 90%;
+  --neutral-content: 217 33% 17%;
+  --base-100: 222 47% 11%;      /* Slate 900 */
+  --base-200: 217 33% 17%;      /* Slate 800 */
+  --base-300: 215 28% 17%;
+  --base-content: 210 40% 98%;  /* Slate 50 */
+  --success: 158 79% 41%;
+  --danger: 348 83% 47%;
+}
+
+.theme-nautical {
+  /* Nautical Theme */
+  --primary: 210 65% 20%;       /* Deep Ocean Blue #123456 */
+  --primary-focus: 210 65% 15%;
+  --primary-content: 43 100% 50%; /* Logo Gold #FFB700 */
+  --secondary: 209 44% 55%;     /* Wave Foam Blue #5A8FC0 */
+  --secondary-focus: 209 44% 50%;
+  --secondary-content: 0 0% 100%;
+  --accent: 43 100% 50%;        /* Logo Gold */
+  --accent-focus: 43 100% 45%;
+  --accent-content: 210 65% 20%;
+  --neutral: 266 29% 56%;       /* Sky Violet #8B6EB0 */
+  --neutral-focus: 266 29% 50%;
+  --neutral-content: 0 0% 100%;
+  --base-100: 209 44% 55%;      /* Wave Foam Blue (Main BG) */
+  --base-200: 210 65% 20%;      /* Deep Ocean Blue (Sidebar/Cards) */
+  --base-300: 210 65% 15%;
+  --base-content: 0 0% 100%;    /* White Text */
+  --success: 120 61% 34%;       /* Kawasaki Green #228B22 */
+  --danger: 348 83% 47%;        /* Racing Red #DC143C */
+}
+
+.theme-forest {
+  /* Forest Theme */
+  --primary: 142 27% 15%;       /* Deep Evergreen #1B3022 */
+  --primary-focus: 142 27% 10%;
+  --primary-content: 88 40% 84%; /* Soft Pine (for contrast) */
+  
+  --secondary: 126 16% 37%;     /* Mossy Fern #4F6D52 */
+  --secondary-focus: 126 16% 32%;
+  --secondary-content: 0 0% 100%;
+  
+  --accent: 48 77% 81%;         /* Sunlight Gold #F3E5AB */
+  --accent-focus: 48 77% 75%;
+  --accent-content: 142 27% 15%; /* Deep Evergreen text */
+  
+  --neutral: 130 9% 54%;        /* Morning Mist #819584 */
+  --neutral-focus: 130 9% 45%;
+  --neutral-content: 0 0% 100%;
+  
+  --base-100: 105 28% 84%;      /* Soft Pine #D3E2CD (Main BG) */
+  --base-200: 111 20% 71%;      /* Sapling Green #A9C2A6 (Sidebar/Cards) */
+  --base-300: 111 20% 65%;
+  --base-content: 142 27% 15%;  /* Deep Evergreen Text */
+  
+  --success: 126 40% 40%;       /* Forest Green */
+  --danger: 0 72% 51%;          /* Earthy Red/Clay */
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background-color: #f8fafc;
+    background-color: hsl(var(--base-100));
+    color: hsl(var(--base-content));
     -webkit-tap-highlight-color: transparent;
     transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.dark body {
-    background-color: #0f172a; /* slate-900 */
 }
 
 .fade-in {
@@ -25,12 +115,33 @@ body {
 }
 
 .glass-nav {
-    background: rgba(255, 255, 255, 0.85);
+    background: hsl(var(--base-200) / 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    border-color: hsl(var(--base-300) / 0.5);
 }
 
-.dark .glass-nav {
-    background: rgba(15, 23, 42, 0.85);
-    border-color: rgba(30, 41, 59, 0.5);
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
 }

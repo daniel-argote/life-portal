@@ -10,7 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@axe-core/react": "^4.11.1",
+    "@google/generative-ai": "^0.24.1",
+    "@hello-pangea/dnd": "^18.0.1",
     "@supabase/supabase-js": "^2.39.0",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -25,6 +29,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
     "postcss": "^8.4.31",
+    "supabase": "^2.78.1",
     "tailwindcss": "^3.3.5",
     "vite": "^5.0.0"
   }

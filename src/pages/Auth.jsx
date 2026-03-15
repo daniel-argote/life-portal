@@ -36,7 +36,7 @@ const Auth = ({ onAuthSuccess, onAuthError }) => {
                         <Icon name="LayoutDashboard" size={36} />
                     </div>
                     <h1 className="text-4xl font-black tracking-tighter dark:text-white">Life Portal</h1>
-                    <p className="text-slate-400 mt-2 font-bold uppercase tracking-widest text-[10px]">Neural Interface v0.0.1</p>
+                    <p className="text-slate-600 mt-2 font-bold uppercase tracking-widest text-[10px]">Neural Interface v0.0.1</p>
                 </div>
 
                 <form onSubmit={handleAuth} className="space-y-4">
