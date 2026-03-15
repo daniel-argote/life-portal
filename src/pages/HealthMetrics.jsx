@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 
-const HealthMetrics = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const HealthMetrics = ({ user, notify }) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({ metric: 'Weight', value: '' });
@@ -36,10 +35,6 @@ const HealthMetrics = ({ user, notify, pageName, setPageName, showHeaders }) => 
 
     return (
         <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader value={pageName} onSave={setPageName} subtext="Biometric Tracking" />
-            )}
-
             <form onSubmit={handleSubmit} className="bg-base-200 p-6 rounded-[2rem] border border-base-300 shadow-sm flex flex-col md:flex-row gap-4">
                 <select
                     className="bg-base-100 p-4 rounded-xl font-bold outline-none text-base-content min-w-[140px]"

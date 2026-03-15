@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 import { format, addDays, parseISO, getDay, subDays, startOfDay } from 'date-fns';
 
-const MoneyLedger = ({ user, notify, pageName, setPageName, showHeaders, config }) => {
+const MoneyLedger = ({ user, notify, config }) => {
     const [weeks, setWeeks] = useState([]);
     const [weekItems, setWeekItems] = useState([]);
     const [activeWeekIndex, setActiveWeekIndex] = useState(0);
@@ -89,10 +88,6 @@ const MoneyLedger = ({ user, notify, pageName, setPageName, showHeaders, config 
 
     return (
         <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader value={pageName} onSave={setPageName} subtext="Weekly Budget Tracking" />
-            )}
-
             <header className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <h3 className="text-xl font-black tracking-tighter text-base-content">Weekly Ledger</h3>

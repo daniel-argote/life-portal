@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 import DatePicker from '../components/DatePicker';
 import { format } from 'date-fns';
 
-const HealthAppointments = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const HealthAppointments = ({ user, notify }) => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showAdd, setShowAdd] = useState(false);
@@ -40,10 +39,6 @@ const HealthAppointments = ({ user, notify, pageName, setPageName, showHeaders }
 
     return (
         <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader value={pageName} onSave={setPageName} subtext="Professional Care Schedule" />
-            )}
-
             <div className="flex justify-between items-center">
                 <h3 className="text-2xl font-black text-base-content">Upcoming Appointments</h3>
                 <button onClick={() => setShowAdd(!showAdd)} className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-primary hover:text-primary-content transition-all">

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 import { 
     format, 
     startOfMonth, 
@@ -16,7 +15,7 @@ import {
     parseISO
 } from 'date-fns';
 
-const Calendar = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const Calendar = ({ user, notify }) => {
     const [events, setEvents] = useState([]);
     const [bills, setBills] = useState([]);
     const [todos, setTodos] = useState([]);
@@ -93,14 +92,6 @@ const Calendar = ({ user, notify, pageName, setPageName, showHeaders }) => {
 
     return (
         <div className="space-y-8 pb-10">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="Event Management" 
-                />
-            )}
-
             <div className="flex items-center justify-between bg-base-200 p-4 rounded-[2rem] border border-base-300 shadow-sm">
                 <div className="flex items-center gap-4">
                     <button onClick={prevMonth} className="p-2 hover:bg-base-300 rounded-full transition-colors text-slate-600"><Icon name="ChevronLeft" size={20} /></button>

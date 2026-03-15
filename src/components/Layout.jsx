@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 import Icon from './Icon';
+import EditableHeader from './EditableHeader';
 import Dashboard from '../pages/Dashboard';
 import Knowledge from '../pages/Knowledge';
 import KnowledgeVault from '../pages/KnowledgeVault';
@@ -323,6 +324,30 @@ const Layout = ({ user }) => {
 
     const ActiveComponent = PAGE_MAP[tab] || Dashboard;
 
+    // Subtext lookup for centralized header
+    const getSubtext = () => {
+        if (tab === 'dashboard') return 'Your Personal Command Center';
+        if (tab === 'food_journal') return 'Daily Nutrition Log';
+        if (tab === 'food_inventory') return 'Kitchen Stock Tracking';
+        if (tab === 'food_recipes') return 'Your Culinary Library';
+        if (tab === 'food_planner') return 'Weekly Meal Schedule';
+        if (tab === 'money_ledger') return 'Weekly Budget Tracking';
+        if (tab === 'money_accounts') return 'Account & Asset Management';
+        if (tab === 'money_bills') return 'Recurring Obligations';
+        if (tab === 'health_metrics') return 'Biometric Tracking';
+        if (tab === 'health_appointments') return 'Professional Care Schedule';
+        if (tab === 'knowledge_vault') return 'Central Intelligence Store';
+        if (tab === 'knowledge_reading') return 'Resource Queue';
+        if (tab === 'vehicle_fleet') return 'Fleet Management';
+        if (tab === 'vehicle_service') return 'Service & Maintenance History';
+        if (tab === 'settings') return 'System Configuration';
+        if (tab === 'assistant') return 'AI Support Agent';
+        
+        const feature = findFeature(hierarchy, tab);
+        if (feature?.children?.length > 0) return `${feature.label} Hub`;
+        return '';
+    };
+
     return (
         <div className={`min-h-screen pb-20 md:pb-0 fade-in transition-all duration-300 ${config.autoHideSidebar ? 'md:pl-20' : 'md:pl-64'}`}>
             {msg && <div className={`fixed top-6 right-6 z-[100] px-8 py-4 rounded-2xl text-primary-content font-black shadow-2xl animate-in slide-in-from-top-4 duration-300 ${msg.type === 'error' ? 'bg-danger' : 'bg-neutral'}`}>{msg.text}</div>}
@@ -342,9 +367,19 @@ const Layout = ({ user }) => {
             />
 
             <main className="p-6 md:p-16 max-w-5xl mx-auto">
+                {config.showHeaders && (
+                    <div className="mb-10">
+                        <EditableHeader 
+                            value={pageNames[tab] || (tab === 'dashboard' ? 'Portal' : (DEFAULT_HIERARCHY.find(h => h.id === tab)?.label || tab))}
+                            onSave={(val) => updatePageName(tab, val)}
+                            subtext={getSubtext()}
+                        />
+                    </div>
+                )}
+
                 {/* Unified Tab Navigation for Parents and their Children */}
                 {(isParentSelected || parentOfCurrent) && (
-                    <div className="flex gap-2 p-1 bg-base-200 rounded-2xl w-fit border border-base-300 mb-8 overflow-x-auto no-scrollbar max-w-full shadow-inner">
+                    <div className="flex gap-2 p-1 bg-base-200 rounded-2xl w-fit border border-base-300 mb-10 overflow-x-auto no-scrollbar max-w-full shadow-inner">
                         {(() => {
                             const parent = isParentSelected ? currentFeature : parentOfCurrent;
                             // The "Hub" Overview is always the first tab
@@ -370,7 +405,6 @@ const Layout = ({ user }) => {
                     setTab={setTab}
                     pageName={pageNames[tab] || (tab === 'dashboard' ? 'Portal' : (DEFAULT_HIERARCHY.find(h => h.id === tab)?.label || tab))}
                     setPageName={(val) => updatePageName(tab, val)}
-                    showHeaders={config.showHeaders}
                     config={config}
                     updateConfig={updateConfig}
                     logs={logs}

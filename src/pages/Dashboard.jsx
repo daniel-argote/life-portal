@@ -2,11 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 import { format } from 'date-fns';
 import { getWeatherIcon } from './Weather';
 
-const Dashboard = ({ vault, logs, todos, events, user, pageName, setPageName, showHeaders, config, dashboardWidgets, updateDashboardWidgets }) => {
+const Dashboard = ({ vault, logs, todos, events, user, config, dashboardWidgets, updateDashboardWidgets }) => {
     const [widgets, setWidgets] = useState([]);
 
     useEffect(() => {
@@ -188,14 +187,7 @@ const Dashboard = ({ vault, logs, todos, events, user, pageName, setPageName, sh
 
     return (
         <div className="space-y-10 pb-20">
-            <div className="flex justify-between items-start">
-                {showHeaders && (
-                    <EditableHeader 
-                        value={pageName} 
-                        onSave={setPageName} 
-                        subtext="Status: Operational" 
-                    />
-                )}
+            <div className="flex justify-end items-start">
                 <button 
                     onClick={() => setShowWidgetStore(true)}
                     className="bg-primary/10 text-primary p-4 rounded-2xl font-bold hover:bg-primary hover:text-primary-content transition-all flex items-center gap-2"

@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 import { scaleAmount } from '../lib/foodUtils';
 
-const FoodRecipes = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const FoodRecipes = ({ user, notify }) => {
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showForm, setShowForm] = useState(false);
@@ -95,10 +94,6 @@ const FoodRecipes = ({ user, notify, pageName, setPageName, showHeaders }) => {
 
     return (
         <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader value={pageName} onSave={setPageName} subtext="Your Culinary Library" />
-            )}
-
             <div className="flex justify-between items-center">
                 <h3 className="text-2xl font-black text-base-content">Recipe Vault</h3>
                 {!showForm && (

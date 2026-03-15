@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 
-const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeaders, featureList, profile, fetchData, notify, darkMode, setDarkMode, style, setStyle, resetHierarchy }) => {
+const Settings = ({ user, config, updateConfig, featureList, profile, fetchData, notify, darkMode, setDarkMode, style, setStyle, resetHierarchy }) => {
     const [email, setEmail] = useState(user?.email || '');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -69,14 +68,6 @@ const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeade
 
     return (
         <div className="space-y-10 pb-20">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="System Configuration" 
-                />
-            )}
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* General Config */}
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">

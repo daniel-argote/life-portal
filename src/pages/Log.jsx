@@ -1,17 +1,8 @@
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 
-const Log = ({ logs, input, setInput, addLog, deleteItem, pageName, setPageName, showHeaders }) => {
+const Log = ({ logs, input, setInput, addLog, deleteItem }) => {
     return (
         <div className="space-y-10 max-w-2xl mx-auto">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="Activity Feed" 
-                    className="text-center"
-                />
-            )}
             <div className="relative">
                 <input value={input} onChange={e => setInput(e.target.value)} className="w-full pl-8 pr-24 py-6 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[2.5rem] outline-none shadow-xl shadow-slate-200/50 dark:shadow-none font-bold text-lg dark:text-white" placeholder="New update..." onKeyPress={e => e.key === 'Enter' && addLog()} />
                 <button onClick={addLog} className="absolute right-3 top-3 bottom-3 aspect-square bg-slate-900 text-white rounded-[1.8rem] flex items-center justify-center hover:bg-black transition-all active:scale-95"><Icon name="Plus" size={28} /></button>

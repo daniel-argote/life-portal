@@ -2,11 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 import DatePicker from '../components/DatePicker';
 import { format } from 'date-fns';
 
-const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const Actions = ({ user, notify }) => {
     const [activeTab, setActiveTab] = useState('objectives');
     const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'list'
     const [loading, setLoading] = useState(false);
@@ -361,14 +360,6 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
 
     return (
         <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="Milestones & Missions" 
-                />
-            )}
-
             <div className="flex gap-2 p-1 bg-base-200 rounded-2xl w-fit border border-base-300">
                 {[
                     { id: 'objectives', label: 'Objectives', icon: 'CheckSquare' },

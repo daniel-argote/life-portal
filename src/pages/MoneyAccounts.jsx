@@ -2,9 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 
-const MoneyAccounts = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const MoneyAccounts = ({ user, notify }) => {
     const [accounts, setAccounts] = useState([]);
     const [newAccountName, setNewAccountName] = useState('');
     const [isShaking, setIsShaking] = useState(false);
@@ -54,10 +53,6 @@ const MoneyAccounts = ({ user, notify, pageName, setPageName, showHeaders }) => 
 
     return (
         <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader value={pageName} onSave={setPageName} subtext="Account & Asset Management" />
-            )}
-
             <header className="flex justify-between items-end">
                 <h3 className="text-xl font-black tracking-tighter text-base-content">Manage Accounts</h3>
             </header>

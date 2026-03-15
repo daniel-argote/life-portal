@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 import { format } from 'date-fns';
 
-const MoneyBills = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const MoneyBills = ({ user, notify }) => {
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({ name: '', amount: '', due_date: format(new Date(), 'yyyy-MM-dd') });
@@ -38,10 +37,6 @@ const MoneyBills = ({ user, notify, pageName, setPageName, showHeaders }) => {
 
     return (
         <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader value={pageName} onSave={setPageName} subtext="Recurring Obligations" />
-            )}
-
             <form onSubmit={handleAdd} className="bg-base-200 p-8 rounded-[2rem] border border-base-300 shadow-xl flex flex-col md:flex-row gap-4 animate-in slide-in-from-top-4 duration-300">
                 <div className="flex-1 space-y-1">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-2">Description</label>

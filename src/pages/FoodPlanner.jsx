@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 import { format, startOfWeek, addDays, eachDayOfInterval } from 'date-fns';
 
-const FoodPlanner = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const FoodPlanner = ({ user, notify }) => {
     const [mealPlan, setMealPlan] = useState([]);
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -50,10 +49,6 @@ const FoodPlanner = ({ user, notify, pageName, setPageName, showHeaders }) => {
 
     return (
         <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader value={pageName} onSave={setPageName} subtext="Weekly Meal Schedule" />
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
                 {days.map(day => {
                     const dateStr = format(day, 'yyyy-MM-dd');

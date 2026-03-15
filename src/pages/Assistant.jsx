@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 
-const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, logs, vault, todos, events }) => {
+const Assistant = ({ user, notify, profile, logs, vault, todos, events }) => {
     const [messages, setMessages] = useState([
         { role: 'assistant', text: "Hello! I'm your Portal Assistant. How can I help you manage your day?" }
     ]);
@@ -119,22 +118,15 @@ const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, 
 
     return (
         <div className="flex flex-col h-[calc(100vh-12rem)] max-w-4xl mx-auto space-y-6">
-            {showHeaders && (
-                <div className="flex justify-between items-start">
-                    <EditableHeader 
-                        value={pageName} 
-                        onSave={setPageName} 
-                        subtext="AI-Powered Intelligence" 
-                    />
-                    <button 
-                        onClick={debugModels}
-                        className="p-2 text-slate-600 hover:text-primary transition-colors opacity-20 hover:opacity-100"
-                        title="Debug API"
-                    >
-                        <Icon name="Bug" size={16} />
-                    </button>
-                </div>
-            )}
+            <div className="flex justify-end items-start">
+                <button 
+                    onClick={debugModels}
+                    className="p-2 text-slate-600 hover:text-primary transition-colors opacity-20 hover:opacity-100"
+                    title="Debug API"
+                >
+                    <Icon name="Bug" size={16} />
+                </button>
+            </div>
 
             {!hasKey ? (
                 <div className="flex-1 flex items-center justify-center p-6">

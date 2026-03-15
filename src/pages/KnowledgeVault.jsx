@@ -1,12 +1,7 @@
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 
-const KnowledgeVault = ({ vault, noteForm, setNoteForm, addNote, deleteItem, pageName, setPageName, showHeaders }) => (
+const KnowledgeVault = ({ vault, noteForm, setNoteForm, addNote, deleteItem }) => (
     <div className="space-y-8 pb-20">
-        {showHeaders && (
-            <EditableHeader value={pageName} onSave={setPageName} subtext="Central Intelligence Store" />
-        )}
-
         <div className="bg-white dark:bg-slate-800 p-10 rounded-[3rem] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
             <input
                 className="w-full text-2xl font-black outline-none placeholder:text-slate-200 dark:placeholder:text-slate-600 bg-transparent dark:text-white"

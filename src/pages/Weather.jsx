@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { format } from 'date-fns';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 
 export const getWeatherIcon = (code) => {
     if (code === 0) return 'Sun';
@@ -16,7 +15,7 @@ export const getWeatherIcon = (code) => {
     return 'Cloud';
 };
 
-const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) => {
+const Weather = ({ user, notify, config }) => {
     const [locations, setLocations] = useState([]);
     const [search, setSearch] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -120,14 +119,6 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
 
     return (
         <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="Atmospheric Intelligence" 
-                />
-            )}
-
             {/* Locations Dashboard Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {locations.map(loc => {
