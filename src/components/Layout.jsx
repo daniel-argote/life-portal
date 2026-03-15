@@ -289,6 +289,10 @@ const Layout = ({ user }) => {
     };
 
     const currentFeature = findFeature(hierarchy, tab);
+    
+    // If current feature has children but we are ON the parent, 
+    // we actually want to show the first child's component but keep parent context
+    const isParentSelected = currentFeature?.children?.length > 0;
     const ActiveComponent = PAGE_MAP[tab] || Dashboard;
 
     return (
@@ -310,18 +314,24 @@ const Layout = ({ user }) => {
             />
 
             <main className="p-6 md:p-16 max-w-5xl mx-auto">
-                {/* Hybrid Content: Sub-feature Tabs */}
-                {currentFeature?.children?.length > 0 && (
-                    <div className="flex gap-2 mb-8 overflow-x-auto pb-2 no-scrollbar">
-                        {currentFeature.children.map(child => (
-                            <button
-                                key={child.id}
-                                onClick={() => setTab(child.id)}
-                                className={`px-4 py-2 rounded-xl font-bold transition-all whitespace-nowrap ${tab === child.id ? 'bg-primary text-primary-content' : 'bg-base-200 text-base-content/60 hover:bg-base-300'}`}
-                            >
-                                {pageNames[child.id] || child.label}
-                            </button>
-                        ))}
+                {/* Unified Tab Navigation for Parents and their Children */}
+                {(isParentSelected || hierarchy.find(p => p.children?.some(c => c.id === tab))) && (
+                    <div className="flex gap-2 p-1 bg-base-200 rounded-2xl w-fit border border-base-300 mb-8 overflow-x-auto no-scrollbar max-w-full">
+                        {(() => {
+                            const parent = isParentSelected ? currentFeature : hierarchy.find(p => p.children?.some(c => c.id === tab));
+                            // Include Parent itself if it has a component, plus all children
+                            const tabItems = [{ id: parent.id, label: 'Overview', icon: parent.icon }, ...parent.children];
+                            return tabItems.map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${tab === item.id ? 'bg-primary text-primary-content shadow-md' : 'text-slate-600 hover:text-primary hover:bg-base-300/50'}`}
+                                >
+                                    <Icon name={item.icon} size={14} />
+                                    {pageNames[item.id] || item.label}
+                                </button>
+                            ));
+                        })()}
                     </div>
                 )}
 

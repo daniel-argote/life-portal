@@ -10,7 +10,7 @@ const Food = ({ pageName, setPageName, showHeaders, setTab }) => {
     ];
 
     return (
-        <div className="space-y-8 pb-20">
+        <div className="space-y-8 pb-20 animate-in fade-in duration-500">
             {showHeaders && (
                 <EditableHeader 
                     value={pageName} 
@@ -19,12 +19,20 @@ const Food = ({ pageName, setPageName, showHeaders, setTab }) => {
                 />
             )}
 
+            <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-10">
+                <Icon name="Utensils" size={48} className="text-primary/20 mx-auto mb-4" />
+                <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Food Hub</h4>
+                <p className="text-slate-600 font-bold max-w-md mx-auto">
+                    Manage your nutrition, plan your week, and organize your kitchen from one central location.
+                </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {categories.map(cat => (
                     <button
                         key={cat.id}
                         onClick={() => setTab(cat.id)}
-                        className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 text-left hover:border-primary/50 transition-all group flex items-start gap-6"
+                        className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 text-left hover:border-primary/50 transition-all group flex items-start gap-6 shadow-sm"
                     >
                         <div className="bg-primary/10 text-primary p-4 rounded-2xl group-hover:bg-primary group-hover:text-primary-content transition-all">
                             <Icon name={cat.icon} size={32} />
@@ -35,14 +43,6 @@ const Food = ({ pageName, setPageName, showHeaders, setTab }) => {
                         </div>
                     </button>
                 ))}
-            </div>
-
-            <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center">
-                <Icon name="Utensils" size={48} className="text-primary/20 mx-auto mb-4" />
-                <h4 className="text-xl font-black text-base-content mb-2">Welcome to the Food Module</h4>
-                <p className="text-slate-600 font-bold max-w-md mx-auto">
-                    Manage your nutrition, plan your week, and organize your kitchen from one central location.
-                </p>
             </div>
         </div>
     );
