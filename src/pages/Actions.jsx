@@ -14,6 +14,7 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
     // Data State
     const [todos, setTodos] = useState([]);
     const [goals, setGoals] = useState([]);
+    const [editingTodo, setEditingTodo] = useState(null);
 
     const fetchData = useCallback(async () => {
         if (!user) return;
@@ -27,7 +28,104 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
         setGoals(g || []);
     }, [user]);
 
+    const updateTodo = async (id, updates) => {
+        setLoading(true);
+        // Clean up empty dates
+        if (updates.due_date === '') updates.due_date = null;
+        
+        const { error } = await supabase.from('todos').update(updates).eq('id', id);
+        if (error) {
+            console.error('Update Error:', error);
+            notify('Update failed: ' + error.message, 'error');
+        } else {
+            fetchData();
+            notify('Objective updated');
+            setEditingTodo(null);
+        }
+        setLoading(false);
+    };
+
     useEffect(() => { fetchData(); }, [fetchData]);
+
+    const EditTodoModal = ({ todo, onClose, onSave }) => {
+        const [form, setForm] = useState({ 
+            task: todo.task || '', 
+            description: todo.description || '', 
+            due_date: todo.due_date || '',
+            status: todo.status || 'todo'
+        });
+
+        return (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                <div className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col max-h-[90vh]">
+                    <header className="p-8 pb-4 flex justify-between items-start">
+                        <div className="space-y-1">
+                            <h3 className="text-3xl font-black dark:text-white leading-none">Edit Objective</h3>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-primary">Mission Details</p>
+                        </div>
+                        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-all">
+                            <Icon name="X" size={24} />
+                        </button>
+                    </header>
+
+                    <div className="flex-1 overflow-y-auto p-8 pt-4 space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Task Name</label>
+                            <input 
+                                value={form.task} 
+                                onChange={e => setForm({...form, task: e.target.value})}
+                                className="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl font-bold border-2 border-transparent focus:border-primary outline-none transition-all text-xl"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Timeline</label>
+                                <DatePicker value={form.due_date} onChange={val => setForm({...form, due_date: val})} />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Status</label>
+                                <select 
+                                    value={form.status} 
+                                    onChange={e => setForm({...form, status: e.target.value})}
+                                    className="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl font-bold border-2 border-transparent focus:border-primary outline-none appearance-none cursor-pointer"
+                                >
+                                    <option value="todo">To Do</option>
+                                    <option value="progress">In Progress</option>
+                                    <option value="done">Complete</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Strategic Details</label>
+                            <textarea 
+                                value={form.description} 
+                                onChange={e => setForm({...form, description: e.target.value})}
+                                placeholder="Add context, sub-tasks, or notes..."
+                                className="w-full h-48 bg-slate-50 dark:bg-slate-900 p-5 rounded-[2rem] font-bold border-2 border-transparent focus:border-primary outline-none transition-all resize-none"
+                            />
+                        </div>
+                    </div>
+
+                    <footer className="p-8 bg-slate-50 dark:bg-slate-900/50 flex gap-3">
+                        <button 
+                            onClick={onClose}
+                            className="flex-1 px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-800 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            onClick={() => onSave(todo.id, form)}
+                            className="flex-[2] bg-primary text-primary-content px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            Save Changes
+                        </button>
+                    </footer>
+                </div>
+            </div>
+        );
+    };
 
     const ObjectivesTab = () => {
         const [task, setTask] = useState('');
@@ -135,12 +233,16 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
                                                                 ref={provided.innerRef}
                                                                 {...provided.draggableProps}
                                                                 {...provided.dragHandleProps}
-                                                                className={`bg-base-100 p-5 rounded-2xl border-2 transition-all group
+                                                                onClick={() => setEditingTodo(todo)}
+                                                                className={`bg-base-100 p-5 rounded-2xl border-2 transition-all group cursor-pointer
                                                                     ${snapshot.isDragging ? 'border-primary shadow-2xl scale-[1.02] z-50' : 'border-transparent shadow-sm hover:border-primary/20'}`}
                                                             >
                                                                 <div className="flex justify-between items-start mb-2">
                                                                     <p className="font-bold text-base-content leading-snug">{todo.task}</p>
-                                                                    <button onClick={() => deleteTodo(todo.id)} className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-danger transition-all">
+                                                                    <button 
+                                                                        onClick={(e) => { e.stopPropagation(); deleteTodo(todo.id); }} 
+                                                                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-danger transition-all"
+                                                                    >
                                                                         <Icon name="X" size={14} />
                                                                     </button>
                                                                 </div>
@@ -165,13 +267,20 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
                 ) : (
                     <div className="space-y-3">
                         {todos.map(todo => (
-                            <div key={todo.id} className="bg-base-200 p-4 rounded-2xl border border-base-300 flex items-center gap-4 group">
+                            <div 
+                                key={todo.id} 
+                                onClick={() => setEditingTodo(todo)}
+                                className="bg-base-200 p-4 rounded-2xl border border-base-300 flex items-center gap-4 group cursor-pointer hover:border-primary/20 transition-all"
+                            >
                                 <div className={`w-2 h-2 rounded-full ${todo.status === 'done' ? 'bg-success' : todo.status === 'progress' ? 'bg-indigo-500' : 'bg-slate-300'}`} />
                                 <div className="flex-1">
                                     <p className={`font-bold ${todo.status === 'done' ? 'line-through text-slate-600' : 'text-base-content'}`}>{todo.task}</p>
                                     {todo.due_date && <p className="text-[10px] font-black text-primary uppercase mt-1">Due {format(new Date(todo.due_date.replace(/-/g, '\/')), 'MMMM do')}</p>}
                                 </div>
-                                <button onClick={() => deleteTodo(todo.id)} className="text-slate-600 hover:text-danger opacity-0 group-hover:opacity-100 p-2 transition-all">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); deleteTodo(todo.id); }} 
+                                    className="text-slate-600 hover:text-danger opacity-0 group-hover:opacity-100 p-2 transition-all"
+                                >
                                     <Icon name="Trash2" size={18} />
                                 </button>
                             </div>
@@ -280,6 +389,14 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
                 {activeTab === 'objectives' && <ObjectivesTab />}
                 {activeTab === 'goals' && <GoalsTab />}
             </div>
+
+            {editingTodo && (
+                <EditTodoModal 
+                    todo={editingTodo} 
+                    onClose={() => setEditingTodo(null)} 
+                    onSave={updateTodo} 
+                />
+            )}
         </div>
     );
 };
