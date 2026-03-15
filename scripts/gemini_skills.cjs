@@ -29,9 +29,22 @@ const supabase = {
     console.log(`Creating new migration: ${name}...`);
     return runCommand(`npx supabase db diff -f ${name}`);
   },
-  push: () => {
-    console.log('Pushing local changes to remote database...');
-    return runCommand('npx supabase db push');
+  push: async () => {
+    console.log('🚀 Starting Pre-flight Check...');
+    
+    try {
+      console.log('🔍 Running Linter...');
+      await runCommand('npm run lint');
+      
+      console.log('🔄 Syncing local database to verify migrations...');
+      await runCommand('npx supabase db reset');
+      
+      console.log('✅ Pre-flight Check passed. Pushing to remote...');
+      return await runCommand('npx supabase db push');
+    } catch (error) {
+      console.error('❌ Pre-flight Check failed! Push aborted.');
+      throw error;
+    }
   },
   reset: () => {
     console.log('Resetting local database to sync with migrations...');

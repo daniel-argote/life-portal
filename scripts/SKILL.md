@@ -11,7 +11,10 @@ Creates a new database migration file.
 - **name** (string, required): The name for the new migration.
 
 ### push
-Pushes local database changes to the remote Supabase project.
+Pushes local database changes to the remote Supabase project. **Includes a mandatory pre-flight check:**
+1. Runs the project linter (`npm run lint`).
+2. Resets and verifies the local database schema (`supabase reset`).
+If any step fails, the push is aborted.
 
 ### reset
 Resets the local database to apply all pending migrations and sync the local schema. **Warning: This clears local database data.**
