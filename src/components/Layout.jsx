@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
+import Icon from './Icon';
 import Dashboard from '../pages/Dashboard';
 import Knowledge from '../pages/Knowledge';
 import KnowledgeVault from '../pages/KnowledgeVault';
