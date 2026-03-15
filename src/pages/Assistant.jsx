@@ -73,7 +73,7 @@ const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, 
                 CURRENT TIME: ${dateString}
 
                 PORTAL DATA SNAPSHOT:
-                - Active Todos: ${todos.map(t => t.title).join(', ') || 'None'}
+                - Active Todos: ${todos.map(t => t.task).join(', ') || 'None'}
                 - Recent Journal Entries: ${logs.slice(0, 5).map(l => l.content).join(' | ') || 'None'}
                 - Upcoming Events: ${events.map(e => `${e.title} (${new Date(e.start_time).toLocaleString()})`).join(', ') || 'None'}
                 - Knowledge Vault Items: ${vault.map(v => v.title).join(', ') || 'None'}

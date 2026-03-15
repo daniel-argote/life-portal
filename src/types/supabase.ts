@@ -66,6 +66,99 @@ export type Database = {
         }
         Relationships: []
       }
+      food: {
+        Row: {
+          calories: number | null
+          content: string | null
+          created_at: string | null
+          id: string
+          is_home_cooked: boolean | null
+          meal: string | null
+          user_id: string
+        }
+        Insert: {
+          calories?: number | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_home_cooked?: boolean | null
+          meal?: string | null
+          user_id: string
+        }
+        Update: {
+          calories?: number | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_home_cooked?: boolean | null
+          meal?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      food_inventory: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          item_name: string
+          quantity: string | null
+          unit: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          item_name: string
+          quantity?: string | null
+          unit?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          item_name?: string
+          quantity?: string | null
+          unit?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          status: string | null
+          target_date: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          target_date?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          target_date?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       health: {
         Row: {
           created_at: string
@@ -90,6 +183,63 @@ export type Database = {
         }
         Relationships: []
       }
+      health_appointments: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          notes: string | null
+          provider: string
+          time: string | null
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          notes?: string | null
+          provider: string
+          time?: string | null
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          provider?: string
+          time?: string | null
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ingredients_library: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_unit: string | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_unit?: string | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_unit?: string | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       logs: {
         Row: {
           content: string
@@ -110,6 +260,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      meal_plan: {
+        Row: {
+          created_at: string | null
+          day_date: string
+          id: string
+          meal_type: string | null
+          note: string | null
+          recipe_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_date: string
+          id?: string
+          meal_type?: string | null
+          note?: string | null
+          recipe_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          day_date?: string
+          id?: string
+          meal_type?: string | null
+          note?: string | null
+          recipe_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       money: {
         Row: {
@@ -157,6 +345,36 @@ export type Database = {
           balance?: number | null
           created_at?: string | null
           id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      money_bills: {
+        Row: {
+          amount: number
+          created_at: string | null
+          due_date: string
+          id: string
+          is_paid: boolean | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          due_date: string
+          id?: string
+          is_paid?: boolean | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          due_date?: string
+          id?: string
+          is_paid?: boolean | null
           name?: string
           user_id?: string
         }
@@ -221,25 +439,115 @@ export type Database = {
         }
         Relationships: []
       }
-      todos: {
+      profiles: {
+        Row: {
+          gemini_api_key: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          gemini_api_key?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          gemini_api_key?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reading_list: {
+        Row: {
+          author: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          rating: number | null
+          status: string | null
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          rating?: number | null
+          status?: string | null
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          author?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          rating?: number | null
+          status?: string | null
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      recipes: {
         Row: {
           created_at: string | null
           id: string
-          is_complete: boolean | null
-          task: string | null
+          ingredients: Json | null
+          instructions: Json | null
+          title: string
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
-          is_complete?: boolean | null
-          task?: string | null
+          ingredients?: Json | null
+          instructions?: Json | null
+          title: string
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
+          ingredients?: Json | null
+          instructions?: Json | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      todos: {
+        Row: {
+          created_at: string | null
+          due_date: string | null
+          id: string
+          is_complete: boolean | null
+          position: number | null
+          status: string | null
+          task: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
           is_complete?: boolean | null
+          position?: number | null
+          status?: string | null
+          task?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          is_complete?: boolean | null
+          position?: number | null
+          status?: string | null
           task?: string | null
           user_id?: string
         }
@@ -268,6 +576,113 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicle_records: {
+        Row: {
+          cost: number | null
+          created_at: string | null
+          date: string
+          description: string | null
+          id: string
+          odometer: number | null
+          type: string | null
+          user_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string | null
+          date: string
+          description?: string | null
+          id?: string
+          odometer?: number | null
+          type?: string | null
+          user_id: string
+          vehicle_id: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          odometer?: number | null
+          type?: string | null
+          user_id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_records_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          created_at: string | null
+          id: string
+          make: string | null
+          model: string | null
+          name: string
+          user_id: string
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          make?: string | null
+          model?: string | null
+          name: string
+          user_id: string
+          vin?: string | null
+          year?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          make?: string | null
+          model?: string | null
+          name?: string
+          user_id?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      weather_locations: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          latitude?: number
+          longitude?: number
+          name?: string
           user_id?: string
         }
         Relationships: []
