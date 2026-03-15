@@ -80,8 +80,7 @@ const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, 
             `;
 
             const model = genAI.getGenerativeModel(
-                { model: "gemini-2.5-flash" },
-                { apiVersion: 'v1' }
+                { model: "gemini-2.5-flash" }
             );
 
             // 3. Prepare History

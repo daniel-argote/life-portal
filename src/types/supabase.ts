@@ -629,31 +629,40 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          category: string | null
           created_at: string | null
           id: string
+          image_url: string | null
           make: string | null
           model: string | null
           name: string
+          style: string | null
           user_id: string
           vin: string | null
           year: number | null
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           id?: string
+          image_url?: string | null
           make?: string | null
           model?: string | null
           name: string
+          style?: string | null
           user_id: string
           vin?: string | null
           year?: number | null
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           id?: string
+          image_url?: string | null
           make?: string | null
           model?: string | null
           name?: string
+          style?: string | null
           user_id?: string
           vin?: string | null
           year?: number | null

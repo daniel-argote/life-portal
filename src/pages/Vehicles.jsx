@@ -27,34 +27,216 @@ const Vehicles = ({ user, notify, pageName, setPageName, showHeaders }) => {
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
+    const MotorcycleIcon = ({ style, className = "w-16 h-16" }) => {
+        const stroke = "currentColor";
+        const sw = 2;
+
+        const base = (
+            <g>
+                {/* Wheels */}
+                <circle cx="5" cy="18" r="4" />
+                <circle cx="19" cy="18" r="4" />
+            </g>
+        );
+
+        if (style === 'adventure') {
+            return (
+                <svg viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {base}
+                    <path d="M5 18l3-9h8l3 9" /> {/* Frame */}
+                    <path d="M8 9l-1-4h2" /> {/* Tall Windshield/Bars */}
+                    <path d="M11 9h5l1 3h-7z" /> {/* Tank/Seat */}
+                    <path d="M16 9l2 4" /> {/* Luggage Rack */}
+                </svg>
+            );
+        }
+        if (style === 'cruiser') {
+            return (
+                <svg viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <circle cx="5" cy="18" r="4" />
+                    <circle cx="20" cy="18" r="4" />
+                    <path d="M5 18l5-6h6l4 6" /> {/* Long Rake Frame */}
+                    <path d="M10 12l-2-4" /> {/* Bars */}
+                    <path d="M11 12c0-2 4-2 5 0v2h-5v-2z" /> {/* Low Seat/Tank */}
+                </svg>
+            );
+        }
+        if (style === 'sportbike') {
+            return (
+                <svg viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {base}
+                    <path d="M5 18l4-10h7l3 10" />
+                    <path d="M9 8c-1 0-2 2-2 4s1 3 3 3h6l2-7H9z" /> {/* Fairing/Body */}
+                    <path d="M10 8l-1-2" /> {/* Clip-ons */}
+                </svg>
+            );
+        }
+        if (style === 'dirtbike') {
+            return (
+                <svg viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <circle cx="5" cy="18" r="3" />
+                    <circle cx="19" cy="18" r="3" />
+                    <path d="M5 18l4-11h6l4 11" />
+                    <path d="M4 14h3" /> {/* High Fender */}
+                    <path d="M9 7l-1-3" /> {/* Bars */}
+                    <path d="M9 7h6l1 2h-7z" /> {/* Slim Seat */}
+                </svg>
+            );
+        }
+        // Standard/Generic Motorbike
+        return (
+            <svg viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {base}
+                <path d="M5 18l4-8h7l3 8" />
+                <path d="M9 10l-1-3" />
+                <path d="M10 10h6v2h-6z" />
+            </svg>
+        );
+    };
+
+    const VehiclePlaceholder = ({ category, style }) => {
+        if (category === 'truck') return <Icon name="Truck" size={64} strokeWidth={1} />;
+        if (category === 'motorcycle') return <MotorcycleIcon style={style} />;
+        return <Icon name="Car" size={64} strokeWidth={1} />;
+    };
+
     const FleetTab = () => {
         const [showAdd, setShowAdd] = useState(false);
-        const [form, setForm] = useState({ name: '', make: '', model: '', year: new Date().getFullYear(), vin: '' });
+        const [form, setForm] = useState({ 
+            name: '', make: '', model: '', year: new Date().getFullYear(), vin: '',
+            category: 'car', style: ''
+        });
+        const [imageFile, setImageFile] = useState(null);
+        const [imagePreview, setImagePreview] = useState(null);
+        const [uploading, setUploading] = useState(false);
+
+        const compressImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1200;
+                        const MAX_HEIGHT = 1200;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('canvas-2d') || canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        canvas.toBlob((blob) => {
+                            resolve(new File([blob], file.name, {
+                                type: 'image/png',
+                                lastModified: Date.now(),
+                            }));
+                        }, 'image/png');
+                        };
+                        };
+                        });
+                        };
+
+        const handleUpload = async (file, vehicleId) => {
+            if (!file) return null;
+            
+            // Apply compression before upload
+            const compressedFile = await compressImage(file);
+            
+            const fileExt = 'png';
+            const fileName = `${user.id}/${vehicleId}-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('vehicle-images')
+                .upload(filePath, compressedFile);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('vehicle-images')
+                .getPublicUrl(filePath);
+
+            return data.publicUrl;
+        };
 
         const handleAdd = async (e) => {
             e.preventDefault();
             if (!form.name) return;
             setLoading(true);
-            const { error } = await supabase.from('vehicles').insert([{ ...form, user_id: user.id }]);
-            if (!error) {
-                setForm({ name: '', make: '', model: '', year: new Date().getFullYear(), vin: '' });
+            setUploading(true);
+            
+            try {
+                // 1. Insert vehicle first to get ID
+                const { data: vehicleData, error: vehicleError } = await supabase
+                    .from('vehicles')
+                    .insert([{ ...form, user_id: user.id }])
+                    .select()
+                    .single();
+
+                if (vehicleError) throw vehicleError;
+
+                // 2. If there's an image, upload it
+                if (imageFile) {
+                    const imageUrl = await handleUpload(imageFile, vehicleData.id);
+                    if (imageUrl) {
+                        await supabase
+                            .from('vehicles')
+                            .update({ image_url: imageUrl })
+                            .eq('id', vehicleData.id);
+                    }
+                }
+
+                setForm({ 
+                    name: '', make: '', model: '', year: new Date().getFullYear(), vin: '',
+                    category: 'car', style: ''
+                });
+                setImageFile(null);
+                setImagePreview(null);
                 setShowAdd(false);
                 fetchData();
                 if (notify) notify('Vehicle added to fleet');
+            } catch (err) {
+                console.error(err);
+                if (notify) notify('Error adding vehicle: ' + err.message, 'error');
+            } finally {
+                setLoading(false);
+                setUploading(false);
             }
-            setLoading(false);
         };
 
-        const deleteVehicle = async (id) => {
+        const deleteVehicle = async (id, imageUrl) => {
             const { error } = await supabase.from('vehicles').delete().eq('id', id);
-            if (!error) { fetchData(); if (notify) notify('Vehicle removed'); }
+            if (!error) {
+                if (imageUrl) {
+                    const path = imageUrl.split('vehicle-images/')[1];
+                    if (path) await supabase.storage.from('vehicle-images').remove([path]);
+                }
+                fetchData(); 
+                if (notify) notify('Vehicle removed'); 
+            }
         };
 
         return (
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
                     <h3 className="text-2xl font-black text-base-content">The Fleet</h3>
-                    <button onClick={() => setShowAdd(!showAdd)} className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-primary hover:text-primary-content transition-all">
+                    <button onClick={() => { setShowAdd(!showAdd); setImagePreview(null); setImageFile(null); }} className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-primary hover:text-primary-content transition-all">
                         <Icon name={showAdd ? "X" : "Plus"} size={18} />
                         {showAdd ? "Cancel" : "Add Vehicle"}
                     </button>
@@ -62,41 +244,119 @@ const Vehicles = ({ user, notify, pageName, setPageName, showHeaders }) => {
 
                 {showAdd && (
                     <form onSubmit={handleAdd} className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-xl space-y-4 animate-in slide-in-from-top-4 duration-300">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="md:col-span-2 space-y-1">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Nickname</label>
+                                <input placeholder="Daily Driver, Trail Bike..." className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Category</label>
+                                <select className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" value={form.category} onChange={e => setForm({...form, category: e.target.value, style: ''})}>
+                                    <option value="car">Car / Sedan</option>
+                                    <option value="motorcycle">Motorcycle</option>
+                                    <option value="truck">Truck / SUV</option>
+                                </select>
+                            </div>
+                            {form.category === 'motorcycle' && (
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Style</label>
+                                    <select className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" value={form.style} onChange={e => setForm({...form, style: e.target.value})}>
+                                        <option value="">Standard</option>
+                                        <option value="adventure">Adventure</option>
+                                        <option value="cruiser">Cruiser</option>
+                                        <option value="sportbike">Sportbike</option>
+                                        <option value="dirtbike">Dirtbike</option>
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input placeholder="Nickname (e.g. Daily Driver)" className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+                            <div className="grid grid-cols-3 gap-4">
+                                <input placeholder="Make" className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" value={form.make} onChange={e => setForm({...form, make: e.target.value})} />
+                                <input placeholder="Model" className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" value={form.model} onChange={e => setForm({...form, model: e.target.value})} />
+                                <input 
+                                    type="number" 
+                                    placeholder="Year" 
+                                    className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" 
+                                    value={form.year} 
+                                    onChange={e => setForm({...form, year: parseInt(e.target.value)})}
+                                    onInput={(e) => { if (e.target.value.length > 4) e.target.value = e.target.value.slice(0, 4); }}
+                                    min="1900"
+                                    max="2100"
+                                />
+                            </div>
                             <input placeholder="VIN" className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" value={form.vin} onChange={e => setForm({...form, vin: e.target.value})} />
                         </div>
-                        <div className="grid grid-cols-3 gap-4">
-                            <input placeholder="Make" className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" value={form.make} onChange={e => setForm({...form, make: e.target.value})} />
-                            <input placeholder="Model" className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" value={form.model} onChange={e => setForm({...form, model: e.target.value})} />
-                            <input 
-                                type="number" 
-                                placeholder="Year" 
-                                className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary" 
-                                value={form.year} 
-                                onChange={e => setForm({...form, year: parseInt(e.target.value)})}
-                                onInput={(e) => { if (e.target.value.length > 4) e.target.value = e.target.value.slice(0, 4); }}
-                                min="1900"
-                                max="2100"
-                            />
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Vehicle Photo</label>
+                            <div className="flex flex-col md:flex-row gap-4 items-start">
+                                <div className="flex-1 w-full">
+                                    <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files[0];
+                                            if (file) {
+                                                setImageFile(file);
+                                                setImagePreview(URL.createObjectURL(file));
+                                            }
+                                        }}
+                                        className="w-full bg-base-100 p-3 rounded-xl font-bold outline-none border-2 border-dashed border-base-300 focus:border-primary"
+                                    />
+                                    <p className="text-[10px] font-bold text-slate-400 mt-2 ml-2 italic">Large photos will be automatically optimized before upload.</p>
+                                </div>
+                                {imagePreview && (
+                                    <div className="w-full md:w-32 h-24 rounded-xl overflow-hidden border-2 border-primary/20 bg-base-100 relative group">
+                                        <img src={imagePreview} className="w-full h-full object-cover" />
+                                        <button 
+                                            type="button"
+                                            onClick={() => { setImageFile(null); setImagePreview(null); }}
+                                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                                        >
+                                            <Icon name="X" size={16} />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <button disabled={loading} className="w-full bg-primary text-primary-content py-4 rounded-xl font-black shadow-lg">Save Vehicle</button>
+                        <button disabled={loading || uploading} className="w-full bg-primary text-primary-content py-4 rounded-xl font-black shadow-lg flex items-center justify-center gap-2">
+                            {(loading || uploading) && <Icon name="Loader2" size={20} className="animate-spin" />}
+                            {uploading ? 'Optimizing & Uploading...' : 'Save Vehicle'}
+                        </button>
                     </form>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {fleet.map(v => (
-                        <div key={v.id} className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm group hover:border-primary/30 transition-all">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h4 className="text-2xl font-black text-base-content">{v.name}</h4>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{v.year} {v.make} {v.model}</p>
+                        <div key={v.id} className="bg-base-200 rounded-[2.5rem] border border-base-300 shadow-sm group hover:border-primary/30 transition-all overflow-hidden flex flex-col">
+                            {v.image_url ? (
+                                <div className="h-48 w-full relative overflow-hidden bg-white" style={{ backgroundImage: `radial-gradient(#e2e8f0 1px, transparent 0)`, backgroundSize: '16px 16px' }}>
+                                    <img src={v.image_url} alt={v.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
-                                <button onClick={() => deleteVehicle(v.id)} className="text-slate-400 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-2">
-                                    <Icon name="Trash2" size={20} />
-                                </button>
+                            ) : (
+                                <div className="h-48 w-full bg-base-300/50 flex items-center justify-center text-slate-300">
+                                    <VehiclePlaceholder category={v.category} style={v.style} />
+                                </div>
+                            )}
+                            <div className="p-8">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-[8px] font-black uppercase tracking-tighter bg-primary/10 text-primary px-2 py-0.5 rounded">{v.category}</span>
+                                            {v.style && <span className="text-[8px] font-black uppercase tracking-tighter bg-base-300 text-slate-500 px-2 py-0.5 rounded">{v.style}</span>}
+                                        </div>
+                                        <h4 className="text-2xl font-black text-base-content">{v.name}</h4>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{v.year} {v.make} {v.model}</p>
+                                    </div>
+                                    <button onClick={() => deleteVehicle(v.id, v.image_url)} className="text-slate-400 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-2">
+                                        <Icon name="Trash2" size={20} />
+                                    </button>
+                                </div>
+                                {v.vin && <p className="text-[10px] font-mono text-slate-400 bg-base-300/50 w-fit px-2 py-1 rounded">VIN: {v.vin}</p>}
                             </div>
-                            {v.vin && <p className="text-[10px] font-mono text-slate-400 bg-base-300/50 w-fit px-2 py-1 rounded">VIN: {v.vin}</p>}
                         </div>
                     ))}
                 </div>

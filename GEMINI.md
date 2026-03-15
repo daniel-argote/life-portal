@@ -26,3 +26,8 @@ This project has custom skills defined in `scripts/gemini_skills.cjs`. When work
   - `new_migration(name)`: Creates a new schema migration file.
   - `push()`: Pushes local database changes to the remote database.
   - `gen_types()`: Generates TypeScript types from the database schema.
+
+## Gemini Configuration
+
+- **Model Version:** This project specifically uses `gemini-2.5-flash` for all AI-powered features (Assistant and Vector Lab). Do not use 1.5 or other versions unless explicitly supported by the user's API project.
+- **Vision Tasks:** For SVG synthesis, prioritize "Lucide-style" minimalist geometric representations.
