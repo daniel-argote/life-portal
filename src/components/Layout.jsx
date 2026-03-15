@@ -95,7 +95,21 @@ const Layout = ({ user }) => {
     const fetchData = useCallback(async () => {
         if (!user) return;
         
-        const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        let { data: prof, error: fetchError } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        
+        if (fetchError && fetchError.code === 'PGRST116') {
+            // Profile not found, create it
+            const { data: newProf, error: insertError } = await supabase
+                .from('profiles')
+                .insert([{ id: user.id }])
+                .select()
+                .single();
+            
+            if (!insertError) {
+                prof = newProf;
+            }
+        }
+
         if (prof) {
             setProfile(prof);
             if (prof.feature_hierarchy) setHierarchy(prof.feature_hierarchy);
@@ -104,9 +118,6 @@ const Layout = ({ user }) => {
             if (prof.dashboard_widgets) setDashboardWidgets(prof.dashboard_widgets);
             if (prof.theme) setDarkMode(prof.theme === 'dark');
             if (prof.style) setStyle(prof.style);
-        } else {
-            const { data: newProf } = await supabase.from('profiles').insert([{ id: user.id }]).select().single();
-            setProfile(newProf);
         }
 
         const { data: l } = await supabase.from('logs').select('*').order('created_at', { ascending: false });
@@ -126,8 +137,14 @@ const Layout = ({ user }) => {
 
     // Save changes to Supabase
     const saveProfileUpdate = async (updates) => {
-        const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
-        if (error) notify("Sync failed", "error");
+        if (!user) return;
+        const { error } = await supabase
+            .from('profiles')
+            .upsert({ id: user.id, ...updates, updated_at: new Date().toISOString() });
+        if (error) {
+            console.error("Profile sync error:", error);
+            notify("Sync failed", "error");
+        }
     };
 
     const updatePageName = (id, newName) => {
