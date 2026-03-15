@@ -93,10 +93,13 @@ const Sidebar = ({ tab, setTab, darkMode, setDarkMode, style, setStyle, navItems
 
     const flatItems = flatten(navItems);
 
+    const isSubFeaturesActive = config.showSubFeatures || isReordering;
+    const minimizedWidth = isSubFeaturesActive ? 'w-28' : 'w-20';
+
     return (
         <aside 
             className={`fixed left-0 top-0 bottom-0 bg-base-200 border-r border-base-300 hidden md:flex flex-col p-4 transition-all duration-300 z-40 overflow-y-auto overflow-x-hidden no-scrollbar group/sidebar
-                ${autoHide ? 'w-20 hover:w-64' : 'w-64'}`}
+                ${autoHide ? `${minimizedWidth} hover:w-64` : 'w-64'}`}
         >
             <button 
                 onClick={() => setTab('dashboard')} 
