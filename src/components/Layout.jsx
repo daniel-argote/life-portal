@@ -10,6 +10,9 @@ import Knowledge from '../pages/Knowledge';
 import KnowledgeVault from '../pages/KnowledgeVault';
 import KnowledgeReadingList from '../pages/KnowledgeReadingList';
 import Actions from '../pages/Actions';
+import ActionObjectives from '../pages/ActionObjectives';
+import ActionGoals from '../pages/ActionGoals';
+import ActionChores from '../pages/ActionChores';
 import Log from '../pages/Log';
 import Money from '../pages/Money';
 import MoneyLedger from '../pages/MoneyLedger';
@@ -34,10 +37,16 @@ import Travel from '../pages/Travel';
 import TravelTrips from '../pages/TravelTrips';
 import TravelBucket from '../pages/TravelBucket';
 import TravelPacking from '../pages/TravelPacking';
+import Recreation from '../pages/Recreation';
+import RecreationHikes from '../pages/RecreationHikes';
+import RecreationCamping from '../pages/RecreationCamping';
 
 const PAGE_MAP = {
     dashboard: Dashboard,
     actions: Actions,
+    action_objectives: ActionObjectives,
+    action_goals: ActionGoals,
+    action_chores: ActionChores,
     money: Money,
     money_ledger: MoneyLedger,
     money_accounts: MoneyAccounts,
@@ -63,12 +72,24 @@ const PAGE_MAP = {
     travel_trips: TravelTrips,
     travel_bucket: TravelBucket,
     travel_packing: TravelPacking,
+    recreation: Recreation,
+    recreation_hikes: RecreationHikes,
+    recreation_camping: RecreationCamping,
     assistant: Assistant,
     settings: Settings
 };
 
 const DEFAULT_HIERARCHY = [
-    { id: 'actions', icon: 'CheckSquare', label: 'Actions' },
+    { 
+        id: 'actions', 
+        icon: 'CheckSquare', 
+        label: 'Actions',
+        children: [
+            { id: 'action_objectives', icon: 'CheckSquare', label: 'Objectives' },
+            { id: 'action_chores', icon: 'RefreshCw', label: 'Chores' },
+            { id: 'action_goals', icon: 'Star', label: 'Strategic Goals' }
+        ]
+    },
     { 
         id: 'money', 
         icon: 'Wallet', 
@@ -129,6 +150,15 @@ const DEFAULT_HIERARCHY = [
             { id: 'travel_packing', icon: 'Briefcase', label: 'Packing' }
         ]
     },
+    { 
+        id: 'recreation', 
+        icon: 'Trees', 
+        label: 'Recreation',
+        children: [
+            { id: 'recreation_hikes', icon: 'Footprints', label: 'Hike Log' },
+            { id: 'recreation_camping', icon: 'Tent', label: 'Camping' }
+        ]
+    },
     { id: 'weather', icon: 'CloudSun', label: 'Weather' },
     { id: 'assistant', icon: 'Bot', label: 'Assistant' }
 ];
@@ -155,6 +185,8 @@ const Layout = ({ user }) => {
     const [logs, setLogs] = useState([]);
     const [vault, setVault] = useState([]);
     const [todos, setTodos] = useState([]);
+    const [chores, setChores] = useState([]);
+    const [choreHistory, setChoreHistory] = useState([]);
     const [events, setEvents] = useState([]);
     const [food, setFood] = useState([]);
     const [inventory, setInventory] = useState([]);
@@ -169,6 +201,8 @@ const Layout = ({ user }) => {
     const [travelBucketList, setTravelBucketList] = useState([]);
     const [travelPoi, setTravelPoi] = useState([]);
     const [travelPacking, setTravelPacking] = useState([]);
+    const [hikes, setHikes] = useState([]);
+    const [camping, setCamping] = useState([]);
     const [dashboardWidgets, setDashboardWidgets] = useState([]);
     const [profile, setProfile] = useState(null);
     const [input, setInput] = useState("");
@@ -221,7 +255,8 @@ const Layout = ({ user }) => {
             { data: l }, { data: v }, { data: t }, { data: e },
             { data: f }, { data: inv }, { data: mp },
             { data: accs }, { data: bls }, { data: appts }, { data: rl }, { data: bio },
-            { data: trips }, { data: days }, { data: bucket }, { data: pois }, { data: pack }
+            { data: trips }, { data: days }, { data: bucket }, { data: pois }, { data: pack },
+            { data: chr }, { data: chist }
         ] = await Promise.all([
             supabase.from('logs').select('*').order('created_at', { ascending: false }),
             supabase.from('vault').select('*').order('updated_at', { ascending: false }),
@@ -239,7 +274,11 @@ const Layout = ({ user }) => {
             supabase.from('travel_days').select('*').order('date', { ascending: true }),
             supabase.from('travel_bucket_list').select('*').order('priority', { ascending: false }),
             supabase.from('travel_poi').select('*').order('created_at', { ascending: false }),
-            supabase.from('travel_packing').select('*').order('category', { ascending: true })
+            supabase.from('travel_packing').select('*').order('category', { ascending: true }),
+            supabase.from('chores').select('*').order('created_at', { ascending: true }),
+            supabase.from('chore_history').select('*').order('completed_at', { ascending: false }),
+            supabase.from('recreation_hikes').select('*').order('date', { ascending: false }),
+            supabase.from('recreation_camping').select('*').order('start_date', { ascending: true })
         ]);
 
         setLogs(l || []);
@@ -259,6 +298,10 @@ const Layout = ({ user }) => {
         setTravelBucketList(bucket || []);
         setTravelPoi(pois || []);
         setTravelPacking(pack || []);
+        setChores(chr || []);
+        setChoreHistory(chist || []);
+        setHikes(hk || []);
+        setCamping(cmp || []);
     }, [user]);
 
     useEffect(() => { if (user) fetchData(); }, [user, fetchData]);
@@ -397,6 +440,9 @@ const Layout = ({ user }) => {
         if (tab === 'food_inventory') return 'Kitchen Stock Tracking';
         if (tab === 'food_recipes') return 'Your Culinary Library';
         if (tab === 'food_planner') return 'Weekly Meal Schedule';
+        if (tab === 'action_objectives') return 'Mission Control & Tasks';
+        if (tab === 'action_chores') return 'Household Maintenance';
+        if (tab === 'action_goals') return 'Strategic Mission Tracking';
         if (tab === 'money_ledger') return 'Weekly Budget Tracking';
         if (tab === 'money_accounts') return 'Account & Asset Management';
         if (tab === 'money_bills') return 'Recurring Obligations';
@@ -409,6 +455,8 @@ const Layout = ({ user }) => {
         if (tab === 'travel_trips') return 'Itinerary & Trip Planner';
         if (tab === 'travel_bucket') return 'Global Wishlist';
         if (tab === 'travel_packing') return 'Checklists & Essentials';
+        if (tab === 'recreation_hikes') return 'Trail Adventure Logs';
+        if (tab === 'recreation_camping') return 'Campsite & Trip Tracker';
         if (tab === 'settings') return 'System Configuration';
         if (tab === 'assistant') return 'AI Support Agent';
         
@@ -479,6 +527,8 @@ const Layout = ({ user }) => {
                     logs={logs}
                     vault={vault}
                     todos={todos}
+                    chores={chores}
+                    choreHistory={choreHistory}
                     events={events}
                     food={food}
                     inventory={inventory}
@@ -498,6 +548,13 @@ const Layout = ({ user }) => {
                     setStyle={setStyle}
                     resetHierarchy={resetHierarchy}
                     dismissWelcome={dismissWelcome}
+                    travelTrips={travelTrips}
+                    travelDays={travelDays}
+                    travelBucketList={travelBucketList}
+                    travelPoi={travelPoi}
+                    travelPacking={travelPacking}
+                    hikes={hikes}
+                    camping={camping}
                     featureList={DEFAULT_HIERARCHY} // For settings
                     // Legacy props for specific pages
                     input={input}

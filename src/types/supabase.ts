@@ -66,6 +66,65 @@ export type Database = {
         }
         Relationships: []
       }
+      chore_history: {
+        Row: {
+          chore_id: string
+          completed_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          chore_id: string
+          completed_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          chore_id?: string
+          completed_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chore_history_chore_id_fkey"
+            columns: ["chore_id"]
+            isOneToOne: false
+            referencedRelation: "chores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chores: {
+        Row: {
+          created_at: string
+          description: string | null
+          frequency: string
+          id: string
+          last_completed: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          last_completed?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          last_completed?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       food: {
         Row: {
           calories: number | null
@@ -534,6 +593,90 @@ export type Database = {
           ingredients?: Json | null
           instructions?: Json | null
           title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      recreation_camping: {
+        Row: {
+          amenities: string[] | null
+          created_at: string
+          end_date: string | null
+          id: string
+          is_favorite: boolean | null
+          location: string | null
+          notes: string | null
+          site_name: string
+          start_date: string | null
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          amenities?: string[] | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          location?: string | null
+          notes?: string | null
+          site_name: string
+          start_date?: string | null
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          amenities?: string[] | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          location?: string | null
+          notes?: string | null
+          site_name?: string
+          start_date?: string | null
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      recreation_hikes: {
+        Row: {
+          created_at: string
+          date: string
+          difficulty: string | null
+          distance: number | null
+          elevation_gain: number | null
+          id: string
+          location: string | null
+          name: string
+          notes: string | null
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          difficulty?: string | null
+          distance?: number | null
+          elevation_gain?: number | null
+          id?: string
+          location?: string | null
+          name: string
+          notes?: string | null
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          difficulty?: string | null
+          distance?: number | null
+          elevation_gain?: number | null
+          id?: string
+          location?: string | null
+          name?: string
+          notes?: string | null
+          rating?: number | null
           user_id?: string
         }
         Relationships: []
