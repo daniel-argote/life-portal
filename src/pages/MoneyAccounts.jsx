@@ -43,17 +43,36 @@ const MoneyAccounts = ({ user, notify }) => {
             return;
         }
         const { error } = await supabase.from('money_accounts').insert([{ name, balance: 0, user_id: user.id, position: accounts.length }]);
-        if (!error) { setNewAccountName(''); fetchAccounts(); notify('Account added'); }
+        if (!error) { 
+            setNewAccountName(''); 
+            fetchAccounts(); 
+            notify('Account added'); 
+        } else {
+            console.error(error);
+            notify('Failed to add account', 'error');
+        }
     };
 
     const updateAccount = async (id, updates) => {
         const { error } = await supabase.from('money_accounts').update(updates).eq('id', id);
-        if (!error) { fetchAccounts(); notify('Account updated'); }
+        if (!error) { 
+            fetchAccounts(); 
+            notify('Account updated'); 
+        } else {
+            console.error(error);
+            notify('Failed to update account', 'error');
+        }
     };
 
     const deleteAccount = async (id) => {
         const { error } = await supabase.from('money_accounts').delete().eq('id', id);
-        if (!error) { fetchAccounts(); notify('Account deleted'); }
+        if (!error) { 
+            fetchAccounts(); 
+            notify('Account deleted'); 
+        } else {
+            console.error(error);
+            notify('Failed to delete account', 'error');
+        }
     };
 
     const handleOnDragEnd = async (result) => {
