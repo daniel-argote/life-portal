@@ -313,12 +313,23 @@ const Layout = ({ user }) => {
     // Save changes to Supabase
     const saveProfileUpdate = useCallback(async (updates) => {
         if (!user) return;
-        const { error } = await supabase
-            .from('profiles')
-            .upsert({ id: user.id, ...updates, updated_at: new Date().toISOString() });
-        if (error) {
-            console.error("Profile sync error:", error);
-            notify("Sync failed", "error");
+        
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .upsert({ 
+                    id: user.id, 
+                    ...updates, 
+                    updated_at: new Date().toISOString() 
+                }, { onConflict: 'id' });
+
+            if (error) {
+                console.error("Profile sync error details:", error);
+                notify(`Sync failed: ${error.message || 'Unknown error'}`, "error");
+            }
+        } catch (err) {
+            console.error("Critical sync exception:", err);
+            notify("Connection error during sync", "error");
         }
     }, [user, notify]);
 
