@@ -1,22 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import MoneySummary from '../components/MoneySummary';
 import PageContainer from '../components/PageContainer';
+import { format, isAfter, parseISO } from 'date-fns';
 
-const Money = ({ user }) => {
-    const [accounts, setAccounts] = useState([]);
-    const [bills, setBills] = useState([]);
-
-    const fetchData = useCallback(async () => {
-        if (!user) return;
-        const { data: accs } = await supabase.from('money_accounts').select('*');
-        setAccounts(accs || []);
-        const { data: bls } = await supabase.from('money_bills').select('*');
-        setBills(bls || []);
-    }, [user]);
-
-    useEffect(() => { fetchData(); }, [fetchData]);
+const Money = ({ accounts = [], bills = [] }) => {
+    const today = new Date();
+    const upcomingBills = bills
+        .filter(b => !b.is_paid && isAfter(parseISO(b.due_date), today))
+        .sort((a, b) => parseISO(a.due_date).getTime() - parseISO(b.due_date).getTime());
+    
+    const nextBill = upcomingBills[0];
 
     return (
         <PageContainer>
@@ -29,6 +22,51 @@ const Money = ({ user }) => {
             </div>
 
             <MoneySummary accounts={accounts} bills={bills} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Next Obligation */}
+                <div className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm flex flex-col transition-all hover:border-danger/30">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 bg-danger/10 text-danger rounded-2xl">
+                            <Icon name="AlertCircle" size={24} />
+                        </div>
+                        <h3 className="font-black text-lg">Next Obligation</h3>
+                    </div>
+                    {nextBill ? (
+                        <div className="bg-base-100 p-6 rounded-3xl border border-base-300/50">
+                            <p className="text-[10px] font-black uppercase text-danger mb-2">Due {format(parseISO(nextBill.due_date), 'MMM do')}</p>
+                            <h4 className="text-2xl font-black text-base-content">{nextBill.name}</h4>
+                            <p className="text-3xl font-black text-danger mt-2">${nextBill.amount}</p>
+                        </div>
+                    ) : (
+                        <p className="text-slate-500 font-bold text-sm italic flex-1 flex items-center justify-center text-center">No upcoming bills</p>
+                    )}
+                </div>
+
+                {/* Top Asset */}
+                <div className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm flex flex-col transition-all hover:border-success/30">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 bg-success/10 text-success rounded-2xl">
+                            <Icon name="TrendingUp" size={24} />
+                        </div>
+                        <h3 className="font-black text-lg">Largest Account</h3>
+                    </div>
+                    {accounts.length > 0 ? (
+                        (() => {
+                            const topAccount = [...accounts].sort((a, b) => b.balance - a.balance)[0];
+                            return (
+                                <div className="bg-base-100 p-6 rounded-3xl border border-base-300/50">
+                                    <p className="text-[10px] font-black uppercase text-success mb-2">Priority Fund</p>
+                                    <h4 className="text-2xl font-black text-base-content">{topAccount.name}</h4>
+                                    <p className="text-3xl font-black text-success mt-2">${Number(topAccount.balance).toLocaleString()}</p>
+                                </div>
+                            );
+                        })()
+                    ) : (
+                        <p className="text-slate-500 font-bold text-sm italic flex-1 flex items-center justify-center text-center">Add your first account</p>
+                    )}
+                </div>
+            </div>
         </PageContainer>
     );
 };

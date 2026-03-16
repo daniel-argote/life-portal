@@ -136,6 +136,16 @@ const Layout = ({ user }) => {
     const [vault, setVault] = useState([]);
     const [todos, setTodos] = useState([]);
     const [events, setEvents] = useState([]);
+    const [food, setFood] = useState([]);
+    const [inventory, setInventory] = useState([]);
+    const [mealPlan, setMealPlan] = useState([]);
+    const [accounts, setAccounts] = useState([]);
+    const [bills, setBills] = useState([]);
+    const [appointments, setAppointments] = useState([]);
+    const [biometrics, setBiometrics] = useState([]);
+    const [vehicles, setVehicles] = useState([]);
+    const [vehicleRecords, setVehicleRecords] = useState([]);
+    const [readingList, setReadingList] = useState([]);
     const [dashboardWidgets, setDashboardWidgets] = useState([]);
     const [profile, setProfile] = useState(null);
     const [input, setInput] = useState("");
@@ -169,16 +179,8 @@ const Layout = ({ user }) => {
         let { data: prof, error: fetchError } = await supabase.from('profiles').select('*').eq('id', user.id).single();
         
         if (fetchError && fetchError.code === 'PGRST116') {
-            // Profile not found, create it
-            const { data: newProf, error: insertError } = await supabase
-                .from('profiles')
-                .insert([{ id: user.id }])
-                .select()
-                .single();
-            
-            if (!insertError) {
-                prof = newProf;
-            }
+            const { data: newProf, error: insertError } = await supabase.from('profiles').insert([{ id: user.id }]).select().single();
+            if (!insertError) prof = newProf;
         }
 
         if (prof) {
@@ -191,17 +193,38 @@ const Layout = ({ user }) => {
             if (prof.style) setStyle(prof.style);
         }
 
-        const { data: l } = await supabase.from('logs').select('*').order('created_at', { ascending: false });
+        // Parallel Fetching for Command Center Performance
+        const [
+            { data: l }, { data: v }, { data: t }, { data: e },
+            { data: f }, { data: inv }, { data: mp },
+            { data: accs }, { data: bls }, { data: appts }, { data: rl }, { data: bio }
+        ] = await Promise.all([
+            supabase.from('logs').select('*').order('created_at', { ascending: false }),
+            supabase.from('vault').select('*').order('updated_at', { ascending: false }),
+            supabase.from('todos').select('*').eq('is_complete', false).order('created_at', { ascending: false }),
+            supabase.from('calendar').select('*').gte('start_time', new Date().toISOString()).order('start_time', { ascending: true }),
+            supabase.from('food').select('*').order('created_at', { ascending: false }),
+            supabase.from('food_inventory').select('*').order('category', { ascending: true }),
+            supabase.from('meal_plan').select('*, recipes(title)').order('day_date', { ascending: true }),
+            supabase.from('money_accounts').select('*').order('position', { ascending: true }),
+            supabase.from('money_bills').select('*').order('due_date', { ascending: true }),
+            supabase.from('health_appointments').select('*').order('date', { ascending: true }),
+            supabase.from('reading_list').select('*').order('created_at', { ascending: false }),
+            supabase.from('health').select('*').order('created_at', { ascending: false })
+        ]);
+
         setLogs(l || []);
-        
-        const { data: v } = await supabase.from('vault').select('*').order('updated_at', { ascending: false });
         setVault(v || []);
-
-        const { data: t } = await supabase.from('todos').select('*').eq('is_complete', false).order('created_at', { ascending: false });
         setTodos(t || []);
-
-        const { data: e } = await supabase.from('calendar').select('*').gte('start_time', new Date().toISOString()).order('start_time', { ascending: true });
         setEvents(e || []);
+        setFood(f || []);
+        setInventory(inv || []);
+        setMealPlan(mp || []);
+        setAccounts(accs || []);
+        setBills(bls || []);
+        setAppointments(appts || []);
+        setReadingList(rl || []);
+        setBiometrics(bio || []);
     }, [user]);
 
     useEffect(() => { if (user) fetchData(); }, [user, fetchData]);
@@ -411,6 +434,14 @@ const Layout = ({ user }) => {
                     vault={vault}
                     todos={todos}
                     events={events}
+                    food={food}
+                    inventory={inventory}
+                    mealPlan={mealPlan}
+                    accounts={accounts}
+                    bills={bills}
+                    appointments={appointments}
+                    biometrics={biometrics}
+                    readingList={readingList}
                     profile={profile}
                     fetchData={fetchData}
                     dashboardWidgets={dashboardWidgets}
