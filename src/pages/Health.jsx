@@ -2,7 +2,7 @@ import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
 import { format, isAfter, parseISO } from 'date-fns';
 
-const Health = ({ appointments = [], biometrics = [] }) => {
+const Health = ({ appointments = [], biometrics = [], config = {}, dismissWelcome }) => {
     const today = new Date();
     const upcoming = appointments
         .filter(a => isAfter(parseISO(a.date), today))
@@ -12,13 +12,22 @@ const Health = ({ appointments = [], biometrics = [] }) => {
 
     return (
         <PageContainer>
-            <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6">
-                <Icon name="Heart" size={48} className="text-primary/20 mx-auto mb-4" />
-                <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Health Hub</h4>
-                <p className="text-slate-600 font-bold max-w-md mx-auto">
-                    A centralized place to monitor your physical well-being and stay on top of your medical schedule.
-                </p>
-            </div>
+            {config.showWelcomes && !config.dismissedWelcomes?.includes('health') && (
+                <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6 relative group">
+                    <button 
+                        onClick={() => dismissWelcome('health')}
+                        className="absolute top-6 right-6 p-2 rounded-full hover:bg-primary/10 transition-colors text-primary/40 hover:text-primary"
+                        title="Dismiss"
+                    >
+                        <Icon name="X" size={20} />
+                    </button>
+                    <Icon name="Heart" size={48} className="text-primary/20 mx-auto mb-4" />
+                    <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Health Hub</h4>
+                    <p className="text-slate-600 font-bold max-w-md mx-auto">
+                        A centralized place to monitor your physical well-being and stay on top of your medical schedule.
+                    </p>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Next Appointment */}

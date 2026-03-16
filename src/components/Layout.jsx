@@ -126,7 +126,9 @@ const Layout = ({ user }) => {
         hiddenFeatures: [],
         weatherUnit: 'fahrenheit',
         showA11yAgent: true,
-        showSubFeatures: false
+        showSubFeatures: false,
+        showWelcomes: false,
+        dismissedWelcomes: []
     });
 
     const [darkMode, setDarkMode] = useState(false);
@@ -279,6 +281,13 @@ const Layout = ({ user }) => {
             setHierarchy(DEFAULT_HIERARCHY);
             saveProfileUpdate({ feature_hierarchy: DEFAULT_HIERARCHY });
             notify("Structure reset");
+        }
+    };
+
+    const dismissWelcome = (id) => {
+        const dismissed = config.dismissedWelcomes || [];
+        if (!dismissed.includes(id)) {
+            updateConfig('dismissedWelcomes', [...dismissed, id]);
         }
     };
 
@@ -451,6 +460,7 @@ const Layout = ({ user }) => {
                     style={style}
                     setStyle={setStyle}
                     resetHierarchy={resetHierarchy}
+                    dismissWelcome={dismissWelcome}
                     featureList={DEFAULT_HIERARCHY} // For settings
                     // Legacy props for specific pages
                     input={input}

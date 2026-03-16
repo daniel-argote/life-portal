@@ -3,7 +3,7 @@ import MoneySummary from '../components/MoneySummary';
 import PageContainer from '../components/PageContainer';
 import { format, isAfter, parseISO } from 'date-fns';
 
-const Money = ({ accounts = [], bills = [] }) => {
+const Money = ({ accounts = [], bills = [], config = {}, dismissWelcome }) => {
     const today = new Date();
     const upcomingBills = bills
         .filter(b => !b.is_paid && isAfter(parseISO(b.due_date), today))
@@ -13,13 +13,22 @@ const Money = ({ accounts = [], bills = [] }) => {
 
     return (
         <PageContainer>
-            <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6">
-                <Icon name="Wallet" size={48} className="text-primary/20 mx-auto mb-4" />
-                <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Money Hub</h4>
-                <p className="text-slate-600 font-bold max-w-md mx-auto">
-                    Stay in command of your finances. Monitor assets, track budgets, and never miss a bill.
-                </p>
-            </div>
+            {config.showWelcomes && !config.dismissedWelcomes?.includes('money') && (
+                <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6 relative group">
+                    <button 
+                        onClick={() => dismissWelcome('money')}
+                        className="absolute top-6 right-6 p-2 rounded-full hover:bg-primary/10 transition-colors text-primary/40 hover:text-primary"
+                        title="Dismiss"
+                    >
+                        <Icon name="X" size={20} />
+                    </button>
+                    <Icon name="Wallet" size={48} className="text-primary/20 mx-auto mb-4" />
+                    <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Money Hub</h4>
+                    <p className="text-slate-600 font-bold max-w-md mx-auto">
+                        Stay in command of your finances. Monitor assets, track budgets, and never miss a bill.
+                    </p>
+                </div>
+            )}
 
             <MoneySummary accounts={accounts} bills={bills} />
 

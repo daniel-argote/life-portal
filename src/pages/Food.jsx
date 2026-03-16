@@ -2,7 +2,7 @@ import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
 import { format } from 'date-fns';
 
-const Food = ({ mealPlan = [], food = [], inventory = [] }) => {
+const Food = ({ mealPlan = [], food = [], inventory = [], config = {}, dismissWelcome }) => {
     const today = format(new Date(), 'yyyy-MM-dd');
     const todayMeals = mealPlan.filter(m => m.day_date === today);
     const latestLog = food[0];
@@ -10,13 +10,22 @@ const Food = ({ mealPlan = [], food = [], inventory = [] }) => {
 
     return (
         <PageContainer>
-            <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6">
-                <Icon name="Utensils" size={48} className="text-primary/20 mx-auto mb-4" />
-                <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Food Hub</h4>
-                <p className="text-slate-600 font-bold max-w-md mx-auto">
-                    Manage your nutrition, plan your week, and organize your kitchen from one central location.
-                </p>
-            </div>
+            {config.showWelcomes && !config.dismissedWelcomes?.includes('food') && (
+                <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6 relative group">
+                    <button 
+                        onClick={() => dismissWelcome('food')}
+                        className="absolute top-6 right-6 p-2 rounded-full hover:bg-primary/10 transition-colors text-primary/40 hover:text-primary"
+                        title="Dismiss"
+                    >
+                        <Icon name="X" size={20} />
+                    </button>
+                    <Icon name="Utensils" size={48} className="text-primary/20 mx-auto mb-4" />
+                    <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Food Hub</h4>
+                    <p className="text-slate-600 font-bold max-w-md mx-auto">
+                        Manage your nutrition, plan your week, and organize your kitchen from one central location.
+                    </p>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Today's Plan */}

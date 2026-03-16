@@ -1,19 +1,28 @@
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
 
-const Knowledge = ({ vault = [], readingList = [] }) => {
+const Knowledge = ({ vault = [], readingList = [], config = {}, dismissWelcome }) => {
     const latestNote = vault[0];
     const currentRead = readingList.find(r => r.status === 'reading');
 
     return (
         <PageContainer>
-            <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6">
-                <Icon name="BrainCircuit" size={48} className="text-primary/20 mx-auto mb-4" />
-                <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Knowledge Hub</h4>
-                <p className="text-slate-600 font-bold max-w-md mx-auto">
-                    Capture everything that matters. Organize your thoughts and track your learning journey.
-                </p>
-            </div>
+            {config.showWelcomes && !config.dismissedWelcomes?.includes('knowledge') && (
+                <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6 relative group">
+                    <button 
+                        onClick={() => dismissWelcome('knowledge')}
+                        className="absolute top-6 right-6 p-2 rounded-full hover:bg-primary/10 transition-colors text-primary/40 hover:text-primary"
+                        title="Dismiss"
+                    >
+                        <Icon name="X" size={20} />
+                    </button>
+                    <Icon name="BrainCircuit" size={48} className="text-primary/20 mx-auto mb-4" />
+                    <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Knowledge Hub</h4>
+                    <p className="text-slate-600 font-bold max-w-md mx-auto">
+                        Capture everything that matters. Organize your thoughts and track your learning journey.
+                    </p>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Latest Intelligence */}

@@ -3,7 +3,7 @@ import PageContainer from '../components/PageContainer';
 import { VehiclePlaceholder } from '../components/VehicleIcons';
 import { format } from 'date-fns';
 
-const Vehicles = ({ vehicles = [], vehicleRecords = [] }) => {
+const Vehicles = ({ vehicles = [], vehicleRecords = [], config = {}, dismissWelcome }) => {
     const totalVehicles = vehicles.length;
     const latestRecord = vehicleRecords[0];
     
@@ -14,13 +14,22 @@ const Vehicles = ({ vehicles = [], vehicleRecords = [] }) => {
 
     return (
         <PageContainer>
-            <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6">
-                <Icon name="CarFront" size={48} className="text-primary/20 mx-auto mb-4" />
-                <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Vehicle Hub</h4>
-                <p className="text-slate-600 font-bold max-w-md mx-auto">
-                    Keep your vehicles in peak condition. Track every oil change, repair, and upgrade in one place.
-                </p>
-            </div>
+            {config.showWelcomes && !config.dismissedWelcomes?.includes('vehicles') && (
+                <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6 relative group">
+                    <button 
+                        onClick={() => dismissWelcome('vehicles')}
+                        className="absolute top-6 right-6 p-2 rounded-full hover:bg-primary/10 transition-colors text-primary/40 hover:text-primary"
+                        title="Dismiss"
+                    >
+                        <Icon name="X" size={20} />
+                    </button>
+                    <Icon name="CarFront" size={48} className="text-primary/20 mx-auto mb-4" />
+                    <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Vehicle Hub</h4>
+                    <p className="text-slate-600 font-bold max-w-md mx-auto">
+                        Keep your vehicles in peak condition. Track every oil change, repair, and upgrade in one place.
+                    </p>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Fleet Overview */}

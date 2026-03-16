@@ -89,6 +89,19 @@ const Settings = ({ user, config, updateConfig, featureList, profile, fetchData,
                             </button>
                         </div>
 
+                        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-emerald-500/30 transition-all group">
+                            <div>
+                                <p className="font-bold dark:text-white">Welcome Banners</p>
+                                <p className="text-xs text-slate-600 font-medium mt-1">Show introductory tips on main hub pages</p>
+                            </div>
+                            <button 
+                                onClick={() => updateConfig('showWelcomes', !config.showWelcomes)}
+                                className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showWelcomes ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                            >
+                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showWelcomes ? 'translate-x-6' : 'translate-x-0'}`} />
+                            </button>
+                        </div>
+
                         <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-emerald-500/30 transition-all group">
                             <label className="block font-bold dark:text-white mb-1">Financial Week Start</label>
                             <p className="text-xs text-slate-600 font-medium mb-3">Which day your ledger cycles reset</p>
