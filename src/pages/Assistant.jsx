@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
+import PageContainer from '../components/PageContainer';
 
-const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, logs, vault, todos, events }) => {
+const Assistant = ({ notify, profile, logs, vault, todos, events }) => {
     const [messages, setMessages] = useState([
         { role: 'assistant', text: "Hello! I'm your Portal Assistant. How can I help you manage your day?" }
     ]);
@@ -17,7 +17,7 @@ const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, 
 
     const debugModels = async () => {
         const rawKey = profile?.gemini_api_key || import.meta.env.VITE_GEMINI_API_KEY;
-        const sanitizedKey = rawKey?.replace(/[^a-zA-Z0-9_\-]/g, '');
+        const sanitizedKey = rawKey?.replace(/[^a-zA-Z0-9_-]/g, '');
         if (!sanitizedKey) return notify("No key to test", "error");
         
         try {
@@ -41,7 +41,7 @@ const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, 
             return;
         }
 
-        const sanitizedKey = rawKey.replace(/[^a-zA-Z0-9_\-]/g, '');
+        const sanitizedKey = rawKey.replace(/[^a-zA-Z0-9_-]/g, '');
         
         const userMessage = { role: 'user', text: input };
         setMessages(prev => [...prev, userMessage]);
@@ -118,23 +118,16 @@ const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, 
     const hasKey = !!(profile?.gemini_api_key || import.meta.env.VITE_GEMINI_API_KEY);
 
     return (
-        <div className="flex flex-col h-[calc(100vh-12rem)] max-w-4xl mx-auto space-y-6">
-            {showHeaders && (
-                <div className="flex justify-between items-start">
-                    <EditableHeader 
-                        value={pageName} 
-                        onSave={setPageName} 
-                        subtext="AI-Powered Intelligence" 
-                    />
-                    <button 
-                        onClick={debugModels}
-                        className="p-2 text-slate-600 hover:text-primary transition-colors opacity-20 hover:opacity-100"
-                        title="Debug API"
-                    >
-                        <Icon name="Bug" size={16} />
-                    </button>
-                </div>
-            )}
+        <PageContainer className="flex flex-col h-[calc(100vh-12rem)] max-w-4xl mx-auto !space-y-6">
+            <div className="flex justify-end items-start">
+                <button 
+                    onClick={debugModels}
+                    className="p-2 text-slate-600 hover:text-primary transition-colors opacity-20 hover:opacity-100"
+                    title="Debug API"
+                >
+                    <Icon name="Bug" size={16} />
+                </button>
+            </div>
 
             {!hasKey ? (
                 <div className="flex-1 flex items-center justify-center p-6">
@@ -145,7 +138,7 @@ const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, 
                         
                         <div className="space-y-2">
                             <h3 className="text-2xl font-black dark:text-white">Activate Assistant</h3>
-                            <p className="text-slate-600 font-bold text-sm">To use the AI features, you'll need to link a Gemini API key.</p>
+                            <p className="text-slate-600 font-bold text-sm">To use the AI features, you&apos;ll need to link a Gemini API key.</p>
                         </div>
 
                         <div className="space-y-4 text-left">
@@ -222,7 +215,7 @@ const Assistant = ({ user, notify, pageName, setPageName, showHeaders, profile, 
                     </form>
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 };
 

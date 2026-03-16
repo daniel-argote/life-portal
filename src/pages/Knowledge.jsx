@@ -1,211 +1,68 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
+import PageContainer from '../components/PageContainer';
 
-const Knowledge = ({ vault, noteForm, setNoteForm, addNote, deleteItem, pageName, setPageName, showHeaders, user, notify }) => {
-    const [activeTab, setActiveTab] = useState('vault');
-    const [loading, setLoading] = useState(false);
-    const [readingList, setReadingList] = useState([]);
-
-    const fetchReadingList = useCallback(async () => {
-        if (!user) return;
-        const { data, error } = await supabase
-            .from('reading_list')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
-        if (!error) setReadingList(data || []);
-    }, [user]);
-
-    useEffect(() => {
-        if (activeTab === 'reading') fetchReadingList();
-    }, [activeTab, fetchReadingList]);
-
-    const VaultTab = () => (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="bg-white dark:bg-slate-800 p-10 rounded-[3rem] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
-                <input
-                    className="w-full text-2xl font-black outline-none placeholder:text-slate-200 dark:placeholder:text-slate-600 bg-transparent dark:text-white"
-                    placeholder="Focus Title"
-                    value={noteForm.title}
-                    onChange={e => setNoteForm({ ...noteForm, title: e.target.value })}
-                />
-                <textarea
-                    className="w-full h-40 outline-none text-slate-500 dark:text-slate-600 font-medium resize-none text-lg placeholder:text-slate-200 dark:placeholder:text-slate-600 bg-transparent"
-                    placeholder="Capture details..."
-                    value={noteForm.content}
-                    onChange={e => setNoteForm({ ...noteForm, content: e.target.value })}
-                />
-                <div className="flex justify-end pt-4">
-                    <button onClick={addNote} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all">
-                        Vault Data
-                    </button>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {vault.map(v => (
-                    <div key={v.id} className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-50 dark:border-slate-700 shadow-sm group hover:shadow-md transition-all">
-                        <div className="flex justify-between items-start mb-4">
-                            <h4 className="font-black text-xl text-slate-800 dark:text-slate-200">{v.title}</h4>
-                            <button onClick={() => deleteItem('vault', v.id)} className="opacity-0 group-hover:opacity-100 text-slate-200 hover:text-red-500 transition-all">
-                                <Icon name="Trash2" size={18} />
-                            </button>
-                        </div>
-                        <p className="text-slate-500 dark:text-slate-600 font-medium whitespace-pre-wrap text-sm leading-relaxed">{v.content}</p>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-
-    const ReadingListTab = () => {
-        const [showAdd, setShowAdd] = useState(false);
-        const [form, setForm] = useState({ title: '', author: '', type: 'book', status: 'queued' });
-
-        const handleAdd = async (e) => {
-            e.preventDefault();
-            if (!form.title) return;
-            setLoading(true);
-            const { error } = await supabase.from('reading_list').insert([{ ...form, user_id: user.id }]);
-            if (!error) {
-                setForm({ title: '', author: '', type: 'book', status: 'queued' });
-                setShowAdd(false);
-                fetchReadingList();
-                if (notify) notify('Added to reading list');
-            }
-            setLoading(false);
-        };
-
-        const updateStatus = async (id, status) => {
-            const { error } = await supabase.from('reading_list').update({ status }).eq('id', id);
-            if (!error) fetchReadingList();
-        };
-
-        const deleteItem = async (id) => {
-            const { error } = await supabase.from('reading_list').delete().eq('id', id);
-            if (!error) { fetchReadingList(); if (notify) notify('Removed from list'); }
-        };
-
-        return (
-            <div className="space-y-6 animate-in fade-in duration-500">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-2xl font-black text-base-content">Resource Queue</h3>
-                    <button onClick={() => setShowAdd(!showAdd)} className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-primary hover:text-primary-content transition-all">
-                        <Icon name={showAdd ? "X" : "Plus"} size={18} />
-                        {showAdd ? "Cancel" : "Add Resource"}
-                    </button>
-                </div>
-
-                {showAdd && (
-                    <form onSubmit={handleAdd} className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-xl space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input
-                                placeholder="Title"
-                                className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary"
-                                value={form.title}
-                                onChange={e => setForm({ ...form, title: e.target.value })}
-                            />
-                            <input
-                                placeholder="Author / Source"
-                                className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary"
-                                value={form.author}
-                                onChange={e => setForm({ ...form, author: e.target.value })}
-                            />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <select
-                                className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none"
-                                value={form.type}
-                                onChange={e => setForm({ ...form, type: e.target.value })}
-                            >
-                                <option value="book">Book</option>
-                                <option value="article">Article</option>
-                                <option value="paper">Research Paper</option>
-                                <option value="video">Video / Course</option>
-                                <option value="other">Other</option>
-                            </select>
-                            <select
-                                className="w-full bg-base-100 p-4 rounded-xl font-bold outline-none"
-                                value={form.status}
-                                onChange={e => setForm({ ...form, status: e.target.value })}
-                            >
-                                <option value="queued">Queued</option>
-                                <option value="reading">Currently Reading</option>
-                                <option value="finished">Finished</option>
-                            </select>
-                        </div>
-                        <button disabled={loading} className="w-full bg-primary text-primary-content py-4 rounded-xl font-black shadow-lg">
-                            Add to Knowledge Base
-                        </button>
-                    </form>
-                )}
-
-                <div className="grid grid-cols-1 gap-4">
-                    {readingList.map(item => (
-                        <div key={item.id} className="bg-base-200 p-6 rounded-[2rem] border border-base-300 flex flex-col md:flex-row md:items-center gap-6 group transition-all hover:border-primary/30">
-                            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                                <Icon name={item.type === 'book' ? 'Book' : 'FileText'} size={24} />
-                            </div>
-                            <div className="flex-1">
-                                <h4 className="text-xl font-black text-base-content">{item.title}</h4>
-                                <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mt-1">{item.author} • {item.type}</p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <select 
-                                    className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-lg border-2 transition-all outline-none
-                                        ${item.status === 'finished' ? 'bg-success/10 border-success/20 text-success' : 
-                                          item.status === 'reading' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-500' : 
-                                          'bg-base-300/50 border-transparent text-slate-600'}`}
-                                    value={item.status}
-                                    onChange={(e) => updateStatus(item.id, e.target.value)}
-                                >
-                                    <option value="queued">Queued</option>
-                                    <option value="reading">Reading</option>
-                                    <option value="finished">Finished</option>
-                                </select>
-                                <button onClick={() => deleteItem(item.id)} className="text-slate-600 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-2">
-                                    <Icon name="Trash2" size={20} />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    };
+const Knowledge = ({ vault = [], readingList = [], config = {}, dismissWelcome }) => {
+    const latestNote = vault[0];
+    const currentRead = readingList.find(r => r.status === 'reading');
 
     return (
-        <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="Intelligence & Resources" 
-                />
+        <PageContainer>
+            {config.showWelcomes && !config.dismissedWelcomes?.includes('knowledge') && (
+                <div className="bg-primary/5 border border-primary/10 p-10 rounded-[3rem] text-center mb-6 relative group">
+                    <button 
+                        onClick={() => dismissWelcome('knowledge')}
+                        className="absolute top-6 right-6 p-2 rounded-full hover:bg-primary/10 transition-colors text-primary/40 hover:text-primary"
+                        title="Dismiss"
+                    >
+                        <Icon name="X" size={20} />
+                    </button>
+                    <Icon name="BrainCircuit" size={48} className="text-primary/20 mx-auto mb-4" />
+                    <h4 className="text-2xl font-black text-base-content mb-2">Welcome to your Knowledge Hub</h4>
+                    <p className="text-slate-600 font-bold max-w-md mx-auto">
+                        Capture everything that matters. Organize your thoughts and track your learning journey.
+                    </p>
+                </div>
             )}
 
-            <div className="flex gap-2 p-1 bg-base-200 rounded-2xl w-fit border border-base-300">
-                {[
-                    { id: 'vault', label: 'Vault', icon: 'Brain' },
-                    { id: 'reading', label: 'Reading List', icon: 'BookOpen' }
-                ].map(t => (
-                    <button
-                        key={t.id}
-                        onClick={() => setActiveTab(t.id)}
-                        className={`px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all ${activeTab === t.id ? 'bg-primary text-primary-content shadow-md' : 'text-slate-600 hover:text-primary hover:bg-base-300/50'}`}
-                    >
-                        <Icon name={t.icon} size={14} />
-                        {t.label}
-                    </button>
-                ))}
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Latest Intelligence */}
+                <div className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm flex flex-col transition-all hover:border-indigo-500/30">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-2xl">
+                            <Icon name="Vault" size={24} />
+                        </div>
+                        <h3 className="font-black text-lg">Latest Note</h3>
+                    </div>
+                    {latestNote ? (
+                        <div className="bg-base-100 p-6 rounded-3xl border border-base-300/50 flex-1">
+                            <h4 className="text-xl font-black text-base-content mb-2">{latestNote.title}</h4>
+                            <p className="text-sm font-bold text-slate-600 line-clamp-3 leading-relaxed">{latestNote.content}</p>
+                        </div>
+                    ) : (
+                        <p className="text-slate-500 font-bold text-sm italic flex-1 flex items-center justify-center text-center">Your vault is empty</p>
+                    )}
+                </div>
 
-            <div>
-                {activeTab === 'vault' && <VaultTab />}
-                {activeTab === 'reading' && <ReadingListTab />}
+                {/* Reading Status */}
+                <div className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm flex flex-col transition-all hover:border-emerald-500/30">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl">
+                            <Icon name="BookOpen" size={24} />
+                        </div>
+                        <h3 className="font-black text-lg">Now Learning</h3>
+                    </div>
+                    {currentRead ? (
+                        <div className="bg-base-100 p-6 rounded-3xl border border-base-300/50 flex-1">
+                            <p className="text-[10px] font-black uppercase text-emerald-500 mb-2">{currentRead.type}</p>
+                            <h4 className="text-xl font-black text-base-content mb-1">{currentRead.title}</h4>
+                            <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">{currentRead.author}</p>
+                        </div>
+                    ) : (
+                        <p className="text-slate-500 font-bold text-sm italic flex-1 flex items-center justify-center text-center">Start a new resource</p>
+                    )}
+                </div>
             </div>
-        </div>
+        </PageContainer>
     );
 };
 

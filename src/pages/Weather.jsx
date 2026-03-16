@@ -2,33 +2,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { format } from 'date-fns';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
+import PageContainer from '../components/PageContainer';
+import { getWeatherIcon } from '../lib/weatherUtils';
 
-export const getWeatherIcon = (code) => {
-    if (code === 0) return 'Sun';
-    if (code >= 1 && code <= 3) return 'CloudSun';
-    if (code >= 45 && code <= 48) return 'CloudFog';
-    if (code >= 51 && code <= 67) return 'CloudRain';
-    if (code >= 71 && code <= 77) return 'CloudSnow';
-    if (code >= 80 && code <= 82) return 'CloudRainWind';
-    if (code >= 85 && code <= 86) return 'CloudSnow';
-    if (code >= 95) return 'CloudLightning';
-    return 'Cloud';
-};
-
-const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) => {
+const Weather = ({ user, notify, config }) => {
     const [locations, setLocations] = useState([]);
     const [search, setSearch] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [forecasts, setForecasts] = useState({});
-    const [loading, setLoading] = useState(false);
 
     const unit = config?.weatherUnit || 'fahrenheit';
 
     const fetchForecasts = useCallback(async (locs) => {
         if (!locs || locs.length === 0) return;
-        setLoading(true);
         try {
             const promises = locs.map(async (loc) => {
                 const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&temperature_unit=${unit}`);
@@ -43,7 +30,6 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
             console.error(e);
             if (notify) notify('Failed to fetch forecasts', 'error');
         }
-        setLoading(false);
     }, [notify, unit]);
 
     const fetchLocations = useCallback(async () => {
@@ -64,7 +50,7 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
 
     useEffect(() => {
         fetchLocations();
-    }, [user]); // Only fetch on mount or user change
+    }, [fetchLocations]);
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -119,15 +105,7 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
     };
 
     return (
-        <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="Atmospheric Intelligence" 
-                />
-            )}
-
+        <PageContainer>
             {/* Locations Dashboard Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {locations.map(loc => {
@@ -232,7 +210,7 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
 
             {/* Detailed Forecast for Selected Location */}
             {selectedLocation && forecasts[selectedLocation.id] && (
-                <div className="fade-in bg-base-200 p-10 rounded-[3rem] border border-base-300 shadow-sm relative overflow-hidden animate-in slide-in-from-bottom duration-500">
+                <div className="bg-base-200 p-10 rounded-[3rem] border border-base-300 shadow-sm relative overflow-hidden animate-in slide-in-from-bottom duration-500">
                     <div className="flex justify-between items-center mb-10">
                         <div className="space-y-1">
                             <h4 className="text-xs font-black uppercase tracking-widest text-primary">Strategic 7-Day Outlook</h4>
@@ -245,7 +223,7 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
                         {forecasts[selectedLocation.id].daily.time.map((date, i) => (
                             <div key={date} className="bg-base-100/50 p-6 rounded-3xl flex flex-col items-center text-center group hover:bg-base-100 transition-all border border-transparent hover:border-primary/20 shadow-sm">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-4">
-                                    {i === 0 ? 'Today' : format(new Date(date.replace(/-/g, '\/')), 'EEE')}
+                                    {i === 0 ? 'Today' : format(new Date(date.replace(/-/g, '/')), 'EEE')}
                                 </p>
                                 <Icon name={getWeatherIcon(forecasts[selectedLocation.id].daily.weathercode[i])} size={32} className="text-primary mb-4" />
                                 <div className="space-y-1">
@@ -257,7 +235,7 @@ const Weather = ({ user, notify, pageName, setPageName, showHeaders, config }) =
                     </div>
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 };
 

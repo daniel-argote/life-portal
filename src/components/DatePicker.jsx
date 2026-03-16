@@ -18,10 +18,10 @@ import Icon from './Icon';
 
 const DatePicker = ({ value, onChange, className, minDate, maxDate }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [currentMonth, setCurrentMonth] = useState(value ? new Date(value.replace(/-/g, '\/')) : new Date());
+    const [currentMonth, setCurrentMonth] = useState(value ? new Date(value.replace(/-/g, '/')) : new Date());
     const containerRef = useRef(null);
 
-    const selectedDate = value ? new Date(value.replace(/-/g, '\/')) : null;
+    const selectedDate = value ? new Date(value.replace(/-/g, '/')) : null;
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -47,8 +47,8 @@ const DatePicker = ({ value, onChange, className, minDate, maxDate }) => {
 
     const isDateDisabled = (day) => {
         const d = startOfDay(day);
-        if (minDate && isBefore(d, startOfDay(new Date(minDate.replace(/-/g, '\/'))))) return true;
-        if (maxDate && isAfter(d, startOfDay(new Date(maxDate.replace(/-/g, '\/'))))) return true;
+        if (minDate && isBefore(d, startOfDay(new Date(minDate.replace(/-/g, '/'))))) return true;
+        if (maxDate && isAfter(d, startOfDay(new Date(maxDate.replace(/-/g, '/'))))) return true;
         return false;
     };
 

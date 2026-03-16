@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
+import PageContainer from '../components/PageContainer';
 
-const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeaders, featureList, profile, fetchData, notify, darkMode, setDarkMode, style, setStyle }) => {
+const Settings = ({ user, config, updateConfig, featureList, profile, fetchData, notify, darkMode, setDarkMode, style, setStyle, resetHierarchy }) => {
     const [email, setEmail] = useState(user?.email || '');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -68,15 +68,7 @@ const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeade
     };
 
     return (
-        <div className="space-y-10 pb-20">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="System Configuration" 
-                />
-            )}
-
+        <PageContainer>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* General Config */}
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
@@ -84,19 +76,6 @@ const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeade
                         <Icon name="Settings2" size={24} className="text-emerald-500" /> General
                     </h3>
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-emerald-500/30 transition-all group">
-                            <div>
-                                <p className="font-bold dark:text-white">Show Page Headers</p>
-                                <p className="text-xs text-slate-600 font-medium mt-1">Display titles at the top of each page</p>
-                            </div>
-                            <button 
-                                onClick={() => updateConfig('showHeaders', !config.showHeaders)}
-                                className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showHeaders ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
-                            >
-                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showHeaders ? 'translate-x-6' : 'translate-x-0'}`} />
-                            </button>
-                        </div>
-
                         <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-emerald-500/30 transition-all group">
                             <div>
                                 <p className="font-bold dark:text-white">Auto-hide Sidebar</p>
@@ -107,6 +86,19 @@ const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeade
                                 className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.autoHideSidebar ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
                             >
                                 <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.autoHideSidebar ? 'translate-x-6' : 'translate-x-0'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-emerald-500/30 transition-all group">
+                            <div>
+                                <p className="font-bold dark:text-white">Welcome Banners</p>
+                                <p className="text-xs text-slate-600 font-medium mt-1">Show introductory tips on main hub pages</p>
+                            </div>
+                            <button 
+                                onClick={() => updateConfig('showWelcomes', !config.showWelcomes)}
+                                className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showWelcomes ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                            >
+                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showWelcomes ? 'translate-x-6' : 'translate-x-0'}`} />
                             </button>
                         </div>
 
@@ -139,37 +131,76 @@ const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeade
                     </div>
                 </div>
 
-                {/* Feature Management */}
-                <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+                {/* Portal Structure Management */}
+                <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm lg:col-span-2">
                     <h3 className="font-bold text-xl mb-6 dark:text-white flex items-center gap-3">
-                        <Icon name="LayoutGrid" size={24} className="text-indigo-500" /> Features
+                        <Icon name="Network" size={24} className="text-indigo-500" /> Portal Structure
                     </h3>
-                    <p className="text-xs text-slate-600 font-bold uppercase tracking-widest mb-6 px-2">Enable or hide modules</p>
-                    <div className="grid grid-cols-1 gap-3">
-                        {featureList.map(feature => {
-                            const isHidden = config.hiddenFeatures.includes(feature.id);
-                            return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest mb-6 px-2">Sidebar Preferences</p>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-indigo-500/30 transition-all group">
+                                    <div>
+                                        <p className="font-bold dark:text-white">Show Sub-features</p>
+                                        <p className="text-xs text-slate-600 font-medium mt-1">Always show nested items in sidebar (Alt+S)</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => updateConfig('showSubFeatures', !config.showSubFeatures)}
+                                        className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showSubFeatures ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                    >
+                                        <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showSubFeatures ? 'translate-x-6' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-emerald-500/30 transition-all group">
+                                    <div>
+                                        <p className="font-bold dark:text-white">Show Headers</p>
+                                        <p className="text-xs text-slate-600 font-medium mt-1">Show editable page titles and subtext</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => updateConfig('showHeaders', !config.showHeaders)}
+                                        className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showHeaders ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                    >
+                                        <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showHeaders ? 'translate-x-6' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="mt-6 flex flex-col gap-3">
                                 <button 
-                                    key={feature.id}
-                                    onClick={() => toggleFeature(feature.id)}
-                                    className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all group
-                                        ${isHidden ? 'bg-slate-50 dark:bg-slate-900 border-transparent opacity-60' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-500/30'}`}
+                                    onClick={resetHierarchy}
+                                    className="w-full p-4 rounded-xl border-2 border-indigo-500/20 text-indigo-500 font-black text-xs uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all flex items-center justify-center gap-2"
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-2 rounded-xl ${isHidden ? 'bg-slate-200 dark:bg-slate-800 text-slate-600' : 'bg-indigo-500/10 text-indigo-500'}`}>
-                                            <Icon name={feature.icon} size={18} />
-                                        </div>
-                                        <div className="text-left">
-                                            <p className={`font-bold ${isHidden ? 'text-slate-600' : 'dark:text-white'}`}>{feature.label}</p>
-                                            <p className="text-[10px] text-slate-600 font-medium uppercase tracking-tighter">{isHidden ? 'Inactive' : 'Active'}</p>
-                                        </div>
-                                    </div>
-                                    <div className={`w-10 h-6 rounded-full transition-all flex items-center px-1 ${!isHidden ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-                                        <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${!isHidden ? 'translate-x-4' : 'translate-x-0'}`} />
-                                    </div>
+                                    <Icon name="RefreshCw" size={14} /> Reset Structure to Defaults
                                 </button>
-                            );
-                        })}
+                                <button 
+                                    onClick={() => { if(window.confirm("Clear all locally cached settings? This will force a fresh sync from the database.")) { localStorage.clear(); window.location.reload(); } }}
+                                    className="w-full p-4 rounded-xl border-2 border-slate-200 text-slate-400 font-black text-xs uppercase tracking-widest hover:border-danger hover:text-danger transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Icon name="Trash2" size={14} /> Clear Local Cache
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest mb-6 px-2">Quick Promotion</p>
+                            <p className="text-[10px] text-slate-500 font-medium mb-4 px-2">Tip: Use &quot;Arrange Tabs&quot; in the sidebar to drag features into or out of groups.</p>
+                            <div className="space-y-2">
+                                {featureList.map(feature => (
+                                    <div key={feature.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                        <div className="flex items-center gap-3">
+                                            <Icon name={feature.icon} size={16} className="text-indigo-500" />
+                                            <span className="font-bold text-sm dark:text-white">{feature.label}</span>
+                                        </div>
+                                        <button 
+                                            onClick={() => toggleFeature(feature.id)}
+                                            className={`text-[10px] font-black uppercase tracking-tighter px-3 py-1 rounded-lg ${config.hiddenFeatures.includes(feature.id) ? 'bg-slate-200 text-slate-500' : 'bg-indigo-500/10 text-indigo-500'}`}
+                                        >
+                                            {config.hiddenFeatures.includes(feature.id) ? 'Hidden' : 'Visible'}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -309,7 +340,7 @@ const Settings = ({ user, pageName, setPageName, config, updateConfig, showHeade
                     {msg.text}
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 };
 

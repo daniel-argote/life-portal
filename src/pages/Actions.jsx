@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
 import DatePicker from '../components/DatePicker';
 import { format } from 'date-fns';
+import PageContainer from '../components/PageContainer';
 
-const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const Actions = ({ user, notify }) => {
     const [activeTab, setActiveTab] = useState('objectives');
     const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'list'
     const [loading, setLoading] = useState(false);
@@ -249,7 +249,7 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
                                                                 {todo.due_date && (
                                                                     <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-tighter">
                                                                         <Icon name="Calendar" size={10} />
-                                                                        {format(new Date(todo.due_date.replace(/-/g, '\/')), 'MMM d')}
+                                                                        {format(new Date(todo.due_date.replace(/-/g, '/')), 'MMM d')}
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -275,7 +275,7 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
                                 <div className={`w-2 h-2 rounded-full ${todo.status === 'done' ? 'bg-success' : todo.status === 'progress' ? 'bg-indigo-500' : 'bg-slate-300'}`} />
                                 <div className="flex-1">
                                     <p className={`font-bold ${todo.status === 'done' ? 'line-through text-slate-600' : 'text-base-content'}`}>{todo.task}</p>
-                                    {todo.due_date && <p className="text-[10px] font-black text-primary uppercase mt-1">Due {format(new Date(todo.due_date.replace(/-/g, '\/')), 'MMMM do')}</p>}
+                                    {todo.due_date && <p className="text-[10px] font-black text-primary uppercase mt-1">Due {format(new Date(todo.due_date.replace(/-/g, '/')), 'MMMM do')}</p>}
                                 </div>
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); deleteTodo(todo.id); }} 
@@ -345,7 +345,7 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
                                         <span className="bg-primary/10 text-primary p-1.5 rounded-lg"><Icon name="Star" size={16} /></span>
                                         <h4 className="text-2xl font-black text-base-content">{goal.title}</h4>
                                     </div>
-                                    {goal.target_date && <p className="text-[10px] font-black text-primary uppercase tracking-widest">Target: {format(new Date(goal.target_date.replace(/-/g, '\/')), 'MMMM yyyy')}</p>}
+                                    {goal.target_date && <p className="text-[10px] font-black text-primary uppercase tracking-widest">Target: {format(new Date(goal.target_date.replace(/-/g, '/')), 'MMMM yyyy')}</p>}
                                 </div>
                                 <button onClick={() => deleteGoal(goal.id)} className="text-slate-600 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-2">
                                     <Icon name="Trash2" size={20} />
@@ -360,15 +360,7 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
     };
 
     return (
-        <div className="space-y-8 pb-20">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="Milestones & Missions" 
-                />
-            )}
-
+        <PageContainer>
             <div className="flex gap-2 p-1 bg-base-200 rounded-2xl w-fit border border-base-300">
                 {[
                     { id: 'objectives', label: 'Objectives', icon: 'CheckSquare' },
@@ -397,7 +389,7 @@ const Actions = ({ user, notify, pageName, setPageName, showHeaders }) => {
                     onSave={updateTodo} 
                 />
             )}
-        </div>
+        </PageContainer>
     );
 };
 

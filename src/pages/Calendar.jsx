@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import EditableHeader from '../components/EditableHeader';
+import PageContainer from '../components/PageContainer';
 import { 
     format, 
     startOfMonth, 
@@ -12,11 +12,10 @@ import {
     isSameMonth, 
     isSameDay, 
     addMonths, 
-    subMonths,
-    parseISO
+    subMonths
 } from 'date-fns';
 
-const Calendar = ({ user, notify, pageName, setPageName, showHeaders }) => {
+const Calendar = ({ user, notify }) => {
     const [events, setEvents] = useState([]);
     const [bills, setBills] = useState([]);
     const [todos, setTodos] = useState([]);
@@ -92,15 +91,7 @@ const Calendar = ({ user, notify, pageName, setPageName, showHeaders }) => {
     };
 
     return (
-        <div className="space-y-8 pb-10">
-            {showHeaders && (
-                <EditableHeader 
-                    value={pageName} 
-                    onSave={setPageName} 
-                    subtext="Event Management" 
-                />
-            )}
-
+        <PageContainer>
             <div className="flex items-center justify-between bg-base-200 p-4 rounded-[2rem] border border-base-300 shadow-sm">
                 <div className="flex items-center gap-4">
                     <button onClick={prevMonth} className="p-2 hover:bg-base-300 rounded-full transition-colors text-slate-600"><Icon name="ChevronLeft" size={20} /></button>
@@ -127,10 +118,10 @@ const Calendar = ({ user, notify, pageName, setPageName, showHeaders }) => {
                 </div>
 
                 <div className="grid grid-cols-7">
-                    {calendarDays.map((day, idx) => {
+                    {calendarDays.map((day) => {
                         const isToday = isSameDay(day, new Date());
                         const isCurrentMonth = isSameMonth(day, monthStart);
-                        const formatDate = (d) => new Date(d.replace(/-/g, '\/'));
+                        const formatDate = (d) => new Date(d.replace(/-/g, '/'));
 
                         return (
                             <div key={day.toString()} onClick={() => openFormForDate(day)} className={`min-h-[140px] p-2 border-r border-b border-base-300 last:border-r-0 cursor-pointer transition-all hover:bg-base-300/50 group ${!isCurrentMonth ? 'opacity-20' : ''}`}>
@@ -179,7 +170,7 @@ const Calendar = ({ user, notify, pageName, setPageName, showHeaders }) => {
                     })}
                 </div>
             </div>
-        </div>
+        </PageContainer>
     );
 };
 
