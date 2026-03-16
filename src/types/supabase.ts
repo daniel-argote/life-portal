@@ -389,22 +389,31 @@ export type Database = {
         Row: {
           balance: number | null
           created_at: string | null
+          due_day: number | null
           id: string
           name: string
+          position: number | null
+          statement_balance: number | null
           user_id: string
         }
         Insert: {
           balance?: number | null
           created_at?: string | null
+          due_day?: number | null
           id?: string
           name: string
+          position?: number | null
+          statement_balance?: number | null
           user_id: string
         }
         Update: {
           balance?: number | null
           created_at?: string | null
+          due_day?: number | null
           id?: string
           name?: string
+          position?: number | null
+          statement_balance?: number | null
           user_id?: string
         }
         Relationships: []
@@ -417,6 +426,7 @@ export type Database = {
           id: string
           is_paid: boolean | null
           name: string
+          position: number | null
           user_id: string
         }
         Insert: {
@@ -426,6 +436,7 @@ export type Database = {
           id?: string
           is_paid?: boolean | null
           name: string
+          position?: number | null
           user_id: string
         }
         Update: {
@@ -435,6 +446,7 @@ export type Database = {
           id?: string
           is_paid?: boolean | null
           name?: string
+          position?: number | null
           user_id?: string
         }
         Relationships: []
@@ -445,6 +457,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_paid: boolean | null
+          position: number | null
           title: string
           user_id: string
           week_id: string
@@ -454,6 +467,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_paid?: boolean | null
+          position?: number | null
           title: string
           user_id: string
           week_id: string
@@ -463,6 +477,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_paid?: boolean | null
+          position?: number | null
           title?: string
           user_id?: string
           week_id?: string
@@ -481,18 +496,21 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          position: number | null
           start_date: string
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
+          position?: number | null
           start_date: string
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
+          position?: number | null
           start_date?: string
           user_id?: string
         }
