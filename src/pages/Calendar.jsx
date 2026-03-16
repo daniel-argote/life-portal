@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
+import PageContainer from '../components/PageContainer';
 import { 
     format, 
     startOfMonth, 
@@ -91,7 +92,7 @@ const Calendar = ({ user, notify }) => {
     };
 
     return (
-        <div className="space-y-8 pb-10">
+        <PageContainer>
             <div className="flex items-center justify-between bg-base-200 p-4 rounded-[2rem] border border-base-300 shadow-sm">
                 <div className="flex items-center gap-4">
                     <button onClick={prevMonth} className="p-2 hover:bg-base-300 rounded-full transition-colors text-slate-600"><Icon name="ChevronLeft" size={20} /></button>
@@ -170,7 +171,7 @@ const Calendar = ({ user, notify }) => {
                     })}
                 </div>
             </div>
-        </div>
+        </PageContainer>
     );
 };
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import { format, addDays, parseISO, getDay, subDays, startOfDay } from 'date-fns';
+import PageContainer from '../components/PageContainer';
 
 const MoneyLedger = ({ user, notify, config }) => {
     const [weeks, setWeeks] = useState([]);
@@ -87,10 +88,9 @@ const MoneyLedger = ({ user, notify, config }) => {
     const paidTotal = weekItems.filter(i => i.is_paid).reduce((acc, item) => acc + Number(item.amount), 0);
 
     return (
-        <div className="space-y-8 pb-20">
+        <PageContainer>
             <header className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <h3 className="text-xl font-black tracking-tighter text-base-content">Weekly Ledger</h3>
                     {activeWeek && (
                         <div className="flex items-center gap-2 bg-base-200 rounded-lg p-1">
                             <button onClick={() => setActiveWeekIndex(Math.min(weeks.length - 1, activeWeekIndex + 1))} disabled={activeWeekIndex >= weeks.length - 1} className="p-2 hover:bg-base-300 rounded-md disabled:opacity-30 transition-colors"><Icon name="ChevronLeft" size={16} /></button>
@@ -143,7 +143,7 @@ const MoneyLedger = ({ user, notify, config }) => {
                     </button>
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 };
 

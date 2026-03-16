@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
+import PageContainer from '../components/PageContainer';
 
 const HealthMetrics = ({ user, notify }) => {
     const [items, setItems] = useState([]);
@@ -34,7 +35,7 @@ const HealthMetrics = ({ user, notify }) => {
     };
 
     return (
-        <div className="space-y-8 pb-20">
+        <PageContainer>
             <form onSubmit={handleSubmit} className="bg-base-200 p-6 rounded-[2rem] border border-base-300 shadow-sm flex flex-col md:flex-row gap-4">
                 <select
                     className="bg-base-100 p-4 rounded-xl font-bold outline-none text-base-content min-w-[140px]"
@@ -73,7 +74,7 @@ const HealthMetrics = ({ user, notify }) => {
                     </div>
                 ))}
             </div>
-        </div>
+        </PageContainer>
     );
 };
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import { format, startOfWeek, addDays, eachDayOfInterval } from 'date-fns';
+import PageContainer from '../components/PageContainer';
 
 const FoodPlanner = ({ user, notify }) => {
     const [mealPlan, setMealPlan] = useState([]);
@@ -48,7 +49,7 @@ const FoodPlanner = ({ user, notify }) => {
     const days = eachDayOfInterval({ start, end: addDays(start, 6) });
 
     return (
-        <div className="space-y-8 pb-20">
+        <PageContainer>
             <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
                 {days.map(day => {
                     const dateStr = format(day, 'yyyy-MM-dd');
@@ -137,7 +138,7 @@ const FoodPlanner = ({ user, notify }) => {
                     </form>
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 };
 

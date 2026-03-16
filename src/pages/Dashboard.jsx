@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import { format } from 'date-fns';
 import { getWeatherIcon } from './Weather';
+import PageContainer from '../components/PageContainer';
 
 const Dashboard = ({ vault, logs, todos, events, user, config, dashboardWidgets, updateDashboardWidgets }) => {
     const [widgets, setWidgets] = useState([]);
@@ -186,7 +187,7 @@ const Dashboard = ({ vault, logs, todos, events, user, config, dashboardWidgets,
     };
 
     return (
-        <div className="space-y-10 pb-20">
+        <PageContainer>
             <div className="flex justify-end items-start">
                 <button 
                     onClick={() => setShowWidgetStore(true)}
@@ -290,7 +291,7 @@ const Dashboard = ({ vault, logs, todos, events, user, config, dashboardWidgets,
                     </div>
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 };
 

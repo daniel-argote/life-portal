@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Icon from '../components/Icon';
+import PageContainer from '../components/PageContainer';
 
 const Assistant = ({ user, notify, profile, logs, vault, todos, events }) => {
     const [messages, setMessages] = useState([
@@ -117,7 +118,7 @@ const Assistant = ({ user, notify, profile, logs, vault, todos, events }) => {
     const hasKey = !!(profile?.gemini_api_key || import.meta.env.VITE_GEMINI_API_KEY);
 
     return (
-        <div className="flex flex-col h-[calc(100vh-12rem)] max-w-4xl mx-auto space-y-6">
+        <PageContainer className="flex flex-col h-[calc(100vh-12rem)] max-w-4xl mx-auto !space-y-6">
             <div className="flex justify-end items-start">
                 <button 
                     onClick={debugModels}
@@ -214,7 +215,7 @@ const Assistant = ({ user, notify, profile, logs, vault, todos, events }) => {
                     </form>
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 };
 

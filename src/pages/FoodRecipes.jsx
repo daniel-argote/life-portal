@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import { scaleAmount } from '../lib/foodUtils';
+import PageContainer from '../components/PageContainer';
 
 const FoodRecipes = ({ user, notify }) => {
     const [recipes, setRecipes] = useState([]);
@@ -93,7 +94,7 @@ const FoodRecipes = ({ user, notify }) => {
     };
 
     return (
-        <div className="space-y-8 pb-20">
+        <PageContainer>
             <div className="flex justify-between items-center">
                 <h3 className="text-2xl font-black text-base-content">Recipe Vault</h3>
                 {!showForm && (
@@ -189,7 +190,7 @@ const FoodRecipes = ({ user, notify }) => {
                     );
                 })}
             </div>
-        </div>
+        </PageContainer>
     );
 };
 

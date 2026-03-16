@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
+import PageContainer from '../components/PageContainer';
 
 const MoneyAccounts = ({ user, notify }) => {
     const [accounts, setAccounts] = useState([]);
@@ -52,11 +53,7 @@ const MoneyAccounts = ({ user, notify }) => {
     };
 
     return (
-        <div className="space-y-8 pb-20">
-            <header className="flex justify-between items-end">
-                <h3 className="text-xl font-black tracking-tighter text-base-content">Manage Accounts</h3>
-            </header>
-            
+        <PageContainer>
             <DragDropContext onDragEnd={handleOnDragEnd}>
                 <Droppable droppableId="accounts" direction="horizontal">
                     {(provided) => (
@@ -113,7 +110,7 @@ const MoneyAccounts = ({ user, notify }) => {
                     )}
                 </Droppable>
             </DragDropContext>
-        </div>
+        </PageContainer>
     );
 };
 

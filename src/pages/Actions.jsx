@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import DatePicker from '../components/DatePicker';
 import { format } from 'date-fns';
+import PageContainer from '../components/PageContainer';
 
 const Actions = ({ user, notify }) => {
     const [activeTab, setActiveTab] = useState('objectives');
@@ -359,7 +360,7 @@ const Actions = ({ user, notify }) => {
     };
 
     return (
-        <div className="space-y-8 pb-20">
+        <PageContainer>
             <div className="flex gap-2 p-1 bg-base-200 rounded-2xl w-fit border border-base-300">
                 {[
                     { id: 'objectives', label: 'Objectives', icon: 'CheckSquare' },
@@ -388,7 +389,7 @@ const Actions = ({ user, notify }) => {
                     onSave={updateTodo} 
                 />
             )}
-        </div>
+        </PageContainer>
     );
 };
 

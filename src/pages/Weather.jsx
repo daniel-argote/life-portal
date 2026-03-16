@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { format } from 'date-fns';
 import Icon from '../components/Icon';
+import PageContainer from '../components/PageContainer';
 
 export const getWeatherIcon = (code) => {
     if (code === 0) return 'Sun';
@@ -118,7 +119,7 @@ const Weather = ({ user, notify, config }) => {
     };
 
     return (
-        <div className="space-y-8 pb-20">
+        <PageContainer>
             {/* Locations Dashboard Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {locations.map(loc => {
@@ -223,7 +224,7 @@ const Weather = ({ user, notify, config }) => {
 
             {/* Detailed Forecast for Selected Location */}
             {selectedLocation && forecasts[selectedLocation.id] && (
-                <div className="fade-in bg-base-200 p-10 rounded-[3rem] border border-base-300 shadow-sm relative overflow-hidden animate-in slide-in-from-bottom duration-500">
+                <div className="bg-base-200 p-10 rounded-[3rem] border border-base-300 shadow-sm relative overflow-hidden animate-in slide-in-from-bottom duration-500">
                     <div className="flex justify-between items-center mb-10">
                         <div className="space-y-1">
                             <h4 className="text-xs font-black uppercase tracking-widest text-primary">Strategic 7-Day Outlook</h4>
@@ -248,7 +249,7 @@ const Weather = ({ user, notify, config }) => {
                     </div>
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 };
 

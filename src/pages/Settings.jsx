@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
+import PageContainer from '../components/PageContainer';
 
 const Settings = ({ user, config, updateConfig, featureList, profile, fetchData, notify, darkMode, setDarkMode, style, setStyle, resetHierarchy }) => {
     const [email, setEmail] = useState(user?.email || '');
@@ -67,7 +68,7 @@ const Settings = ({ user, config, updateConfig, featureList, profile, fetchData,
     };
 
     return (
-        <div className="space-y-10 pb-20">
+        <PageContainer>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* General Config */}
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
@@ -75,19 +76,6 @@ const Settings = ({ user, config, updateConfig, featureList, profile, fetchData,
                         <Icon name="Settings2" size={24} className="text-emerald-500" /> General
                     </h3>
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-emerald-500/30 transition-all group">
-                            <div>
-                                <p className="font-bold dark:text-white">Show Page Headers</p>
-                                <p className="text-xs text-slate-600 font-medium mt-1">Display titles at the top of each page</p>
-                            </div>
-                            <button 
-                                onClick={() => updateConfig('showHeaders', !config.showHeaders)}
-                                className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showHeaders ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
-                            >
-                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showHeaders ? 'translate-x-6' : 'translate-x-0'}`} />
-                            </button>
-                        </div>
-
                         <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-emerald-500/30 transition-all group">
                             <div>
                                 <p className="font-bold dark:text-white">Auto-hide Sidebar</p>
@@ -138,17 +126,31 @@ const Settings = ({ user, config, updateConfig, featureList, profile, fetchData,
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <p className="text-xs text-slate-600 font-bold uppercase tracking-widest mb-6 px-2">Sidebar Preferences</p>
-                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-indigo-500/30 transition-all group">
-                                <div>
-                                    <p className="font-bold dark:text-white">Show Sub-features</p>
-                                    <p className="text-xs text-slate-600 font-medium mt-1">Always show nested items in sidebar (Alt+S)</p>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-indigo-500/30 transition-all group">
+                                    <div>
+                                        <p className="font-bold dark:text-white">Show Sub-features</p>
+                                        <p className="text-xs text-slate-600 font-medium mt-1">Always show nested items in sidebar (Alt+S)</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => updateConfig('showSubFeatures', !config.showSubFeatures)}
+                                        className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showSubFeatures ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                    >
+                                        <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showSubFeatures ? 'translate-x-6' : 'translate-x-0'}`} />
+                                    </button>
                                 </div>
-                                <button 
-                                    onClick={() => updateConfig('showSubFeatures', !config.showSubFeatures)}
-                                    className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showSubFeatures ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'}`}
-                                >
-                                    <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showSubFeatures ? 'translate-x-6' : 'translate-x-0'}`} />
-                                </button>
+                                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-emerald-500/30 transition-all group">
+                                    <div>
+                                        <p className="font-bold dark:text-white">Show Headers</p>
+                                        <p className="text-xs text-slate-600 font-medium mt-1">Show editable page titles and subtext</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => updateConfig('showHeaders', !config.showHeaders)}
+                                        className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${config.showHeaders ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                    >
+                                        <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${config.showHeaders ? 'translate-x-6' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
                             </div>
                             <div className="mt-6 flex flex-col gap-3">
                                 <button 
@@ -325,7 +327,7 @@ const Settings = ({ user, config, updateConfig, featureList, profile, fetchData,
                     {msg.text}
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 };
 

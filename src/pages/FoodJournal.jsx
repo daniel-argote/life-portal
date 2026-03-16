@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
+import PageContainer from '../components/PageContainer';
 import { startOfWeek, addDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 
 const FoodJournal = ({ user, notify }) => {
@@ -48,7 +49,7 @@ const FoodJournal = ({ user, notify }) => {
     const homeCookedCount = weekMeals.filter(m => m.is_home_cooked).length;
 
     return (
-        <div className="space-y-8 pb-20">
+        <PageContainer>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
                     <form onSubmit={handleSubmit} className="bg-base-200 p-6 rounded-[2rem] border border-base-300 shadow-sm flex flex-col gap-4">
@@ -122,7 +123,7 @@ const FoodJournal = ({ user, notify }) => {
                     </div>
                 ))}
             </div>
-        </div>
+        </PageContainer>
     );
 };
 
