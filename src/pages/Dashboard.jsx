@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import { format } from 'date-fns';
-import { getWeatherIcon } from './Weather';
+import { getWeatherIcon } from '../lib/weatherUtils';
 import PageContainer from '../components/PageContainer';
 
 const Dashboard = ({ vault, logs, todos, events, user, config, dashboardWidgets, updateDashboardWidgets }) => {
