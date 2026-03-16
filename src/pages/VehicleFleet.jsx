@@ -8,6 +8,7 @@ const VehicleFleet = ({ user, notify }) => {
     const [fleet, setFleet] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showAdd, setShowAdd] = useState(false);
+    const [editingVehicleId, setEditingVehicleId] = useState(null);
     const [form, setForm] = useState({ 
         name: '', make: '', model: '', year: new Date().getFullYear(), vin: '',
         category: 'car', style: ''
@@ -61,26 +62,54 @@ const VehicleFleet = ({ user, notify }) => {
         return data.publicUrl;
     };
 
+    const startEdit = (vehicle) => {
+        setForm({
+            name: vehicle.name,
+            make: vehicle.make || '',
+            model: vehicle.model || '',
+            year: vehicle.year || new Date().getFullYear(),
+            vin: vehicle.vin || '',
+            category: vehicle.category || 'car',
+            style: vehicle.style || ''
+        });
+        setEditingVehicleId(vehicle.id);
+        setImagePreview(vehicle.image_url);
+        setShowAdd(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const handleAdd = async (e) => {
         e.preventDefault();
         if (!form.name) return;
         setLoading(true);
         setUploading(true);
         try {
-            const { data: v, error: err } = await supabase.from('vehicles').insert([{ ...form, user_id: user.id }]).select().single();
-            if (err) throw err;
+            let v;
+            if (editingVehicleId) {
+                const { data, error: err } = await supabase.from('vehicles').update({ ...form }).eq('id', editingVehicleId).select().single();
+                if (err) throw err;
+                v = data;
+            } else {
+                const { data, error: err } = await supabase.from('vehicles').insert([{ ...form, user_id: user.id }]).select().single();
+                if (err) throw err;
+                v = data;
+            }
+
             if (imageFile) {
                 const url = await handleUpload(imageFile, v.id);
                 if (url) await supabase.from('vehicles').update({ image_url: url }).eq('id', v.id);
             }
+
             setForm({ name: '', make: '', model: '', year: new Date().getFullYear(), vin: '', category: 'car', style: '' });
             setImageFile(null);
             setImagePreview(null);
+            setEditingVehicleId(null);
             setShowAdd(false);
             fetchData();
-            if (notify) notify('Vehicle added to fleet');
+            notify(editingVehicleId ? 'Vehicle updated' : 'Vehicle added to fleet');
         } catch (err) {
-            if (notify) notify('Error adding vehicle', 'error');
+            console.error(err);
+            notify('Error saving vehicle', 'error');
         } finally {
             setLoading(false);
             setUploading(false);
@@ -103,7 +132,18 @@ const VehicleFleet = ({ user, notify }) => {
         <PageContainer>
             <div className="flex justify-between items-center">
                 <h3 className="text-2xl font-black text-base-content">The Fleet</h3>
-                <button onClick={() => { setShowAdd(!showAdd); setImagePreview(null); setImageFile(null); }} className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-primary hover:text-primary-content transition-all">
+                <button 
+                    onClick={() => { 
+                        if (!showAdd) {
+                            setEditingVehicleId(null);
+                            setForm({ name: '', make: '', model: '', year: new Date().getFullYear(), vin: '', category: 'car', style: '' });
+                            setImagePreview(null);
+                            setImageFile(null);
+                        }
+                        setShowAdd(!showAdd); 
+                    }} 
+                    className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-primary hover:text-primary-content transition-all"
+                >
                     <Icon name={showAdd ? "X" : "Plus"} size={18} />
                     {showAdd ? "Cancel" : "Add Vehicle"}
                 </button>
@@ -171,7 +211,10 @@ const VehicleFleet = ({ user, notify }) => {
                                     <h4 className="text-2xl font-black text-base-content">{v.name}</h4>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{v.year} {v.make} {v.model}</p>
                                 </div>
-                                <button onClick={() => deleteVehicle(v.id, v.image_url)} className="text-slate-400 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-2"><Icon name="Trash2" size={20} /></button>
+                                <div className="flex gap-2">
+                                    <button onClick={() => startEdit(v)} className="text-slate-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-all p-2"><Icon name="Pencil" size={20} /></button>
+                                    <button onClick={() => deleteVehicle(v.id, v.image_url)} className="text-slate-400 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-2"><Icon name="Trash2" size={20} /></button>
+                                </div>
                             </div>
                             {v.vin && <p className="text-[10px] font-mono text-slate-400 bg-base-300/50 w-fit px-2 py-1 rounded">VIN: {v.vin}</p>}
                         </div>
