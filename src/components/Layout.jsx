@@ -26,7 +26,9 @@ import FoodJournal from '../pages/FoodJournal';
 import FoodPlanner from '../pages/FoodPlanner';
 import FoodRecipes from '../pages/FoodRecipes';
 import FoodInventory from '../pages/FoodInventory';
-import Calendar from '../pages/Calendar';
+import CalendarHub from '../pages/CalendarHub';
+import CalendarGrid from '../pages/CalendarGrid';
+import CalendarTimeline from '../pages/CalendarTimeline';
 import Vehicles from '../pages/Vehicles';
 import VehicleFleet from '../pages/VehicleFleet';
 import VehicleServiceLog from '../pages/VehicleServiceLog';
@@ -63,7 +65,9 @@ const PAGE_MAP = {
     food_planner: FoodPlanner,
     food_recipes: FoodRecipes,
     food_inventory: FoodInventory,
-    calendar: Calendar,
+    calendar: CalendarHub,
+    calendar_grid: CalendarGrid,
+    calendar_timeline: CalendarTimeline,
     vehicles: Vehicles,
     vehicle_fleet: VehicleFleet,
     vehicle_service: VehicleServiceLog,
@@ -256,7 +260,7 @@ const Layout = ({ user }) => {
             { data: f }, { data: inv }, { data: mp },
             { data: accs }, { data: bls }, { data: appts }, { data: rl }, { data: bio },
             { data: trips }, { data: days }, { data: bucket }, { data: pois }, { data: pack },
-            { data: chr }, { data: chist }
+            { data: chr }, { data: chist }, { data: hk }, { data: cmp }
         ] = await Promise.all([
             supabase.from('logs').select('*').order('created_at', { ascending: false }),
             supabase.from('vault').select('*').order('updated_at', { ascending: false }),
@@ -438,6 +442,8 @@ const Layout = ({ user }) => {
         if (tab === 'dashboard') return 'Your Personal Command Center';
         if (tab === 'food_journal') return 'Daily Nutrition Log';
         if (tab === 'food_inventory') return 'Kitchen Stock Tracking';
+        if (tab === 'calendar_grid') return 'Monthly Planning Grid';
+        if (tab === 'calendar_timeline') return 'Chronological Event Flow';
         if (tab === 'food_recipes') return 'Your Culinary Library';
         if (tab === 'food_planner') return 'Weekly Meal Schedule';
         if (tab === 'action_objectives') return 'Mission Control & Tasks';
