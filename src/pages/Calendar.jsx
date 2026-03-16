@@ -12,8 +12,7 @@ import {
     isSameMonth, 
     isSameDay, 
     addMonths, 
-    subMonths,
-    parseISO
+    subMonths
 } from 'date-fns';
 
 const Calendar = ({ user, notify }) => {
@@ -119,10 +118,10 @@ const Calendar = ({ user, notify }) => {
                 </div>
 
                 <div className="grid grid-cols-7">
-                    {calendarDays.map((day, idx) => {
+                    {calendarDays.map((day) => {
                         const isToday = isSameDay(day, new Date());
                         const isCurrentMonth = isSameMonth(day, monthStart);
-                        const formatDate = (d) => new Date(d.replace(/-/g, '\/'));
+                        const formatDate = (d) => new Date(d.replace(/-/g, '/'));
 
                         return (
                             <div key={day.toString()} onClick={() => openFormForDate(day)} className={`min-h-[140px] p-2 border-r border-b border-base-300 last:border-r-0 cursor-pointer transition-all hover:bg-base-300/50 group ${!isCurrentMonth ? 'opacity-20' : ''}`}>

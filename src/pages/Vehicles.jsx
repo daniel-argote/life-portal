@@ -1,6 +1,5 @@
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
-import { VehiclePlaceholder } from '../components/VehicleIcons';
 import { format } from 'date-fns';
 
 const Vehicles = ({ vehicles = [], vehicleRecords = [], config = {}, dismissWelcome }) => {
@@ -56,7 +55,7 @@ const Vehicles = ({ vehicles = [], vehicleRecords = [], config = {}, dismissWelc
                     {latestRecord ? (
                         <div className="bg-base-100 p-6 rounded-3xl border border-base-300/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                                <p className="text-[10px] font-black uppercase text-indigo-500 mb-1">{latestRecord.type} • {format(new Date(latestRecord.date.replace(/-/g, '\/')), 'MMM do')}</p>
+                                <p className="text-[10px] font-black uppercase text-indigo-500 mb-1">{latestRecord.type} • {format(new Date(latestRecord.date.replace(/-/g, '/')), 'MMM do')}</p>
                                 <h4 className="text-xl font-black text-base-content">{latestRecord.description}</h4>
                                 <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-widest">{latestRecord.vehicles?.name}</p>
                             </div>

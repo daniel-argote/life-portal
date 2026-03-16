@@ -30,6 +30,10 @@ import VehicleServiceLog from '../pages/VehicleServiceLog';
 import Weather from '../pages/Weather';
 import Assistant from '../pages/Assistant';
 import Settings from '../pages/Settings';
+import Travel from '../pages/Travel';
+import TravelTrips from '../pages/TravelTrips';
+import TravelBucket from '../pages/TravelBucket';
+import TravelPacking from '../pages/TravelPacking';
 
 const PAGE_MAP = {
     dashboard: Dashboard,
@@ -55,6 +59,10 @@ const PAGE_MAP = {
     vehicle_fleet: VehicleFleet,
     vehicle_service: VehicleServiceLog,
     weather: Weather,
+    travel: Travel,
+    travel_trips: TravelTrips,
+    travel_bucket: TravelBucket,
+    travel_packing: TravelPacking,
     assistant: Assistant,
     settings: Settings
 };
@@ -111,6 +119,16 @@ const DEFAULT_HIERARCHY = [
             { id: 'vehicle_service', icon: 'Wrench', label: 'Service Log' }
         ]
     },
+    { 
+        id: 'travel', 
+        icon: 'Plane', 
+        label: 'Travel',
+        children: [
+            { id: 'travel_trips', icon: 'Compass', label: 'Trip Planner' },
+            { id: 'travel_bucket', icon: 'Star', label: 'Bucket List' },
+            { id: 'travel_packing', icon: 'Briefcase', label: 'Packing' }
+        ]
+    },
     { id: 'weather', icon: 'CloudSun', label: 'Weather' },
     { id: 'assistant', icon: 'Bot', label: 'Assistant' }
 ];
@@ -145,9 +163,12 @@ const Layout = ({ user }) => {
     const [bills, setBills] = useState([]);
     const [appointments, setAppointments] = useState([]);
     const [biometrics, setBiometrics] = useState([]);
-    const [vehicles, setVehicles] = useState([]);
-    const [vehicleRecords, setVehicleRecords] = useState([]);
     const [readingList, setReadingList] = useState([]);
+    const [travelTrips, setTravelTrips] = useState([]);
+    const [travelDays, setTravelDays] = useState([]);
+    const [travelBucketList, setTravelBucketList] = useState([]);
+    const [travelPoi, setTravelPoi] = useState([]);
+    const [travelPacking, setTravelPacking] = useState([]);
     const [dashboardWidgets, setDashboardWidgets] = useState([]);
     const [profile, setProfile] = useState(null);
     const [input, setInput] = useState("");
@@ -199,7 +220,8 @@ const Layout = ({ user }) => {
         const [
             { data: l }, { data: v }, { data: t }, { data: e },
             { data: f }, { data: inv }, { data: mp },
-            { data: accs }, { data: bls }, { data: appts }, { data: rl }, { data: bio }
+            { data: accs }, { data: bls }, { data: appts }, { data: rl }, { data: bio },
+            { data: trips }, { data: days }, { data: bucket }, { data: pois }, { data: pack }
         ] = await Promise.all([
             supabase.from('logs').select('*').order('created_at', { ascending: false }),
             supabase.from('vault').select('*').order('updated_at', { ascending: false }),
@@ -212,7 +234,12 @@ const Layout = ({ user }) => {
             supabase.from('money_bills').select('*').order('due_date', { ascending: true }),
             supabase.from('health_appointments').select('*').order('date', { ascending: true }),
             supabase.from('reading_list').select('*').order('created_at', { ascending: false }),
-            supabase.from('health').select('*').order('created_at', { ascending: false })
+            supabase.from('health').select('*').order('created_at', { ascending: false }),
+            supabase.from('travel_trips').select('*').order('start_date', { ascending: true }),
+            supabase.from('travel_days').select('*').order('date', { ascending: true }),
+            supabase.from('travel_bucket_list').select('*').order('priority', { ascending: false }),
+            supabase.from('travel_poi').select('*').order('created_at', { ascending: false }),
+            supabase.from('travel_packing').select('*').order('category', { ascending: true })
         ]);
 
         setLogs(l || []);
@@ -227,12 +254,17 @@ const Layout = ({ user }) => {
         setAppointments(appts || []);
         setReadingList(rl || []);
         setBiometrics(bio || []);
+        setTravelTrips(trips || []);
+        setTravelDays(days || []);
+        setTravelBucketList(bucket || []);
+        setTravelPoi(pois || []);
+        setTravelPacking(pack || []);
     }, [user]);
 
     useEffect(() => { if (user) fetchData(); }, [user, fetchData]);
 
     // Save changes to Supabase
-    const saveProfileUpdate = async (updates) => {
+    const saveProfileUpdate = useCallback(async (updates) => {
         if (!user) return;
         const { error } = await supabase
             .from('profiles')
@@ -241,7 +273,7 @@ const Layout = ({ user }) => {
             console.error("Profile sync error:", error);
             notify("Sync failed", "error");
         }
-    };
+    }, [user, notify]);
 
     const updatePageName = (id, newName) => {
         const newNames = { ...pageNames, [id]: newName };
@@ -249,11 +281,13 @@ const Layout = ({ user }) => {
         saveProfileUpdate({ page_names: newNames });
     };
 
-    const updateConfig = (key, value) => {
-        const newConfig = { ...config, [key]: value };
-        setConfig(newConfig);
-        saveProfileUpdate({ portal_config: newConfig });
-    };
+    const updateConfig = useCallback((key, value) => {
+        setConfig(prev => {
+            const newConfig = { ...prev, [key]: value };
+            saveProfileUpdate({ portal_config: newConfig });
+            return newConfig;
+        });
+    }, [saveProfileUpdate]);
 
     const updateHierarchy = (newHierarchy) => {
         setHierarchy(newHierarchy);
@@ -317,7 +351,7 @@ const Layout = ({ user }) => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [config.showSubFeatures]);
+    }, [config.showSubFeatures, updateConfig]);
 
     const addLog = async () => {
         if (!input.trim()) return;
@@ -372,6 +406,9 @@ const Layout = ({ user }) => {
         if (tab === 'knowledge_reading') return 'Resource Queue';
         if (tab === 'vehicle_fleet') return 'Fleet Management';
         if (tab === 'vehicle_service') return 'Service & Maintenance History';
+        if (tab === 'travel_trips') return 'Itinerary & Trip Planner';
+        if (tab === 'travel_bucket') return 'Global Wishlist';
+        if (tab === 'travel_packing') return 'Checklists & Essentials';
         if (tab === 'settings') return 'System Configuration';
         if (tab === 'assistant') return 'AI Support Agent';
         

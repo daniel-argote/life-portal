@@ -183,7 +183,7 @@ const Settings = ({ user, config, updateConfig, featureList, profile, fetchData,
 
                         <div>
                             <p className="text-xs text-slate-600 font-bold uppercase tracking-widest mb-6 px-2">Quick Promotion</p>
-                            <p className="text-[10px] text-slate-500 font-medium mb-4 px-2">Tip: Use "Arrange Tabs" in the sidebar to drag features into or out of groups.</p>
+                            <p className="text-[10px] text-slate-500 font-medium mb-4 px-2">Tip: Use &quot;Arrange Tabs&quot; in the sidebar to drag features into or out of groups.</p>
                             <div className="space-y-2">
                                 {featureList.map(feature => (
                                     <div key={feature.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">

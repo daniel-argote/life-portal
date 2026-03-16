@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
 
-const Assistant = ({ user, notify, profile, logs, vault, todos, events }) => {
+const Assistant = ({ notify, profile, logs, vault, todos, events }) => {
     const [messages, setMessages] = useState([
         { role: 'assistant', text: "Hello! I'm your Portal Assistant. How can I help you manage your day?" }
     ]);
@@ -17,7 +17,7 @@ const Assistant = ({ user, notify, profile, logs, vault, todos, events }) => {
 
     const debugModels = async () => {
         const rawKey = profile?.gemini_api_key || import.meta.env.VITE_GEMINI_API_KEY;
-        const sanitizedKey = rawKey?.replace(/[^a-zA-Z0-9_\-]/g, '');
+        const sanitizedKey = rawKey?.replace(/[^a-zA-Z0-9_-]/g, '');
         if (!sanitizedKey) return notify("No key to test", "error");
         
         try {
@@ -41,7 +41,7 @@ const Assistant = ({ user, notify, profile, logs, vault, todos, events }) => {
             return;
         }
 
-        const sanitizedKey = rawKey.replace(/[^a-zA-Z0-9_\-]/g, '');
+        const sanitizedKey = rawKey.replace(/[^a-zA-Z0-9_-]/g, '');
         
         const userMessage = { role: 'user', text: input };
         setMessages(prev => [...prev, userMessage]);
@@ -138,7 +138,7 @@ const Assistant = ({ user, notify, profile, logs, vault, todos, events }) => {
                         
                         <div className="space-y-2">
                             <h3 className="text-2xl font-black dark:text-white">Activate Assistant</h3>
-                            <p className="text-slate-600 font-bold text-sm">To use the AI features, you'll need to link a Gemini API key.</p>
+                            <p className="text-slate-600 font-bold text-sm">To use the AI features, you&apos;ll need to link a Gemini API key.</p>
                         </div>
 
                         <div className="space-y-4 text-left">

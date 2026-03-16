@@ -67,7 +67,7 @@ const MoneyBills = ({ user, notify }) => {
                         </button>
                         <div className="flex-1">
                             <h4 className={`text-xl font-black ${bill.is_paid ? 'line-through text-slate-600' : 'text-base-content'}`}>{bill.name}</h4>
-                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">Due {new Date(bill.due_date.replace(/-/g, '\/')).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</p>
+                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">Due {new Date(bill.due_date.replace(/-/g, '/')).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</p>
                         </div>
                         <div className="text-right">
                             <div className="text-2xl font-black text-success">${bill.amount}</div>

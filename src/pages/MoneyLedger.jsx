@@ -56,7 +56,7 @@ const MoneyLedger = ({ user, notify, config }) => {
             if (previousWeek) {
                 const { data: itemsToCopy } = await supabase.from('money_items').select('*').eq('week_id', previousWeek.id);
                 if (itemsToCopy?.length > 0) {
-                    const newItems = itemsToCopy.map(({ id, created_at, week_id, is_paid, ...rest }) => ({ ...rest, week_id: newWeekData[0].id, user_id: user.id, is_paid: false }));
+                    const newItems = itemsToCopy.map(({ title, amount, category }) => ({ title, amount, category, week_id: newWeekData[0].id, user_id: user.id, is_paid: false }));
                     await supabase.from('money_items').insert(newItems);
                 }
             }
@@ -64,6 +64,7 @@ const MoneyLedger = ({ user, notify, config }) => {
             setActiveWeekIndex(0);
             notify(`New week starting ${format(parseISO(startDate), 'EEEE, MMM do')}`);
         }
+
         setLoading(false);
     };
 
@@ -94,7 +95,7 @@ const MoneyLedger = ({ user, notify, config }) => {
                     {activeWeek && (
                         <div className="flex items-center gap-2 bg-base-200 rounded-lg p-1">
                             <button onClick={() => setActiveWeekIndex(Math.min(weeks.length - 1, activeWeekIndex + 1))} disabled={activeWeekIndex >= weeks.length - 1} className="p-2 hover:bg-base-300 rounded-md disabled:opacity-30 transition-colors"><Icon name="ChevronLeft" size={16} /></button>
-                            <span className="text-[10px] font-black uppercase tracking-widest min-w-[80px] text-center">{new Date(activeWeek.start_date.replace(/-/g, '\/')).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest min-w-[80px] text-center">{new Date(activeWeek.start_date.replace(/-/g, '/')).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                             <button onClick={() => setActiveWeekIndex(Math.max(0, activeWeekIndex - 1))} disabled={activeWeekIndex <= 0} className="p-2 hover:bg-base-300 rounded-md disabled:opacity-30 transition-colors"><Icon name="ChevronRight" size={16} /></button>
                         </div>
                     )}

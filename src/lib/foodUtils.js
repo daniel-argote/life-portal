@@ -3,7 +3,7 @@ export const scaleAmount = (amountStr, multiplier) => {
     
     const parseValue = (str) => {
         str = str.toString().trim();
-        const parts = str.split(/[\s\-]|and/).filter(p => p.trim());
+        const parts = str.split(/[\s-]|and/).filter(p => p.trim());
         
         let total = 0;
         let hasValue = false;

@@ -249,7 +249,7 @@ const Actions = ({ user, notify }) => {
                                                                 {todo.due_date && (
                                                                     <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-tighter">
                                                                         <Icon name="Calendar" size={10} />
-                                                                        {format(new Date(todo.due_date.replace(/-/g, '\/')), 'MMM d')}
+                                                                        {format(new Date(todo.due_date.replace(/-/g, '/')), 'MMM d')}
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -275,7 +275,7 @@ const Actions = ({ user, notify }) => {
                                 <div className={`w-2 h-2 rounded-full ${todo.status === 'done' ? 'bg-success' : todo.status === 'progress' ? 'bg-indigo-500' : 'bg-slate-300'}`} />
                                 <div className="flex-1">
                                     <p className={`font-bold ${todo.status === 'done' ? 'line-through text-slate-600' : 'text-base-content'}`}>{todo.task}</p>
-                                    {todo.due_date && <p className="text-[10px] font-black text-primary uppercase mt-1">Due {format(new Date(todo.due_date.replace(/-/g, '\/')), 'MMMM do')}</p>}
+                                    {todo.due_date && <p className="text-[10px] font-black text-primary uppercase mt-1">Due {format(new Date(todo.due_date.replace(/-/g, '/')), 'MMMM do')}</p>}
                                 </div>
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); deleteTodo(todo.id); }} 
@@ -345,7 +345,7 @@ const Actions = ({ user, notify }) => {
                                         <span className="bg-primary/10 text-primary p-1.5 rounded-lg"><Icon name="Star" size={16} /></span>
                                         <h4 className="text-2xl font-black text-base-content">{goal.title}</h4>
                                     </div>
-                                    {goal.target_date && <p className="text-[10px] font-black text-primary uppercase tracking-widest">Target: {format(new Date(goal.target_date.replace(/-/g, '\/')), 'MMMM yyyy')}</p>}
+                                    {goal.target_date && <p className="text-[10px] font-black text-primary uppercase tracking-widest">Target: {format(new Date(goal.target_date.replace(/-/g, '/')), 'MMMM yyyy')}</p>}
                                 </div>
                                 <button onClick={() => deleteGoal(goal.id)} className="text-slate-600 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-2">
                                     <Icon name="Trash2" size={20} />

@@ -34,7 +34,7 @@ const Food = ({ mealPlan = [], food = [], inventory = [], config = {}, dismissWe
                         <div className="p-3 bg-primary/10 text-primary rounded-2xl">
                             <Icon name="CalendarDays" size={24} />
                         </div>
-                        <h3 className="font-black text-lg">Today's Plan</h3>
+                        <h3 className="font-black text-lg">Today&apos;s Plan</h3>
                     </div>
                     {todayMeals.length > 0 ? (
                         <div className="space-y-3 flex-1">

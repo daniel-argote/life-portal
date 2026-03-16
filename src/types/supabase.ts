@@ -441,27 +441,36 @@ export type Database = {
       }
       profiles: {
         Row: {
+          dashboard_widgets: Json | null
           feature_hierarchy: Json | null
           gemini_api_key: string | null
           id: string
           page_names: Json | null
           portal_config: Json | null
+          style: string | null
+          theme: string | null
           updated_at: string
         }
         Insert: {
+          dashboard_widgets?: Json | null
           feature_hierarchy?: Json | null
           gemini_api_key?: string | null
           id: string
           page_names?: Json | null
           portal_config?: Json | null
+          style?: string | null
+          theme?: string | null
           updated_at?: string
         }
         Update: {
+          dashboard_widgets?: Json | null
           feature_hierarchy?: Json | null
           gemini_api_key?: string | null
           id?: string
           page_names?: Json | null
           portal_config?: Json | null
+          style?: string | null
+          theme?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -561,6 +570,196 @@ export type Database = {
           position?: number | null
           status?: string | null
           task?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      travel_bucket_list: {
+        Row: {
+          country: string | null
+          created_at: string
+          id: string
+          is_visited: boolean | null
+          name: string
+          notes: string | null
+          priority: string | null
+          user_id: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_visited?: boolean | null
+          name: string
+          notes?: string | null
+          priority?: string | null
+          user_id: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_visited?: boolean | null
+          name?: string
+          notes?: string | null
+          priority?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      travel_days: {
+        Row: {
+          created_at: string
+          date: string | null
+          day_number: number
+          destination_city: string | null
+          id: string
+          notes: string | null
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string | null
+          day_number: number
+          destination_city?: string | null
+          id?: string
+          notes?: string | null
+          trip_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string | null
+          day_number?: number
+          destination_city?: string | null
+          id?: string
+          notes?: string | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_days_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "travel_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_packing: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_packed: boolean | null
+          item_name: string
+          trip_id: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_packed?: boolean | null
+          item_name: string
+          trip_id?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_packed?: boolean | null
+          item_name?: string
+          trip_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_packing_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "travel_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_poi: {
+        Row: {
+          bucket_id: string | null
+          category: string | null
+          created_at: string
+          day_id: string | null
+          description: string | null
+          id: string
+          location: string | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          bucket_id?: string | null
+          category?: string | null
+          created_at?: string
+          day_id?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          bucket_id?: string | null
+          category?: string | null
+          created_at?: string
+          day_id?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_poi_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "travel_bucket_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "travel_poi_day_id_fkey"
+            columns: ["day_id"]
+            isOneToOne: false
+            referencedRelation: "travel_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_trips: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string | null
+          status?: string | null
           user_id?: string
         }
         Relationships: []

@@ -1,5 +1,3 @@
-import Icon from '../components/Icon';
-
 const MoneySummary = ({ accounts = [], bills = [] }) => {
     const totalValue = accounts.reduce((acc, curr) => acc + Number(curr.balance || 0), 0);
     const paidBills = bills.filter(b => b.is_paid).length;

@@ -167,7 +167,7 @@ const Dashboard = ({ vault, logs, todos, events, user, config, dashboardWidgets,
                 return (
                     <div className="space-y-3">
                         {events.slice(0, 5).map(e => {
-                            const date = new Date(e.start_time.split('T')[0].replace(/-/g, '\/'));
+                            const date = new Date(e.start_time.split('T')[0].replace(/-/g, '/'));
                             return (
                                 <div key={e.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
                                     <div className="text-center min-w-[40px]">

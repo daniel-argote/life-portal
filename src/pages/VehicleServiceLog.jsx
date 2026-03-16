@@ -85,8 +85,8 @@ const VehicleServiceLog = ({ user, notify }) => {
                 {records.map(record => (
                     <div key={record.id} className="bg-base-200 p-6 rounded-3xl border border-base-300 flex items-center gap-6 group hover:border-primary/30 transition-all shadow-sm">
                         <div className="text-center min-w-[80px]">
-                            <p className="text-[10px] font-black uppercase text-slate-400">{format(new Date(record.date.replace(/-/g, '\/')), 'MMM')}</p>
-                            <p className="text-2xl font-black text-base-content">{format(new Date(record.date.replace(/-/g, '\/')), 'd')}</p>
+                            <p className="text-[10px] font-black uppercase text-slate-400">{format(new Date(record.date.replace(/-/g, '/')), 'MMM')}</p>
+                            <p className="text-2xl font-black text-base-content">{format(new Date(record.date.replace(/-/g, '/')), 'd')}</p>
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1"><span className="text-[8px] font-black uppercase tracking-tighter bg-primary/10 text-primary px-2 py-0.5 rounded">{record.type}</span><span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{record.vehicles?.name}</span></div>

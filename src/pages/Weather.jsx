@@ -3,18 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { format } from 'date-fns';
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
-
-export const getWeatherIcon = (code) => {
-    if (code === 0) return 'Sun';
-    if (code >= 1 && code <= 3) return 'CloudSun';
-    if (code >= 45 && code <= 48) return 'CloudFog';
-    if (code >= 51 && code <= 67) return 'CloudRain';
-    if (code >= 71 && code <= 77) return 'CloudSnow';
-    if (code >= 80 && code <= 82) return 'CloudRainWind';
-    if (code >= 85 && code <= 86) return 'CloudSnow';
-    if (code >= 95) return 'CloudLightning';
-    return 'Cloud';
-};
+import { getWeatherIcon } from '../lib/weatherUtils';
 
 const Weather = ({ user, notify, config }) => {
     const [locations, setLocations] = useState([]);
@@ -22,13 +11,11 @@ const Weather = ({ user, notify, config }) => {
     const [searchResults, setSearchResults] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [forecasts, setForecasts] = useState({});
-    const [loading, setLoading] = useState(false);
 
     const unit = config?.weatherUnit || 'fahrenheit';
 
     const fetchForecasts = useCallback(async (locs) => {
         if (!locs || locs.length === 0) return;
-        setLoading(true);
         try {
             const promises = locs.map(async (loc) => {
                 const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&temperature_unit=${unit}`);
@@ -43,7 +30,6 @@ const Weather = ({ user, notify, config }) => {
             console.error(e);
             if (notify) notify('Failed to fetch forecasts', 'error');
         }
-        setLoading(false);
     }, [notify, unit]);
 
     const fetchLocations = useCallback(async () => {
@@ -64,7 +50,7 @@ const Weather = ({ user, notify, config }) => {
 
     useEffect(() => {
         fetchLocations();
-    }, [user]); // Only fetch on mount or user change
+    }, [fetchLocations]);
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -237,7 +223,7 @@ const Weather = ({ user, notify, config }) => {
                         {forecasts[selectedLocation.id].daily.time.map((date, i) => (
                             <div key={date} className="bg-base-100/50 p-6 rounded-3xl flex flex-col items-center text-center group hover:bg-base-100 transition-all border border-transparent hover:border-primary/20 shadow-sm">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-4">
-                                    {i === 0 ? 'Today' : format(new Date(date.replace(/-/g, '\/')), 'EEE')}
+                                    {i === 0 ? 'Today' : format(new Date(date.replace(/-/g, '/')), 'EEE')}
                                 </p>
                                 <Icon name={getWeatherIcon(forecasts[selectedLocation.id].daily.weathercode[i])} size={32} className="text-primary mb-4" />
                                 <div className="space-y-1">

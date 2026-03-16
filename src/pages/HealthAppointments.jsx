@@ -74,8 +74,8 @@ const HealthAppointments = ({ user, notify }) => {
                 {appointments.map(appt => (
                     <div key={appt.id} className="bg-base-200 p-6 rounded-[2rem] border border-base-300 flex items-center gap-6 group hover:border-primary/30 transition-all shadow-sm">
                         <div className="text-center min-w-[80px]">
-                            <p className="text-[10px] font-black uppercase text-slate-600">{format(new Date(appt.date.replace(/-/g, '\/')), 'MMM')}</p>
-                            <p className="text-2xl font-black text-base-content">{format(new Date(appt.date.replace(/-/g, '\/')), 'd')}</p>
+                            <p className="text-[10px] font-black uppercase text-slate-600">{format(new Date(appt.date.replace(/-/g, '/')), 'MMM')}</p>
+                            <p className="text-2xl font-black text-base-content">{format(new Date(appt.date.replace(/-/g, '/')), 'd')}</p>
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
