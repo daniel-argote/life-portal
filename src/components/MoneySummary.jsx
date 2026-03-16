@@ -1,23 +1,11 @@
-import { setDate, isAfter, addMonths } from 'date-fns';
+import { calculateWeeklyRequirement } from '../lib/moneyUtils';
 
 const MoneySummary = ({ accounts = [], bills = [] }) => {
     const totalValue = accounts.reduce((acc, curr) => acc + Number(curr.balance || 0), 0);
     const paidBills = bills.filter(b => b.is_paid).length;
     const totalBills = bills.length;
 
-    const calculateWeekly = (dueDay, balance) => {
-        if (!dueDay || !balance || balance <= 0) return 0;
-        const today = new Date();
-        let targetDate = setDate(new Date(), dueDay);
-        if (!isAfter(targetDate, today)) {
-            targetDate = addMonths(targetDate, 1);
-        }
-        const diffDays = Math.max(1, Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-        const weeks = Math.ceil(diffDays / 7);
-        return balance / weeks;
-    };
-
-    const totalWeeklyReq = accounts.reduce((acc, curr) => acc + calculateWeekly(curr.due_day, curr.statement_balance), 0);
+    const totalWeeklyReq = accounts.reduce((acc, curr) => acc + calculateWeeklyRequirement(curr), 0);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">

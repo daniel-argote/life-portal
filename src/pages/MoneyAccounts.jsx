@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
-import { format, isAfter, setDate, addMonths } from 'date-fns';
+import { calculateWeeklyRequirement } from '../lib/moneyUtils';
 
 const MoneyAccounts = ({ user, notify }) => {
     const [accounts, setAccounts] = useState([]);
@@ -19,20 +19,6 @@ const MoneyAccounts = ({ user, notify }) => {
 
     useEffect(() => { fetchAccounts(); }, [fetchAccounts]);
 
-    const calculateWeekly = (dueDay, balance) => {
-        if (!dueDay || !balance || balance <= 0) return 0;
-        const today = new Date();
-        let targetDate = setDate(new Date(), dueDay);
-        
-        if (!isAfter(targetDate, today)) {
-            targetDate = addMonths(targetDate, 1);
-        }
-        
-        const diffDays = Math.max(1, Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-        const weeks = Math.ceil(diffDays / 7);
-        return (balance / weeks).toFixed(2);
-    };
-
     const addAccount = async (e) => {
         e.preventDefault();
         const name = newAccountName.trim();
@@ -42,7 +28,7 @@ const MoneyAccounts = ({ user, notify }) => {
             accountInputRef.current?.focus();
             return;
         }
-        const { error } = await supabase.from('money_accounts').insert([{ name, balance: 0, user_id: user.id, position: accounts.length }]);
+        const { error } = await supabase.from('money_accounts').insert([{ name, balance: 0, user_id: user.id, position: accounts.length, payoff_mode: 'monthly', payoff_weeks: 1 }]);
         if (!error) { 
             setNewAccountName(''); 
             fetchAccounts(); 
@@ -93,8 +79,8 @@ const MoneyAccounts = ({ user, notify }) => {
                     {(provided) => (
                         <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {accounts.map((account, index) => {
-                                const weeklyReq = calculateWeekly(account.due_day, account.statement_balance);
-                                const isLiability = account.due_day && account.statement_balance > 0;
+                                const weeklyReq = calculateWeeklyRequirement(account);
+                                const isLiability = account.statement_balance > 0 && (account.due_day || account.payoff_mode === 'fixed');
 
                                 return (
                                     <Draggable key={account.id} draggableId={account.id} index={index}>
@@ -133,15 +119,36 @@ const MoneyAccounts = ({ user, notify }) => {
                                                     </div>
 
                                                     <div className="mt-auto space-y-4 pt-6 border-t border-base-300/50">
+                                                        <div className="flex gap-2 mb-2">
+                                                            <button 
+                                                                onClick={() => updateAccount(account.id, { payoff_mode: 'monthly' })}
+                                                                className={`flex-1 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${account.payoff_mode === 'monthly' ? 'bg-primary text-primary-content shadow-sm' : 'bg-base-300 text-slate-500'}`}
+                                                            >
+                                                                Monthly
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => updateAccount(account.id, { payoff_mode: 'fixed' })}
+                                                                className={`flex-1 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${account.payoff_mode === 'fixed' ? 'bg-indigo-500 text-white shadow-sm' : 'bg-base-300 text-slate-500'}`}
+                                                            >
+                                                                Fixed Term
+                                                            </button>
+                                                        </div>
+
                                                         <div className="grid grid-cols-2 gap-4">
                                                             <div className="space-y-1">
-                                                                <label className="text-[8px] font-black uppercase text-slate-500 ml-1">Due Day</label>
+                                                                <label className="text-[8px] font-black uppercase text-slate-500 ml-1">
+                                                                    {account.payoff_mode === 'fixed' ? 'Total Weeks' : 'Due Day'}
+                                                                </label>
                                                                 <input 
                                                                     type="number"
-                                                                    placeholder="DD"
+                                                                    placeholder={account.payoff_mode === 'fixed' ? 'Weeks' : 'DD'}
                                                                     className="w-full bg-base-100 p-2 rounded-xl text-center font-bold text-xs outline-none border-2 border-transparent focus:border-indigo-500/30"
-                                                                    defaultValue={account.due_day || ''}
-                                                                    onBlur={(e) => updateAccount(account.id, { due_day: parseInt(e.target.value) || null })}
+                                                                    defaultValue={account.payoff_mode === 'fixed' ? (account.payoff_weeks || '') : (account.due_day || '')}
+                                                                    onBlur={(e) => {
+                                                                        const val = parseInt(e.target.value) || null;
+                                                                        const update = account.payoff_mode === 'fixed' ? { payoff_weeks: val } : { due_day: val };
+                                                                        updateAccount(account.id, update);
+                                                                    }}
                                                                 />
                                                             </div>
                                                             <div className="space-y-1">
@@ -162,7 +169,7 @@ const MoneyAccounts = ({ user, notify }) => {
                                                         {isLiability && (
                                                             <div className="bg-indigo-500/5 border border-indigo-500/10 p-4 rounded-2xl text-center animate-in fade-in zoom-in-95 duration-300">
                                                                 <p className="text-[8px] font-black uppercase text-indigo-500 tracking-widest mb-1">Weekly Requirement</p>
-                                                                <div className="text-xl font-black text-indigo-600">${weeklyReq}</div>
+                                                                <div className="text-xl font-black text-indigo-600">${Number(weeklyReq).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                                             </div>
                                                         )}
                                                     </div>
