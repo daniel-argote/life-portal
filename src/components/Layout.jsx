@@ -26,6 +26,7 @@ import FoodJournal from '../pages/FoodJournal';
 import FoodPlanner from '../pages/FoodPlanner';
 import FoodRecipes from '../pages/FoodRecipes';
 import FoodInventory from '../pages/FoodInventory';
+import FoodTopLists from '../pages/FoodTopLists';
 import CalendarHub from '../pages/CalendarHub';
 import CalendarGrid from '../pages/CalendarGrid';
 import CalendarTimeline from '../pages/CalendarTimeline';
@@ -65,6 +66,7 @@ const PAGE_MAP = {
     food_planner: FoodPlanner,
     food_recipes: FoodRecipes,
     food_inventory: FoodInventory,
+    food_top_lists: FoodTopLists,
     calendar: CalendarHub,
     calendar_grid: CalendarGrid,
     calendar_timeline: CalendarTimeline,
@@ -131,7 +133,8 @@ const DEFAULT_HIERARCHY = [
             { id: 'food_journal', icon: 'BookText', label: 'Journal' },
             { id: 'food_planner', icon: 'CalendarDays', label: 'Planner' },
             { id: 'food_recipes', icon: 'Salad', label: 'Recipes' },
-            { id: 'food_inventory', icon: 'Library', label: 'Inventory' }
+            { id: 'food_inventory', icon: 'Library', label: 'Inventory' },
+            { id: 'food_top_lists', icon: 'Trophy', label: 'Culinary Standings' }
         ]
     },
     { id: 'calendar', icon: 'Calendar', label: 'Calendar' },
@@ -457,6 +460,7 @@ const Layout = ({ user }) => {
         if (tab === 'calendar_timeline') return 'Chronological Event Flow';
         if (tab === 'food_recipes') return 'Your Culinary Library';
         if (tab === 'food_planner') return 'Weekly Meal Schedule';
+        if (tab === 'food_top_lists') return 'Your Personal Culinary Hall of Fame';
         if (tab === 'action_objectives') return 'Mission Control & Tasks';
         if (tab === 'action_chores') return 'Household Maintenance';
         if (tab === 'action_goals') return 'Strategic Mission Tracking';

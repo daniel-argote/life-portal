@@ -2,7 +2,7 @@ import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
 import { format } from 'date-fns';
 
-const Food = ({ mealPlan = [], food = [], inventory = [], config = {}, dismissWelcome }) => {
+const Food = ({ mealPlan = [], food = [], inventory = [], config = {}, dismissWelcome, setTab }) => {
     const today = format(new Date(), 'yyyy-MM-dd');
     const todayMeals = mealPlan.filter(m => m.day_date === today);
     const latestLog = food[0];
@@ -83,6 +83,25 @@ const Food = ({ mealPlan = [], food = [], inventory = [], config = {}, dismissWe
                         <div className="mt-6 w-full bg-base-100 p-4 rounded-2xl border border-base-300/50">
                             <p className="text-xs font-bold text-emerald-600">{lowStockCount} items potentially low</p>
                         </div>
+                    </div>
+                </div>
+
+                {/* Culinary Standings */}
+                <div 
+                    onClick={() => setTab('food_top_lists')}
+                    className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm flex flex-col h-full transition-all hover:border-primary/30 cursor-pointer group"
+                >
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-primary-content transition-all">
+                            <Icon name="Trophy" size={24} />
+                        </div>
+                        <h3 className="font-black text-lg">Culinary Standings</h3>
+                    </div>
+                    <p className="text-sm font-bold text-slate-500 italic flex-1">
+                        Rank your favorite dishes and establishments. From the best Reuben to the ultimate Burger.
+                    </p>
+                    <div className="mt-6 flex justify-end">
+                        <Icon name="ArrowRight" className="text-primary opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1" size={20} />
                     </div>
                 </div>
             </div>

@@ -106,6 +106,12 @@ const ActionObjectives = ({ user, notify }) => {
                                 </select>
                             </div>
                         </div>
+                        {todo.completed_at && (
+                            <div className="bg-success/10 p-4 rounded-2xl border border-success/20 flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-success">Mission Completed</span>
+                                <span className="font-bold text-success text-sm">{format(new Date(todo.completed_at), 'MMMM do, yyyy')}</span>
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Strategic Details</label>
                             <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Add context, sub-tasks, or notes..." className="w-full h-48 bg-slate-50 dark:bg-slate-900 p-5 rounded-[2rem] font-bold border-2 border-transparent focus:border-primary outline-none transition-all resize-none" />
@@ -160,12 +166,20 @@ const ActionObjectives = ({ user, notify }) => {
                                                                 <p className="font-bold text-base-content leading-snug">{todo.task}</p>
                                                                 <button onClick={(e) => { e.stopPropagation(); deleteTodo(todo.id); }} className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-danger transition-all"><Icon name="X" size={14} /></button>
                                                             </div>
-                                                            {todo.due_date && (
-                                                                <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-tighter">
-                                                                    <Icon name="Calendar" size={10} />
-                                                                    {format(new Date(todo.due_date.replace(/-/g, '/')), 'MMM d')}
-                                                                </div>
-                                                            )}
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {todo.due_date && (
+                                                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-tighter">
+                                                                        <Icon name="Calendar" size={10} />
+                                                                        {format(new Date(todo.due_date.replace(/-/g, '/')), 'MMM d')}
+                                                                    </div>
+                                                                )}
+                                                                {todo.completed_at && (
+                                                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-success uppercase tracking-tighter">
+                                                                        <Icon name="CheckCircle2" size={10} />
+                                                                        {format(new Date(todo.completed_at), 'MMM d')}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </Draggable>
@@ -185,7 +199,10 @@ const ActionObjectives = ({ user, notify }) => {
                             <div className={`w-2 h-2 rounded-full ${todo.status === 'done' ? 'bg-success' : todo.status === 'progress' ? 'bg-indigo-500' : 'bg-slate-300'}`} />
                             <div className="flex-1">
                                 <p className={`font-bold ${todo.status === 'done' ? 'line-through text-slate-600' : 'text-base-content'}`}>{todo.task}</p>
-                                {todo.due_date && <p className="text-[10px] font-black text-primary uppercase mt-1">Due {format(new Date(todo.due_date.replace(/-/g, '/')), 'MMMM do')}</p>}
+                                <div className="flex gap-4 mt-1">
+                                    {todo.due_date && <p className="text-[10px] font-black text-primary uppercase">Due {format(new Date(todo.due_date.replace(/-/g, '/')), 'MMMM do')}</p>}
+                                    {todo.completed_at && <p className="text-[10px] font-black text-success uppercase">Completed {format(new Date(todo.completed_at), 'MMMM do')}</p>}
+                                </div>
                             </div>
                             <button onClick={(e) => { e.stopPropagation(); deleteTodo(todo.id); }} className="text-slate-600 hover:text-danger opacity-0 group-hover:opacity-100 p-2 transition-all"><Icon name="Trash2" size={18} /></button>
                         </div>

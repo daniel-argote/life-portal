@@ -33,9 +33,24 @@ const ActionGoals = ({ user, notify }) => {
         setLoading(false);
     };
 
+    const updateGoal = async (id, updates) => {
+        setLoading(true);
+        const { error } = await supabase.from('goals').update(updates).eq('id', id);
+        if (!error) {
+            fetchData();
+            notify('Goal strategy adjusted');
+        }
+        setLoading(false);
+    };
+
     const deleteGoal = async (id) => {
         const { error } = await supabase.from('goals').delete().eq('id', id);
         if (!error) { fetchData(); notify('Goal archived'); }
+    };
+
+    const toggleComplete = (goal) => {
+        const newStatus = goal.status === 'achieved' ? 'active' : 'achieved';
+        updateGoal(goal.id, { status: newStatus });
     };
 
     return (
@@ -62,20 +77,30 @@ const ActionGoals = ({ user, notify }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {goals.map(goal => (
-                    <div key={goal.id} className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm group hover:border-primary/30 transition-all">
+                    <div key={goal.id} className={`bg-base-200 p-8 rounded-[2.5rem] border-2 shadow-sm group transition-all ${goal.status === 'achieved' ? 'border-success/30' : 'border-base-300 hover:border-primary/30'}`}>
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="bg-primary/10 text-primary p-1.5 rounded-lg"><Icon name="Star" size={16} /></span>
-                                    <h4 className="text-2xl font-black text-base-content">{goal.title}</h4>
+                                    <span className={`p-1.5 rounded-lg ${goal.status === 'achieved' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>
+                                        <Icon name={goal.status === 'achieved' ? "CheckCircle2" : "Star"} size={16} />
+                                    </span>
+                                    <h4 className={`text-2xl font-black ${goal.status === 'achieved' ? 'text-success' : 'text-base-content'}`}>{goal.title}</h4>
                                 </div>
-                                {goal.target_date && <p className="text-[10px] font-black text-primary uppercase tracking-widest">Target: {format(new Date(goal.target_date.replace(/-/g, '/')), 'MMMM yyyy')}</p>}
+                                <div className="flex gap-4">
+                                    {goal.target_date && <p className="text-[10px] font-black text-primary uppercase tracking-widest">Target: {format(new Date(goal.target_date.replace(/-/g, '/')), 'MMMM yyyy')}</p>}
+                                    {goal.completed_at && <p className="text-[10px] font-black text-success uppercase tracking-widest">Achieved: {format(new Date(goal.completed_at), 'MMMM yyyy')}</p>}
+                                </div>
                             </div>
-                            <button onClick={() => deleteGoal(goal.id)} className="text-slate-600 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-2">
-                                <Icon name="Trash2" size={20} />
-                            </button>
+                            <div className="flex gap-2">
+                                <button onClick={() => toggleComplete(goal)} className={`p-2 rounded-xl transition-all ${goal.status === 'achieved' ? 'text-success hover:bg-success/10' : 'text-slate-400 hover:text-success hover:bg-success/10'}`} title={goal.status === 'achieved' ? "Re-activate Goal" : "Mark as Achieved"}>
+                                    <Icon name={goal.status === 'achieved' ? "RefreshCw" : "Check"} size={20} />
+                                </button>
+                                <button onClick={() => deleteGoal(goal.id)} className="text-slate-600 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-2">
+                                    <Icon name="Trash2" size={20} />
+                                </button>
+                            </div>
                         </div>
-                        <p className="text-sm font-bold text-slate-500 dark:text-slate-600 leading-relaxed">{goal.description}</p>
+                        <p className={`text-sm font-bold leading-relaxed ${goal.status === 'achieved' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-600'}`}>{goal.description}</p>
                     </div>
                 ))}
             </div>
