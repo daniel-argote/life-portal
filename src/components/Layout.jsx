@@ -183,7 +183,9 @@ const Layout = ({ user }) => {
         showA11yAgent: true,
         showSubFeatures: false,
         showWelcomes: false,
-        dismissedWelcomes: []
+        dismissedWelcomes: [],
+        debugMode: false,
+        dismissibleErrors: false
     });
 
     const [darkMode, setDarkMode] = useState(false);
@@ -233,9 +235,18 @@ const Layout = ({ user }) => {
     }, [hierarchy, config.hiddenFeatures]);
 
     const notify = useCallback((text, type = 'success') => {
-        setMsg({ text, type });
-        setTimeout(() => setMsg(null), 3000);
-    }, []);
+        // If text is an error object, extract message
+        let displayMsg = text;
+        if (typeof text === 'object' && text !== null) {
+            displayMsg = text.message || text.error_description || JSON.stringify(text);
+        }
+        setMsg({ text: displayMsg, type });
+        
+        // If it's an error and dismissibleErrors is enabled, don't auto-dismiss
+        if (type === 'error' && config.dismissibleErrors) return;
+
+        setTimeout(() => setMsg(null), type === 'error' ? 20000 : 3000);
+    }, [config.dismissibleErrors]);
 
     const fetchData = useCallback(async () => {
         if (!user) return;
@@ -488,7 +499,14 @@ const Layout = ({ user }) => {
 
     return (
         <div className={`min-h-screen pb-20 md:pb-0 fade-in transition-all duration-300 ${config.autoHideSidebar ? 'md:pl-20' : 'md:pl-64'}`}>
-            {msg && <div className={`fixed top-6 right-6 z-[100] px-8 py-4 rounded-2xl text-primary-content font-black shadow-2xl animate-in slide-in-from-top-4 duration-300 ${msg.type === 'error' ? 'bg-danger' : 'bg-neutral'}`}>{msg.text}</div>}
+            {msg && (
+                <div className={`fixed top-6 right-6 z-[100] pl-8 pr-4 py-4 rounded-2xl text-primary-content font-black shadow-2xl animate-in slide-in-from-top-4 duration-300 flex items-center gap-4 ${msg.type === 'error' ? 'bg-danger' : 'bg-neutral'}`}>
+                    <span>{msg.text}</span>
+                    <button onClick={() => setMsg(null)} className="p-1 hover:bg-white/20 rounded-lg transition-colors">
+                        <Icon name="X" size={16} />
+                    </button>
+                </div>
+            )}
 
             <Sidebar 
                 tab={tab} 

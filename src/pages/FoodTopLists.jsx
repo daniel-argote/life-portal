@@ -83,17 +83,19 @@ const FoodTopLists = ({ user, notify }) => {
 
     const fetchLists = useCallback(async () => {
         if (!user) return;
-        const { data } = await supabase.from('food_top_lists').select('*').order('category_name');
+        const { data, error } = await supabase.from('food_top_lists').select('*').order('category_name');
+        if (error) notify(error, 'error');
         setLists(data || []);
-    }, [user]);
+    }, [user, notify]);
 
     const fetchItems = useCallback(async (listId) => {
-        const { data } = await supabase.from('food_top_list_items')
+        const { data, error } = await supabase.from('food_top_list_items')
             .select('*')
             .eq('list_id', listId)
             .order('rating_flavor', { ascending: false });
+        if (error) notify(error, 'error');
         setItems(data || []);
-    }, []);
+    }, [notify]);
 
     useEffect(() => { fetchLists(); }, [fetchLists]);
 
@@ -106,7 +108,9 @@ const FoodTopLists = ({ user, notify }) => {
         if (!listForm.category_name) return;
         setLoading(true);
         const { data, error } = await supabase.from('food_top_lists').insert([{ ...listForm, user_id: user.id }]).select();
-        if (!error && data) {
+        if (error) {
+            notify(error, 'error');
+        } else if (data) {
             setListForm({ category_name: '', description: '' });
             setShowAddList(false);
             fetchLists();
@@ -125,7 +129,9 @@ const FoodTopLists = ({ user, notify }) => {
             list_id: selectedList.id, 
             user_id: user.id 
         }]);
-        if (!error) {
+        if (error) {
+            notify(error, 'error');
+        } else {
             setItemForm({
                 restaurant_name: '', dish_name: '', location_name: '',
                 rating_flavor: 5, rating_value: 5, rating_vibe: 5,
@@ -142,7 +148,9 @@ const FoodTopLists = ({ user, notify }) => {
     const updateItem = async (id, updates) => {
         setLoading(true);
         const { error } = await supabase.from('food_top_list_items').update(updates).eq('id', id);
-        if (!error) {
+        if (error) {
+            notify(error, 'error');
+        } else {
             fetchItems(selectedList.id);
             setEditingItem(null);
             notify('Entry adjusted');
@@ -153,7 +161,9 @@ const FoodTopLists = ({ user, notify }) => {
     const deleteItem = async (id) => {
         if (!window.confirm("Archive this culinary record?")) return;
         const { error } = await supabase.from('food_top_list_items').delete().eq('id', id);
-        if (!error) {
+        if (error) {
+            notify(error, 'error');
+        } else {
             fetchItems(selectedList.id);
             notify('Entry archived');
         }
@@ -170,7 +180,9 @@ const FoodTopLists = ({ user, notify }) => {
     const deleteList = async (id) => {
         if (!window.confirm("Delete this entire category and all its rankings? This cannot be undone.")) return;
         const { error } = await supabase.from('food_top_lists').delete().eq('id', id);
-        if (!error) {
+        if (error) {
+            notify(error, 'error');
+        } else {
             setSelectedList(null);
             fetchLists();
             notify('Category archived');

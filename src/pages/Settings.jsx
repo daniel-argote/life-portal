@@ -292,6 +292,32 @@ const Settings = ({ user, config, updateConfig, featureList, profile, fetchData,
                                 <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${config.showA11yAgent ? 'left-7' : 'left-1'}`} />
                             </button>
                         </div>
+
+                        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-red-500/20 transition-all">
+                            <div>
+                                <p className="font-bold dark:text-white">Debug Mode</p>
+                                <p className="text-xs text-slate-600 font-medium mt-1">Expose detailed error messages in the UI for troubleshooting.</p>
+                            </div>
+                            <button 
+                                onClick={() => updateConfig('debugMode', !config.debugMode)}
+                                className={`w-14 h-8 rounded-full transition-all relative ${config.debugMode ? 'bg-red-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                            >
+                                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${config.debugMode ? 'left-7' : 'left-1'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-transparent hover:border-orange-500/20 transition-all">
+                            <div>
+                                <p className="font-bold dark:text-white">Dismissible Errors</p>
+                                <p className="text-xs text-slate-600 font-medium mt-1">Disable auto-dismiss for error messages (require manual close).</p>
+                            </div>
+                            <button 
+                                onClick={() => updateConfig('dismissibleErrors', !config.dismissibleErrors)}
+                                className={`w-14 h-8 rounded-full transition-all relative ${config.dismissibleErrors ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                            >
+                                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${config.dismissibleErrors ? 'left-7' : 'left-1'}`} />
+                            </button>
+                        </div>
                     </div>
                 </div>
 

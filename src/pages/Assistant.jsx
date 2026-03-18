@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
 
-const Assistant = ({ notify, profile, logs, vault, todos, events }) => {
+const Assistant = ({ notify, profile, logs, vault, todos, events, config }) => {
     const [messages, setMessages] = useState([
         { role: 'assistant', text: "Hello! I'm your Portal Assistant. How can I help you manage your day?" }
     ]);
@@ -28,7 +28,7 @@ const Assistant = ({ notify, profile, logs, vault, todos, events }) => {
             notify("Check console for model list");
         } catch (e) {
             console.error("Assistant: ListModels failed", e);
-            notify("ListModels failed. Check console.", "error");
+            notify(e, "error");
         }
     };
 
@@ -107,7 +107,7 @@ const Assistant = ({ notify, profile, logs, vault, todos, events }) => {
             } else if (error.message?.includes('Headers')) {
                 notify("API Key format error. Re-save it in Settings.", "error");
             } else {
-                notify("Assistant encountered an error", "error");
+                notify(error, "error");
             }
         } finally {
             setLoading(false);
@@ -119,15 +119,17 @@ const Assistant = ({ notify, profile, logs, vault, todos, events }) => {
 
     return (
         <PageContainer className="flex flex-col h-[calc(100vh-12rem)] max-w-4xl mx-auto !space-y-6">
-            <div className="flex justify-end items-start">
-                <button 
-                    onClick={debugModels}
-                    className="p-2 text-slate-600 hover:text-primary transition-colors opacity-20 hover:opacity-100"
-                    title="Debug API"
-                >
-                    <Icon name="Bug" size={16} />
-                </button>
-            </div>
+            {config.debugMode && (
+                <div className="flex justify-end items-start -mb-12">
+                    <button 
+                        onClick={debugModels}
+                        className="p-2 text-slate-600 hover:text-primary transition-colors opacity-20 hover:opacity-100"
+                        title="Debug API"
+                    >
+                        <Icon name="Bug" size={16} />
+                    </button>
+                </div>
+            )}
 
             {!hasKey ? (
                 <div className="flex-1 flex items-center justify-center p-6">
