@@ -6,10 +6,11 @@ import DatePicker from '../components/DatePicker';
 import { format } from 'date-fns';
 import PageContainer from '../components/PageContainer';
 
-const ActionObjectives = ({ user, notify, todos, fetchData }) => {
+const ActionObjectives = ({ user, notify, todos, todoLabels, fetchData }) => {
     const [editingTodo, setEditingTodo] = useState(null);
     const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'list'
     const [loading, setLoading] = useState(false);
+    const [showLabelManager, setShowLabelManager] = useState(false);
 
     const updateTodo = async (id, updates) => {
         setLoading(true);
@@ -54,6 +55,18 @@ const ActionObjectives = ({ user, notify, todos, fetchData }) => {
         setLoading(false);
     };
 
+    const handleAddLabel = async (name, color) => {
+        const { error } = await supabase.from('todo_labels').insert([{ name, color, user_id: user.id }]).select();
+        if (!error) fetchData();
+        else notify(error, 'error');
+    };
+
+    const handleDeleteLabel = async (id) => {
+        const { error } = await supabase.from('todo_labels').delete().eq('id', id);
+        if (!error) fetchData();
+        else notify(error, 'error');
+    };
+
     const onDragEnd = async (result) => {
         if (!result.destination) return;
         const { source, destination, draggableId } = result;
@@ -69,13 +82,83 @@ const ActionObjectives = ({ user, notify, todos, fetchData }) => {
         done: { title: 'Complete', icon: 'CheckCircle2' }
     };
 
+    const LabelManagerModal = ({ onClose }) => {
+        const [name, setName] = useState('');
+        const [color, setColor] = useState('#6366f1');
+        const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#64748b'];
+
+        return (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col">
+                    <header className="p-8 pb-4 flex justify-between items-start">
+                        <div>
+                            <h3 className="text-2xl font-black dark:text-white leading-none">Manage Labels</h3>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-primary mt-1">Categorization Library</p>
+                        </div>
+                        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-all">
+                            <Icon name="X" size={24} />
+                        </button>
+                    </header>
+                    <div className="p-8 pt-4 space-y-6">
+                        <div className="flex gap-2">
+                            <input 
+                                value={name} 
+                                onChange={e => setName(e.target.value)} 
+                                placeholder="Label Name" 
+                                className="flex-1 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl font-bold outline-none border-2 border-transparent focus:border-primary"
+                            />
+                            <button 
+                                onClick={() => { handleAddLabel(name, color); setName(''); }}
+                                className="bg-primary text-white p-3 rounded-xl hover:scale-105 transition-transform"
+                            >
+                                <Icon name="Plus" size={20} />
+                            </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {colors.map(c => (
+                                <button 
+                                    key={c} 
+                                    onClick={() => setColor(c)} 
+                                    className={`w-8 h-8 rounded-full border-2 transition-all ${color === c ? 'border-primary scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                    style={{ backgroundColor: c }}
+                                />
+                            ))}
+                        </div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                            {todoLabels.map(l => (
+                                <div key={l.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-xl group">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: l.color }} />
+                                        <span className="font-bold dark:text-white text-sm">{l.name}</span>
+                                    </div>
+                                    <button onClick={() => handleDeleteLabel(l.id)} className="text-slate-400 hover:text-danger opacity-0 group-hover:opacity-100 transition-all">
+                                        <Icon name="Trash2" size={14} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const EditTodoModal = ({ todo, onClose, onSave }) => {
         const [form, setForm] = useState({ 
             task: todo.task || '', 
             description: todo.description || '', 
             due_date: todo.due_date || '',
-            status: todo.status || 'todo'
+            status: todo.status || 'todo',
+            label_ids: todo.label_ids || []
         });
+
+        const toggleLabel = (labelId) => {
+            const current = form.label_ids || [];
+            const next = current.includes(labelId)
+                ? current.filter(id => id !== labelId)
+                : [...current, labelId];
+            setForm({ ...form, label_ids: next });
+        };
 
         return (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
@@ -108,6 +191,30 @@ const ActionObjectives = ({ user, notify, todos, fetchData }) => {
                                 </select>
                             </div>
                         </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Labels</label>
+                            <div className="flex flex-wrap gap-2 p-2">
+                                {todoLabels.map(l => (
+                                    <button 
+                                        key={l.id} 
+                                        onClick={() => toggleLabel(l.id)}
+                                        className={`px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase transition-all flex items-center gap-2 ${form.label_ids?.includes(l.id) ? 'shadow-md scale-105' : 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100'}`}
+                                        style={{ backgroundColor: l.color, color: 'white' }}
+                                    >
+                                        {l.name}
+                                        {form.label_ids?.includes(l.id) && <Icon name="Check" size={10} />}
+                                    </button>
+                                ))}
+                                <button 
+                                    onClick={() => setShowLabelManager(true)}
+                                    className="px-3 py-1.5 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-400 font-black text-[10px] uppercase hover:border-primary hover:text-primary transition-all"
+                                >
+                                    Manage
+                                </button>
+                            </div>
+                        </div>
+
                         {todo.completed_at && (
                             <div className="bg-success/10 p-4 rounded-2xl border border-success/20 flex items-center justify-between">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-success">Mission Completed</span>
@@ -143,9 +250,17 @@ const ActionObjectives = ({ user, notify, todos, fetchData }) => {
     return (
         <PageContainer>
             <AddTaskForm />
-            <div className="flex justify-end gap-2">
-                <button onClick={() => setViewMode('kanban')} className={`p-2 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-primary text-primary-content shadow-md' : 'bg-base-200 text-slate-600'}`}><Icon name="Layout" size={20} /></button>
-                <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-primary text-primary-content shadow-md' : 'bg-base-200 text-slate-600'}`}><Icon name="List" size={20} /></button>
+            <div className="flex justify-between items-center">
+                <button 
+                    onClick={() => setShowLabelManager(true)}
+                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-colors"
+                >
+                    <Icon name="Tag" size={14} /> Manage Labels
+                </button>
+                <div className="flex gap-2">
+                    <button onClick={() => setViewMode('kanban')} className={`p-2 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-primary text-primary-content shadow-md' : 'bg-base-200 text-slate-600'}`}><Icon name="Layout" size={20} /></button>
+                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-primary text-primary-content shadow-md' : 'bg-base-200 text-slate-600'}`}><Icon name="List" size={20} /></button>
+                </div>
             </div>
             {viewMode === 'kanban' ? (
                 <DragDropContext onDragEnd={onDragEnd}>
@@ -165,10 +280,19 @@ const ActionObjectives = ({ user, notify, todos, fetchData }) => {
                                                     {(provided, snapshot) => (
                                                         <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} onClick={() => setEditingTodo(todo)} className={`bg-base-100 p-5 rounded-2xl border-2 transition-all group cursor-pointer ${snapshot.isDragging ? 'border-primary shadow-2xl scale-[1.02] z-50' : 'border-transparent shadow-sm hover:border-primary/20'}`}>
                                                             <div className="flex justify-between items-start mb-2">
-                                                                <p className="font-bold text-base-content leading-snug">{todo.task}</p>
+                                                                <div className="space-y-2">
+                                                                    <div className="flex flex-wrap gap-1">
+                                                                        {todo.label_ids?.map(labelId => {
+                                                                            const label = todoLabels.find(l => l.id === labelId);
+                                                                            if (!label) return null;
+                                                                            return <div key={labelId} className="w-6 h-1 rounded-full" style={{ backgroundColor: label.color }} title={label.name} />;
+                                                                        })}
+                                                                    </div>
+                                                                    <p className="font-bold text-base-content leading-snug">{todo.task}</p>
+                                                                </div>
                                                                 <button onClick={(e) => { e.stopPropagation(); deleteTodo(todo.id); }} className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-danger transition-all"><Icon name="X" size={14} /></button>
                                                             </div>
-                                                            <div className="flex flex-wrap gap-2">
+                                                            <div className="flex flex-wrap gap-2 mt-2">
                                                                 {todo.due_date && (
                                                                     <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-tighter">
                                                                         <Icon name="Calendar" size={10} />
@@ -200,7 +324,16 @@ const ActionObjectives = ({ user, notify, todos, fetchData }) => {
                         <div key={todo.id} onClick={() => setEditingTodo(todo)} className="bg-base-200 p-4 rounded-2xl border border-base-300 flex items-center gap-4 group cursor-pointer hover:border-primary/20 transition-all">
                             <div className={`w-2 h-2 rounded-full ${todo.status === 'done' ? 'bg-success' : todo.status === 'progress' ? 'bg-indigo-500' : 'bg-slate-300'}`} />
                             <div className="flex-1">
-                                <p className={`font-bold ${todo.status === 'done' ? 'line-through text-slate-600' : 'text-base-content'}`}>{todo.task}</p>
+                                <div className="flex items-center gap-3">
+                                    <p className={`font-bold ${todo.status === 'done' ? 'line-through text-slate-600' : 'text-base-content'}`}>{todo.task}</p>
+                                    <div className="flex gap-1">
+                                        {todo.label_ids?.map(labelId => {
+                                            const label = todoLabels.find(l => l.id === labelId);
+                                            if (!label) return null;
+                                            return <div key={labelId} className="px-2 py-0.5 rounded text-[8px] font-black text-white uppercase" style={{ backgroundColor: label.color }}>{label.name}</div>;
+                                        })}
+                                    </div>
+                                </div>
                                 <div className="flex gap-4 mt-1">
                                     {todo.due_date && <p className="text-[10px] font-black text-primary uppercase">Due {format(new Date(todo.due_date.replace(/-/g, '/')), 'MMMM do')}</p>}
                                     {todo.completed_at && <p className="text-[10px] font-black text-success uppercase">Completed {format(new Date(todo.completed_at), 'MMMM do')}</p>}
@@ -212,6 +345,7 @@ const ActionObjectives = ({ user, notify, todos, fetchData }) => {
                 </div>
             )}
             {editingTodo && <EditTodoModal todo={editingTodo} onClose={() => setEditingTodo(null)} onSave={updateTodo} />}
+            {showLabelManager && <LabelManagerModal onClose={() => setShowLabelManager(false)} />}
         </PageContainer>
     );
 };

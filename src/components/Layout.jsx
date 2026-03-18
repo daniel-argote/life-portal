@@ -194,6 +194,7 @@ const Layout = ({ user }) => {
     const [logs, setLogs] = useState([]);
     const [vault, setVault] = useState([]);
     const [todos, setTodos] = useState([]);
+    const [todoLabels, setTodoLabels] = useState([]);
     const [chores, setChores] = useState([]);
     const [choreHistory, setChoreHistory] = useState([]);
     const [events, setEvents] = useState([]);
@@ -270,7 +271,7 @@ const Layout = ({ user }) => {
 
         // Parallel Fetching for Command Center Performance
         const [
-            { data: l }, { data: v }, { data: t }, { data: e },
+            { data: l }, { data: v }, { data: t }, { data: tl }, { data: e },
             { data: f }, { data: inv }, { data: mp },
             { data: accs }, { data: bls }, { data: appts }, { data: rl }, { data: bio },
             { data: trips }, { data: days }, { data: bucket }, { data: pois }, { data: pack },
@@ -279,6 +280,7 @@ const Layout = ({ user }) => {
             supabase.from('logs').select('*').order('created_at', { ascending: false }),
             supabase.from('vault').select('*').order('updated_at', { ascending: false }),
             supabase.from('todos').select('*').eq('is_complete', false).order('created_at', { ascending: false }),
+            supabase.from('todo_labels').select('*').order('name', { ascending: true }),
             supabase.from('calendar').select('*').gte('start_time', new Date().toISOString()).order('start_time', { ascending: true }),
             supabase.from('food').select('*').order('created_at', { ascending: false }),
             supabase.from('food_inventory').select('*').order('category', { ascending: true }),
@@ -302,6 +304,7 @@ const Layout = ({ user }) => {
         setLogs(l || []);
         setVault(v || []);
         setTodos(t || []);
+        setTodoLabels(tl || []);
         setEvents(e || []);
         setFood(f || []);
         setInventory(inv || []);
@@ -566,6 +569,7 @@ const Layout = ({ user }) => {
                     logs={logs}
                     vault={vault}
                     todos={todos}
+                    todoLabels={todoLabels}
                     chores={chores}
                     choreHistory={choreHistory}
                     events={events}
