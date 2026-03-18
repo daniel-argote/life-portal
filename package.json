@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:prod": "playwright test --baseUrl https://daniel-argote.github.io/life-portal/"
   },
   "dependencies": {
     "@axe-core/react": "^4.11.1",
