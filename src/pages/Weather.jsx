@@ -228,10 +228,10 @@ const Weather = ({ user, notify, config }) => {
                                             {isNow ? 'Now' : format(date, 'ha')}
                                         </span>
                                         <Icon name={getWeatherIcon(forecasts[selectedLocation.id].hourly.weathercode[i])} size={20} />
-                                        <div className="flex flex-col items-center -space-y-1">
+                                        <div className="flex flex-col items-center">
                                             <span className="font-black text-sm">{Math.round(forecasts[selectedLocation.id].hourly.temperature_2m[i])}°</span>
-                                            <span className="text-[8px] font-black opacity-60 flex items-center gap-0.5">
-                                                <Icon name="Droplet" size={8} />
+                                            <span className={`text-[10px] font-black flex items-center gap-0.5 ${forecasts[selectedLocation.id].hourly.precipitation_probability[i] > 0 ? 'text-indigo-400 opacity-100' : 'opacity-20'}`}>
+                                                <Icon name="Droplets" size={10} />
                                                 {forecasts[selectedLocation.id].hourly.precipitation_probability[i]}%
                                             </span>
                                         </div>
