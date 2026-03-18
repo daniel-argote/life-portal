@@ -68,11 +68,16 @@ const MoneyLedger = ({ user, notify, config }) => {
         setLoading(false);
     };
 
-    const addItem = async (e) => {
-        e.preventDefault();
+    const addItem = async () => {
         if (!activeWeek || !newItem.title || !newItem.amount) return;
         const { error } = await supabase.from('money_items').insert([{ week_id: activeWeek.id, user_id: user.id, title: newItem.title, amount: newItem.amount, is_paid: false }]);
-        if (!error) { setNewItem({ title: '', amount: '' }); fetchWeekItems(); notify('Item added'); }
+        if (error) {
+            notify(error, 'error');
+        } else {
+            setNewItem({ title: '', amount: '' }); 
+            fetchWeekItems(); 
+            notify('Item added'); 
+        }
     };
 
     const togglePaid = async (item) => {
@@ -82,7 +87,12 @@ const MoneyLedger = ({ user, notify, config }) => {
 
     const deleteItem = async (id) => {
         const { error } = await supabase.from('money_items').delete().eq('id', id);
-        if (!error) { fetchWeekItems(); notify('Item removed'); }
+        if (error) {
+            notify(error, 'error');
+        } else {
+            fetchWeekItems(); 
+            notify('Item removed'); 
+        }
     };
 
     const weekTotal = weekItems.reduce((acc, item) => acc + Number(item.amount), 0);
@@ -124,13 +134,16 @@ const MoneyLedger = ({ user, notify, config }) => {
                             </button>
                         </div>
                     ))}
-                    <form onSubmit={addItem} className="flex items-center gap-4 pt-4 mt-4 border-t-2 border-dashed border-base-content/5">
+                    <form onSubmit={(e) => { e.preventDefault(); addItem(); }} className="flex items-center gap-4 pt-4 mt-4 border-t-2 border-dashed border-base-content/5">
                         <Icon name="Plus" size={16} className="text-base-content/30" />
                         <input placeholder="New Item..." className="flex-1 bg-transparent font-bold text-lg outline-none placeholder:text-base-content/30 text-base-content" value={newItem.title} onChange={e => setNewItem({...newItem, title: e.target.value})} />
                         <div className="flex items-center w-24">
                             <span className="text-base-content/30 font-bold mr-1">$</span>
                             <input type="number" placeholder="0" className="w-full bg-transparent font-mono font-bold text-lg outline-none placeholder:text-base-content/30 text-right text-base-content" value={newItem.amount} onChange={e => setNewItem({...newItem, amount: e.target.value})} />
                         </div>
+                        <button aria-label="Add Ledger Item" type="submit" className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors">
+                            <Icon name="PlusCircle" size={20} />
+                        </button>
                     </form>
                 </div>
             ) : (

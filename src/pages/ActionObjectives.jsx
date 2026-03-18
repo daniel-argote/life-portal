@@ -6,25 +6,18 @@ import DatePicker from '../components/DatePicker';
 import { format } from 'date-fns';
 import PageContainer from '../components/PageContainer';
 
-const ActionObjectives = ({ user, notify }) => {
-    const [todos, setTodos] = useState([]);
+const ActionObjectives = ({ user, notify, todos, fetchData }) => {
     const [editingTodo, setEditingTodo] = useState(null);
     const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'list'
     const [loading, setLoading] = useState(false);
-
-    const fetchData = useCallback(async () => {
-        if (!user) return;
-        const { data } = await supabase.from('todos').select('*').order('position', { ascending: true });
-        setTodos(data || []);
-    }, [user]);
-
-    useEffect(() => { fetchData(); }, [fetchData]);
 
     const updateTodo = async (id, updates) => {
         setLoading(true);
         if (updates.due_date === '') updates.due_date = null;
         const { error } = await supabase.from('todos').update(updates).eq('id', id);
-        if (!error) {
+        if (error) {
+            notify(error, 'error');
+        } else {
             fetchData();
             notify('Objective updated');
             setEditingTodo(null);
@@ -34,11 +27,15 @@ const ActionObjectives = ({ user, notify }) => {
 
     const deleteTodo = async (id) => {
         const { error } = await supabase.from('todos').delete().eq('id', id);
-        if (!error) { fetchData(); notify('Objective removed'); }
+        if (error) {
+            notify(error, 'error');
+        } else {
+            fetchData(); 
+            notify('Objective removed'); 
+        }
     };
 
-    const addTask = async (e, task, dueDate) => {
-        e.preventDefault();
+    const addTask = async (task, dueDate) => {
         if (!task.trim()) return;
         setLoading(true);
         const { error } = await supabase.from('todos').insert([{ 
@@ -48,7 +45,12 @@ const ActionObjectives = ({ user, notify }) => {
             user_id: user.id,
             position: todos.filter(t => t.status === 'todo').length
         }]);
-        if (!error) { fetchData(); notify('Objective added'); }
+        if (error) {
+            notify(error, 'error');
+        } else {
+            fetchData(); 
+            notify('Objective added'); 
+        }
         setLoading(false);
     };
 
@@ -130,10 +132,10 @@ const ActionObjectives = ({ user, notify }) => {
         const [task, setTask] = useState('');
         const [dueDate, setDueDate] = useState('');
         return (
-            <form onSubmit={(e) => { addTask(e, task, dueDate); setTask(''); setDueDate(''); }} className="bg-base-200 p-6 rounded-[2rem] border border-base-300 shadow-sm flex flex-col md:flex-row gap-4">
+            <form onSubmit={(e) => { e.preventDefault(); addTask(task, dueDate); setTask(''); setDueDate(''); }} className="bg-base-200 p-6 rounded-[2rem] border border-base-300 shadow-sm flex flex-col md:flex-row gap-4">
                 <input value={task} onChange={(e) => setTask(e.target.value)} placeholder="New Objective..." className="flex-1 bg-base-100 p-4 rounded-xl font-bold outline-none text-base-content border-2 border-transparent focus:border-primary transition-all" />
                 <div className="w-full md:w-64"><DatePicker value={dueDate} onChange={setDueDate} /></div>
-                <button disabled={loading} className="bg-primary text-primary-content p-4 rounded-xl font-bold shadow-lg hover:scale-105 transition-transform"><Icon name="Plus" size={24} /></button>
+                <button aria-label="Add Objective" type="submit" disabled={loading} className="bg-primary text-primary-content p-4 rounded-xl font-bold shadow-lg hover:scale-105 transition-transform"><Icon name="Plus" size={24} /></button>
             </form>
         );
     };

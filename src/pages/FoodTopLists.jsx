@@ -103,8 +103,7 @@ const FoodTopLists = ({ user, notify }) => {
         if (selectedList) fetchItems(selectedList.id);
     }, [selectedList, fetchItems]);
 
-    const handleAddList = async (e) => {
-        e.preventDefault();
+    const handleAddList = async () => {
         if (!listForm.category_name) return;
         setLoading(true);
         const { data, error } = await supabase.from('food_top_lists').insert([{ ...listForm, user_id: user.id }]).select();
@@ -120,8 +119,7 @@ const FoodTopLists = ({ user, notify }) => {
         setLoading(false);
     };
 
-    const handleAddItem = async (e) => {
-        e.preventDefault();
+    const handleAddItem = async () => {
         if (!itemForm.restaurant_name || !selectedList) return;
         setLoading(true);
         const { error } = await supabase.from('food_top_list_items').insert([{ 
@@ -210,7 +208,7 @@ const FoodTopLists = ({ user, notify }) => {
             </div>
 
             {showAddList && (
-                <form onSubmit={handleAddList} className="bg-base-200 p-8 rounded-[3rem] border border-base-300 shadow-xl space-y-4 mb-8 animate-in slide-in-from-top-4 duration-300">
+                <form onSubmit={(e) => { e.preventDefault(); handleAddList(); }} className="bg-base-200 p-8 rounded-[3rem] border border-base-300 shadow-xl space-y-4 mb-8 animate-in slide-in-from-top-4 duration-300">
                     <input placeholder="Category (e.g. Reubens, Best Burgers)" className="w-full bg-base-100 p-4 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-primary transition-all text-xl" value={listForm.category_name} onChange={e => setListForm({...listForm, category_name: e.target.value})} />
                     <input placeholder="Short description..." className="w-full bg-base-100 p-4 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-primary transition-all" value={listForm.description} onChange={e => setListForm({...listForm, description: e.target.value})} />
                     <button disabled={loading} className="w-full bg-primary text-primary-content py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg">Create Standings</button>
@@ -239,7 +237,7 @@ const FoodTopLists = ({ user, notify }) => {
                     </div>
 
                     {showAddItem && (
-                        <form onSubmit={handleAddItem} className="bg-base-200 p-8 rounded-[3rem] border-2 border-indigo-500/20 shadow-xl space-y-6 animate-in slide-in-from-top-4 duration-300">
+                        <form onSubmit={(e) => { e.preventDefault(); handleAddItem(); }} className="bg-base-200 p-8 rounded-[3rem] border-2 border-indigo-500/20 shadow-xl space-y-6 animate-in slide-in-from-top-4 duration-300">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
                                     <div className="space-y-2">

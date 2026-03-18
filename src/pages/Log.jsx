@@ -4,10 +4,10 @@ import PageContainer from '../components/PageContainer';
 const Log = ({ logs, input, setInput, addLog, deleteItem }) => {
     return (
         <PageContainer className="max-w-2xl mx-auto">
-            <div className="relative">
-                <input value={input} onChange={e => setInput(e.target.value)} className="w-full pl-8 pr-24 py-6 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[2.5rem] outline-none shadow-xl shadow-slate-200/50 dark:shadow-none font-bold text-lg dark:text-white" placeholder="New update..." onKeyPress={e => e.key === 'Enter' && addLog()} />
-                <button onClick={addLog} className="absolute right-3 top-3 bottom-3 aspect-square bg-slate-900 text-white rounded-[1.8rem] flex items-center justify-center hover:bg-black transition-all active:scale-95"><Icon name="Plus" size={28} /></button>
-            </div>
+            <form onSubmit={(e) => { e.preventDefault(); addLog(); }} className="relative">
+                <input value={input} onChange={e => setInput(e.target.value)} className="w-full pl-8 pr-24 py-6 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[2.5rem] outline-none shadow-xl shadow-slate-200/50 dark:shadow-none font-bold text-lg dark:text-white" placeholder="New update..." />
+                <button type="submit" aria-label="Add Log Entry" className="absolute right-3 top-3 bottom-3 aspect-square bg-slate-900 text-white rounded-[1.8rem] flex items-center justify-center hover:bg-black transition-all active:scale-95"><Icon name="Plus" size={28} /></button>
+            </form>
             <div className="space-y-6 relative before:absolute before:left-4 before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-100 dark:before:bg-slate-800">
                 {logs.map(l => (
                     <div key={l.id} className="group relative pl-12">

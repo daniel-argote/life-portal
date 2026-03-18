@@ -70,6 +70,17 @@ const Settings = ({ user, config, updateConfig, featureList, profile, fetchData,
     return (
         <PageContainer>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Sign Out Section (Visible on all sizes) */}
+                <div className="lg:col-span-2">
+                    <button 
+                        onClick={() => supabase.auth.signOut()}
+                        className="w-full p-8 rounded-[2.5rem] bg-danger/10 text-danger font-black uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-danger hover:text-white transition-all shadow-sm group"
+                    >
+                        <Icon name="LogOut" size={24} className="group-hover:scale-110 transition-transform" />
+                        Terminate Session / Sign Out
+                    </button>
+                </div>
+
                 {/* General Config */}
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
                     <h3 className="font-bold text-xl mb-6 dark:text-white flex items-center gap-3">
@@ -316,6 +327,29 @@ const Settings = ({ user, config, updateConfig, featureList, profile, fetchData,
                                 className={`w-14 h-8 rounded-full transition-all relative ${config.dismissibleErrors ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700'}`}
                             >
                                 <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${config.dismissibleErrors ? 'left-7' : 'left-1'}`} />
+                            </button>
+                        </div>
+
+                        {/* Test Cleanup Helper */}
+                        <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30">
+                            <div>
+                                <p className="font-bold text-red-600">Prune Profile Data</p>
+                                <p className="text-xs text-red-500 font-medium mt-1">Permanently delete ALL your data and profile (testing only).</p>
+                            </div>
+                            <button 
+                                onClick={async () => {
+                                    if (window.confirm("CRITICAL: This will delete ALL data for this account. Continue?")) {
+                                        const { error } = await supabase.from('profiles').delete().eq('id', user.id);
+                                        if (error) notify(error, 'error');
+                                        else {
+                                            notify("Account data purged. Signing out...");
+                                            setTimeout(() => supabase.auth.signOut(), 2000);
+                                        }
+                                    }
+                                }}
+                                className="bg-red-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-red-700 transition-all"
+                            >
+                                Execute Purge
                             </button>
                         </div>
                     </div>
