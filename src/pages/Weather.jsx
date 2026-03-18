@@ -18,7 +18,7 @@ const Weather = ({ user, notify, config }) => {
         if (!locs || locs.length === 0) return;
         try {
             const promises = locs.map(async (loc) => {
-                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&hourly=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&temperature_unit=${unit}`);
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&hourly=temperature_2m,weathercode,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max&timezone=auto&temperature_unit=${unit}`);
                 const data = await res.json();
                 return { id: loc.id, data };
             });
@@ -151,9 +151,13 @@ const Weather = ({ user, notify, config }) => {
                                             <div className="text-5xl font-black text-primary leading-none">
                                                 {Math.round(forecast.current_weather.temperature)}°
                                             </div>
-                                            <div className="flex gap-2 mt-2">
+                                            <div className="flex gap-2 mt-2 items-center">
                                                 <span className="text-xs font-black text-slate-400">H: {Math.round(forecast.daily.temperature_2m_max[0])}°</span>
                                                 <span className="text-xs font-black text-slate-400 text-opacity-50">L: {Math.round(forecast.daily.temperature_2m_min[0])}°</span>
+                                                <span className="flex items-center gap-1 text-[10px] font-black text-indigo-400 ml-1">
+                                                    <Icon name="Droplets" size={10} />
+                                                    {forecast.daily.precipitation_probability_max[0]}%
+                                                </span>
                                             </div>
                                         </div>
                                         <button 
@@ -224,7 +228,13 @@ const Weather = ({ user, notify, config }) => {
                                             {isNow ? 'Now' : format(date, 'ha')}
                                         </span>
                                         <Icon name={getWeatherIcon(forecasts[selectedLocation.id].hourly.weathercode[i])} size={20} />
-                                        <span className="font-black text-sm">{Math.round(forecasts[selectedLocation.id].hourly.temperature_2m[i])}°</span>
+                                        <div className="flex flex-col items-center -space-y-1">
+                                            <span className="font-black text-sm">{Math.round(forecasts[selectedLocation.id].hourly.temperature_2m[i])}°</span>
+                                            <span className="text-[8px] font-black opacity-60 flex items-center gap-0.5">
+                                                <Icon name="Droplet" size={8} />
+                                                {forecasts[selectedLocation.id].hourly.precipitation_probability[i]}%
+                                            </span>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -251,6 +261,10 @@ const Weather = ({ user, notify, config }) => {
                                     <div className="space-y-1">
                                         <p className="text-lg font-black text-base-content leading-none">{Math.round(forecasts[selectedLocation.id].daily.temperature_2m_max[i])}°</p>
                                         <p className="text-[10px] font-bold text-slate-400">{Math.round(forecasts[selectedLocation.id].daily.temperature_2m_min[i])}°</p>
+                                        <p className="text-[9px] font-black text-indigo-400 pt-1 flex items-center justify-center gap-1">
+                                            <Icon name="Droplets" size={10} />
+                                            {forecasts[selectedLocation.id].daily.precipitation_probability_max[i]}%
+                                        </p>
                                     </div>
                                 </div>
                             ))}
