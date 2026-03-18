@@ -279,7 +279,10 @@ const Layout = ({ user }) => {
         ] = await Promise.all([
             supabase.from('logs').select('*').order('created_at', { ascending: false }),
             supabase.from('vault').select('*').order('updated_at', { ascending: false }),
-            supabase.from('todos').select('*').eq('is_complete', false).order('created_at', { ascending: false }),
+            supabase.from('todos')
+                .select('*')
+                .or(`status.neq.done,completed_at.gt.${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()}`)
+                .order('created_at', { ascending: false }),
             supabase.from('todo_labels').select('*').order('name', { ascending: true }),
             supabase.from('calendar').select('*').gte('start_time', new Date().toISOString()).order('start_time', { ascending: true }),
             supabase.from('food').select('*').order('created_at', { ascending: false }),
