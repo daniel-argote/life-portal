@@ -8,6 +8,7 @@ import PageContainer from '../components/PageContainer';
 
 const ActionObjectives = ({ user, notify, todos, todoLabels, fetchData }) => {
     const [editingTodo, setEditingTodo] = useState(null);
+    const [showAddModal, setShowAddModal] = useState(false);
     const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'list'
     const [loading, setLoading] = useState(false);
     const [showLabelManager, setShowLabelManager] = useState(false);
@@ -36,12 +37,14 @@ const ActionObjectives = ({ user, notify, todos, todoLabels, fetchData }) => {
         }
     };
 
-    const addTask = async (task, dueDate) => {
+    const addTask = async (task, dueDate, description = '', label_ids = []) => {
         if (!task.trim()) return;
         setLoading(true);
         const { error } = await supabase.from('todos').insert([{ 
             task, 
             due_date: dueDate || null, 
+            description,
+            label_ids,
             status: 'todo', 
             user_id: user.id,
             position: todos.filter(t => t.status === 'todo').length
@@ -51,6 +54,7 @@ const ActionObjectives = ({ user, notify, todos, todoLabels, fetchData }) => {
         } else {
             fetchData(); 
             notify('Objective added'); 
+            setShowAddModal(false);
         }
         setLoading(false);
     };
@@ -138,6 +142,81 @@ const ActionObjectives = ({ user, notify, todos, todoLabels, fetchData }) => {
                             ))}
                         </div>
                     </div>
+                </div>
+            </div>
+        );
+    };
+
+    const AddTodoModal = ({ onClose, onSave }) => {
+        const [form, setForm] = useState({ 
+            task: '', 
+            description: '', 
+            due_date: '',
+            label_ids: []
+        });
+
+        const toggleLabel = (labelId) => {
+            const current = form.label_ids || [];
+            const next = current.includes(labelId)
+                ? current.filter(id => id !== labelId)
+                : [...current, labelId];
+            setForm({ ...form, label_ids: next });
+        };
+
+        return (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                <div className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col max-h-[90vh]">
+                    <header className="p-8 pb-4 flex justify-between items-start">
+                        <div className="space-y-1">
+                            <h3 className="text-3xl font-black dark:text-white leading-none">New Objective</h3>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-primary">Mission Scope</p>
+                        </div>
+                        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-all">
+                            <Icon name="X" size={24} />
+                        </button>
+                    </header>
+                    <div className="flex-1 overflow-y-auto p-8 pt-4 space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Task Name</label>
+                            <input autoFocus value={form.task} onChange={e => setForm({...form, task: e.target.value})} placeholder="What needs to be done?" className="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl font-bold border-2 border-transparent focus:border-primary outline-none transition-all text-xl" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Timeline</label>
+                            <DatePicker value={form.due_date} onChange={val => setForm({...form, due_date: val})} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Labels</label>
+                            <div className="flex flex-wrap gap-2 p-2">
+                                {todoLabels.map(l => (
+                                    <button 
+                                        key={l.id} 
+                                        onClick={() => toggleLabel(l.id)}
+                                        className={`px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase transition-all flex items-center gap-2 ${form.label_ids?.includes(l.id) ? 'shadow-md scale-105' : 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100'}`}
+                                        style={{ backgroundColor: l.color, color: 'white' }}
+                                    >
+                                        {l.name}
+                                        {form.label_ids?.includes(l.id) && <Icon name="Check" size={10} />}
+                                    </button>
+                                ))}
+                                <button 
+                                    onClick={() => setShowLabelManager(true)}
+                                    className="px-3 py-1.5 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-400 font-black text-[10px] uppercase hover:border-primary hover:text-primary transition-all"
+                                >
+                                    Manage
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Strategic Details</label>
+                            <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Add context, sub-tasks, or notes..." className="w-full h-48 bg-slate-50 dark:bg-slate-900 p-5 rounded-[2rem] font-bold border-2 border-transparent focus:border-primary outline-none transition-all resize-none" />
+                        </div>
+                    </div>
+                    <footer className="p-8 bg-slate-50 dark:bg-slate-900/50 flex gap-3">
+                        <button onClick={onClose} className="flex-1 px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-800 transition-all">Cancel</button>
+                        <button onClick={() => onSave(form.task, form.due_date, form.description, form.label_ids)} className="flex-[2] bg-primary text-primary-content px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all">Create Objective</button>
+                    </footer>
                 </div>
             </div>
         );
@@ -242,7 +321,10 @@ const ActionObjectives = ({ user, notify, todos, todoLabels, fetchData }) => {
             <form onSubmit={(e) => { e.preventDefault(); addTask(task, dueDate); setTask(''); setDueDate(''); }} className="bg-base-200 p-6 rounded-[2rem] border border-base-300 shadow-sm flex flex-col md:flex-row gap-4">
                 <input value={task} onChange={(e) => setTask(e.target.value)} placeholder="New Objective..." className="flex-1 bg-base-100 p-4 rounded-xl font-bold outline-none text-base-content border-2 border-transparent focus:border-primary transition-all" />
                 <div className="w-full md:w-64"><DatePicker value={dueDate} onChange={setDueDate} /></div>
-                <button aria-label="Add Objective" type="submit" disabled={loading} className="bg-primary text-primary-content p-4 rounded-xl font-bold shadow-lg hover:scale-105 transition-transform"><Icon name="Plus" size={24} /></button>
+                <div className="flex gap-2">
+                    <button aria-label="Add Objective" type="submit" disabled={loading} className="bg-primary text-primary-content p-4 rounded-xl font-bold shadow-lg hover:scale-105 transition-transform"><Icon name="Plus" size={24} /></button>
+                    <button type="button" onClick={() => setShowAddModal(true)} className="bg-base-300 text-slate-600 p-4 rounded-xl font-bold hover:bg-base-400 transition-all shadow-lg" title="Open Full Form"><Icon name="Maximize2" size={20} /></button>
+                </div>
             </form>
         );
     };
@@ -345,6 +427,7 @@ const ActionObjectives = ({ user, notify, todos, todoLabels, fetchData }) => {
                 </div>
             )}
             {editingTodo && <EditTodoModal todo={editingTodo} onClose={() => setEditingTodo(null)} onSave={updateTodo} />}
+            {showAddModal && <AddTodoModal onClose={() => setShowAddModal(false)} onSave={addTask} />}
             {showLabelManager && <LabelManagerModal onClose={() => setShowLabelManager(false)} />}
         </PageContainer>
     );
