@@ -18,7 +18,7 @@ const Weather = ({ user, notify, config }) => {
         if (!locs || locs.length === 0) return;
         try {
             const promises = locs.map(async (loc) => {
-                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&temperature_unit=${unit}`);
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&hourly=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&temperature_unit=${unit}`);
                 const data = await res.json();
                 return { id: loc.id, data };
             });
@@ -210,28 +210,51 @@ const Weather = ({ user, notify, config }) => {
 
             {/* Detailed Forecast for Selected Location */}
             {selectedLocation && forecasts[selectedLocation.id] && (
-                <div className="bg-base-200 p-10 rounded-[3rem] border border-base-300 shadow-sm relative overflow-hidden animate-in slide-in-from-bottom duration-500">
-                    <div className="flex justify-between items-center mb-10">
-                        <div className="space-y-1">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-primary">Strategic 7-Day Outlook</h4>
-                            <h3 className="text-3xl font-black text-base-content">{selectedLocation.name}</h3>
+                <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
+                    {/* Hourly Forecast */}
+                    <div className="bg-base-200 p-8 rounded-[3rem] border border-base-300 shadow-sm">
+                        <h4 className="text-xs font-black uppercase tracking-widest text-primary mb-6 ml-2">Hourly Projections</h4>
+                        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                            {forecasts[selectedLocation.id].hourly.time.slice(0, 24).map((time, i) => {
+                                const date = new Date(time);
+                                const isNow = date.getHours() === new Date().getHours();
+                                return (
+                                    <div key={time} className={`min-w-[80px] p-4 rounded-2xl flex flex-col items-center gap-3 transition-all ${isNow ? 'bg-primary text-primary-content shadow-lg scale-105' : 'bg-base-100/50'}`}>
+                                        <span className={`text-[10px] font-black uppercase ${isNow ? 'text-primary-content' : 'text-slate-400'}`}>
+                                            {isNow ? 'Now' : format(date, 'ha')}
+                                        </span>
+                                        <Icon name={getWeatherIcon(forecasts[selectedLocation.id].hourly.weathercode[i])} size={20} />
+                                        <span className="font-black text-sm">{Math.round(forecasts[selectedLocation.id].hourly.temperature_2m[i])}°</span>
+                                    </div>
+                                );
+                            })}
                         </div>
-                        <a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">Data: Open-Meteo</a>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
-                        {forecasts[selectedLocation.id].daily.time.map((date, i) => (
-                            <div key={date} className="bg-base-100/50 p-6 rounded-3xl flex flex-col items-center text-center group hover:bg-base-100 transition-all border border-transparent hover:border-primary/20 shadow-sm">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-4">
-                                    {i === 0 ? 'Today' : format(new Date(date.replace(/-/g, '/')), 'EEE')}
-                                </p>
-                                <Icon name={getWeatherIcon(forecasts[selectedLocation.id].daily.weathercode[i])} size={32} className="text-primary mb-4" />
-                                <div className="space-y-1">
-                                    <p className="text-lg font-black text-base-content leading-none">{Math.round(forecasts[selectedLocation.id].daily.temperature_2m_max[i])}°</p>
-                                    <p className="text-[10px] font-bold text-slate-400">{Math.round(forecasts[selectedLocation.id].daily.temperature_2m_min[i])}°</p>
-                                </div>
+                    {/* 7-Day Outlook */}
+                    <div className="bg-base-200 p-10 rounded-[3rem] border border-base-300 shadow-sm relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-10">
+                            <div className="space-y-1">
+                                <h4 className="text-xs font-black uppercase tracking-widest text-primary">Strategic 7-Day Outlook</h4>
+                                <h3 className="text-3xl font-black text-base-content">{selectedLocation.name}</h3>
                             </div>
-                        ))}
+                            <a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">Data: Open-Meteo</a>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
+                            {forecasts[selectedLocation.id].daily.time.map((date, i) => (
+                                <div key={date} className="bg-base-100/50 p-6 rounded-3xl flex flex-col items-center text-center group hover:bg-base-100 transition-all border border-transparent hover:border-primary/20 shadow-sm">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-4">
+                                        {i === 0 ? 'Today' : format(new Date(date.replace(/-/g, '/')), 'EEE')}
+                                    </p>
+                                    <Icon name={getWeatherIcon(forecasts[selectedLocation.id].daily.weathercode[i])} size={32} className="text-primary mb-4" />
+                                    <div className="space-y-1">
+                                        <p className="text-lg font-black text-base-content leading-none">{Math.round(forecasts[selectedLocation.id].daily.temperature_2m_max[i])}°</p>
+                                        <p className="text-[10px] font-bold text-slate-400">{Math.round(forecasts[selectedLocation.id].daily.temperature_2m_min[i])}°</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
