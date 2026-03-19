@@ -3,11 +3,12 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
-import { calculateWeeklyRequirement, getCycleRange } from '../lib/moneyUtils';
-import { format, startOfDay, parseISO, subDays } from 'date-fns';
+import { calculateWeeklyRequirement } from '../lib/moneyUtils';
+import { parseISO, format, startOfDay, getDay, subDays } from 'date-fns';
 
-const MoneyAccounts = ({ user, notify }) => {
+const MoneyAccounts = ({ user, notify, config }) => {
     const [accounts, setAccounts] = useState([]);
+    const [filter, setFilter] = useState('all'); // 'all', 'liabilities', 'assets'
     const [newAccountName, setNewAccountName] = useState('');
     const [isShaking, setIsShaking] = useState(false);
     const accountInputRef = useRef(null);
@@ -20,6 +21,27 @@ const MoneyAccounts = ({ user, notify }) => {
 
     useEffect(() => { fetchAccounts(); }, [fetchAccounts]);
 
+    const filteredAccounts = accounts.filter(a => {
+        if (filter === 'liabilities') return ['credit', 'loan'].includes(a.account_type);
+        if (filter === 'assets') return ['cash', 'savings', 'investment'].includes(a.account_type);
+        return true;
+    });
+
+    const getTypeIcon = (type) => {
+        if (type === 'credit') return 'CreditCard';
+        if (type === 'loan') return 'Car';
+        if (type === 'savings') return 'PiggyBank';
+        if (type === 'investment') return 'TrendingUp';
+        if (type === 'cash') return 'Wallet';
+        return 'CircleDollarSign';
+    };
+
+    const getTypeColor = (type) => {
+        if (['credit', 'loan'].includes(type)) return 'text-danger';
+        if (['savings', 'investment'].includes(type)) return 'text-success';
+        return 'text-primary';
+    };
+
     const addAccount = async (e) => {
         e.preventDefault();
         const name = newAccountName.trim();
@@ -29,7 +51,15 @@ const MoneyAccounts = ({ user, notify }) => {
             accountInputRef.current?.focus();
             return;
         }
-        const { error } = await supabase.from('money_accounts').insert([{ name, balance: 0, user_id: user.id, position: accounts.length, payoff_mode: 'monthly', payoff_weeks: 1 }]);
+        const { error } = await supabase.from('money_accounts').insert([{ 
+            name, 
+            balance: 0, 
+            user_id: user.id, 
+            position: accounts.length, 
+            payoff_mode: 'monthly', 
+            payoff_weeks: 1,
+            account_type: 'credit'
+        }]);
         if (!error) { 
             setNewAccountName(''); 
             fetchAccounts(); 
@@ -116,20 +146,46 @@ const MoneyAccounts = ({ user, notify }) => {
 
     return (
         <PageContainer>
+            {/* Filter Hub */}
+            <div className="flex gap-4 mb-10 overflow-x-auto no-scrollbar pb-2">
+                {[
+                    { id: 'all', label: 'All Accounts', icon: 'LayoutGrid' },
+                    { id: 'liabilities', label: 'Liabilities', icon: 'ArrowDownCircle' },
+                    { id: 'assets', label: 'Assets', icon: 'ArrowUpCircle' }
+                ].map(item => (
+                    <button
+                        key={item.id}
+                        onClick={() => setFilter(item.id)}
+                        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 transition-all whitespace-nowrap shadow-sm border ${filter === item.id ? 'bg-primary text-primary-content border-primary' : 'bg-base-200 text-slate-500 border-base-300 hover:border-primary/30'}`}
+                    >
+                        <Icon name={item.icon} size={16} />
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+
             <DragDropContext onDragEnd={handleOnDragEnd}>
                 <Droppable droppableId="accounts" direction="horizontal">
                     {(provided) => (
                         <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {accounts.map((account, index) => {
-                                const weeklyReq = calculateWeeklyRequirement(account);
-                                const isLiability = account.statement_balance > 0 && (account.due_day || account.payoff_mode === 'fixed');
+                            {filteredAccounts.map((account, index) => {
+                                // Align calculation with the start of the CURRENT financial week
+                                // This matches exactly what the ledger sees for "Week 1"
+                                const targetDay = config?.financialWeekStart || 0;
+                                let calculationFloor = startOfDay(new Date());
+                                while (getDay(calculationFloor) !== targetDay) {
+                                    calculationFloor = subDays(calculationFloor, 1);
+                                }
+
+                                const weeklyReq = calculateWeeklyRequirement(account, calculationFloor, targetDay);
+                                const isLiability = ['credit', 'loan'].includes(account.account_type);
 
                                 return (
                                     <Draggable key={account.id} draggableId={account.id} index={index}>
                                         {(provided, snapshot) => (
                                             <div {...provided.draggableProps} ref={provided.innerRef}>
                                                 <div className={`bg-base-200 p-8 rounded-[2.5rem] border-2 transition-all relative group flex flex-col h-full
-                                                    ${snapshot.isDragging ? 'border-primary shadow-2xl scale-[1.05] z-50 bg-base-100' : (isLiability ? 'border-indigo-500/20 hover:border-indigo-500/40' : 'border-base-300 hover:border-primary/30')}`}>
+                                                    ${snapshot.isDragging ? 'border-primary shadow-2xl scale-[1.05] z-50 bg-base-100' : (isLiability && account.statement_balance > 0 ? 'border-primary/20 hover:border-primary/40' : 'border-base-300 hover:border-primary/30')}`}>
                                                     
                                                     <div {...provided.dragHandleProps} className="absolute top-6 right-6 p-1.5 hover:bg-base-300 rounded-lg cursor-grab active:cursor-grabbing text-slate-500 transition-colors">
                                                         <Icon name="GripVertical" size={16} />
@@ -143,6 +199,11 @@ const MoneyAccounts = ({ user, notify }) => {
                                                     </button>
 
                                                     <div className="text-center mb-6">
+                                                        <div className="flex justify-center mb-4">
+                                                            <div className={`p-3 bg-base-100 rounded-2xl shadow-inner ${getTypeColor(account.account_type)}`}>
+                                                                <Icon name={getTypeIcon(account.account_type)} size={24} />
+                                                            </div>
+                                                        </div>
                                                         <input 
                                                             className="bg-transparent text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 text-center w-full outline-none focus:text-primary"
                                                             defaultValue={account.name}
@@ -165,57 +226,79 @@ const MoneyAccounts = ({ user, notify }) => {
                                                                 onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                                                             />
                                                         </div>
-                                                        <p className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter mt-1">Statement Balance (Due Day {account.due_day})</p>
+                                                        <p className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter mt-1">
+                                                            {isLiability ? `Statement Balance (Due Day ${account.due_day})` : 'Available Balance'}
+                                                        </p>
                                                     </div>
 
                                                     <div className="mt-auto space-y-4 pt-6 border-t border-base-300/50">
-                                                        <div className="flex items-center justify-between px-4">
-                                                            <span className="text-[8px] font-black uppercase text-slate-400">Current Balance (Optional)</span>
-                                                            <div className="flex items-center text-slate-500 font-bold text-xs">
-                                                                <span className="mr-0.5">$</span>
-                                                                <input 
-                                                                    className="bg-transparent w-16 text-right outline-none"
-                                                                    defaultValue={account.balance || 0}
-                                                                    onPointerDown={e => e.stopPropagation()}
-                                                                    onFocus={e => e.target.select()}
-                                                                    onBlur={(e) => updateAccount(account.id, { balance: parseFloat(e.target.value) || 0 })}
-                                                                />
+                                                        <div className="grid grid-cols-2 gap-4 px-2">
+                                                            <div className="space-y-1">
+                                                                <label className="text-[7px] font-black uppercase text-slate-500 ml-1">Account Type</label>
+                                                                <select 
+                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none appearance-none text-center cursor-pointer border border-transparent focus:border-primary/30"
+                                                                    value={account.account_type || 'credit'}
+                                                                    onChange={(e) => updateAccount(account.id, { account_type: e.target.value })}
+                                                                >
+                                                                    <option value="credit">Credit Card</option>
+                                                                    <option value="loan">Loan / Lease</option>
+                                                                    <option value="cash">Cash / Checking</option>
+                                                                    <option value="savings">Savings</option>
+                                                                    <option value="investment">Investment</option>
+                                                                    <option value="other">Other</option>
+                                                                </select>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[7px] font-black uppercase text-slate-500 ml-1">Strategy</label>
+                                                                <select 
+                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none appearance-none text-center cursor-pointer border border-transparent focus:border-primary/30"
+                                                                    value={account.payoff_mode || 'monthly'}
+                                                                    onChange={(e) => updateAccount(account.id, { payoff_mode: e.target.value })}
+                                                                >
+                                                                    <option value="monthly">Monthly</option>
+                                                                    <option value="fixed">Fixed Term</option>
+                                                                    <option value="fixed_amount">Fixed Amount</option>
+                                                                </select>
                                                             </div>
                                                         </div>
 
                                                         <div className="grid grid-cols-2 gap-4 px-2">
                                                             <div className="space-y-1">
-                                                                <label className="text-[7px] font-black uppercase text-slate-500 ml-1">Strategy</label>
-                                                                <select 
-                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none appearance-none text-center cursor-pointer border border-transparent focus:border-indigo-500/30"
-                                                                    value={account.payoff_mode || 'monthly'}
-                                                                    onChange={(e) => updateAccount(account.id, { payoff_mode: e.target.value })}
-                                                                >
-                                                                    <option value="monthly">Monthly</option>
-                                                                    <option value="fixed">Fixed</option>
-                                                                </select>
-                                                            </div>
-                                                            <div className="space-y-1">
                                                                 <label className="text-[7px] font-black uppercase text-slate-500 ml-1">
-                                                                    {account.payoff_mode === 'fixed' ? 'Weeks' : 'Due Day'}
+                                                                    {account.payoff_mode === 'fixed' ? 'Weeks' : account.payoff_mode === 'fixed_amount' ? 'Fixed Amt' : 'Due Day'}
                                                                 </label>
                                                                 <input 
                                                                     type="number"
-                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none text-center border border-transparent focus:border-indigo-500/30"
-                                                                    defaultValue={account.payoff_mode === 'fixed' ? (account.payoff_weeks || '') : (account.due_day || '')}
+                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none text-center border border-transparent focus:border-primary/30"
+                                                                    defaultValue={account.payoff_mode === 'fixed' ? (account.payoff_weeks || '') : account.payoff_mode === 'fixed_amount' ? (account.fixed_amount || '') : (account.due_day || '')}
+                                                                    onPointerDown={e => e.stopPropagation()}
+                                                                    onFocus={e => e.target.select()}
                                                                     onBlur={(e) => {
-                                                                        const val = parseInt(e.target.value) || null;
-                                                                        const update = account.payoff_mode === 'fixed' ? { payoff_weeks: val } : { due_day: val };
-                                                                        updateAccount(account.id, update);
+                                                                        const val = parseFloat(e.target.value) || 0;
+                                                                        const field = account.payoff_mode === 'fixed' ? 'payoff_weeks' : account.payoff_mode === 'fixed_amount' ? 'fixed_amount' : 'due_day';
+                                                                        updateAccount(account.id, { [field]: val });
                                                                     }}
                                                                 />
                                                             </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[7px] font-black uppercase text-slate-500 ml-1">Current Balance</label>
+                                                                <div className="relative">
+                                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[8px] text-slate-400">$</span>
+                                                                    <input 
+                                                                        className="w-full bg-base-100 p-1.5 pl-4 rounded-lg text-[10px] font-bold outline-none text-center border border-transparent focus:border-primary/30"
+                                                                        defaultValue={account.balance || 0}
+                                                                        onPointerDown={e => e.stopPropagation()}
+                                                                        onFocus={e => e.target.select()}
+                                                                        onBlur={(e) => updateAccount(account.id, { balance: parseFloat(e.target.value) || 0 })}
+                                                                    />
+                                                                </div>
+                                                            </div>
                                                         </div>
 
-                                                        {isLiability && (
-                                                            <div className="bg-indigo-500/5 border border-indigo-500/10 p-4 rounded-2xl text-center animate-in fade-in zoom-in-95 duration-300">
-                                                                <p className="text-[8px] font-black uppercase text-indigo-500 tracking-widest mb-1">Weekly Requirement</p>
-                                                                <div className="text-xl font-black text-indigo-600">${Number(weeklyReq).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                                        {isLiability && weeklyReq > 0 && (
+                                                            <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl text-center animate-in fade-in zoom-in-95 duration-300">
+                                                                <p className="text-[8px] font-black uppercase text-primary tracking-widest mb-1">Weekly Requirement</p>
+                                                                <div className="text-xl font-black text-primary">${Number(weeklyReq).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -226,7 +309,7 @@ const MoneyAccounts = ({ user, notify }) => {
                                 );
                             })}
                             {provided.placeholder}
-                            <form onSubmit={addAccount} className={`bg-base-200/50 p-8 rounded-[2.5rem] border-2 border-dashed border-base-300 flex flex-col justify-center items-center gap-4 hover:border-primary/50 transition-colors group min-h-[300px] ${isShaking ? 'animate-shake' : ''}`}>
+                            <form onSubmit={addAccount} className={`bg-base-200/50 p-8 rounded-[2.5rem] border-2 border-dashed border-base-300 flex flex-col justify-center items-center gap-4 hover:border-primary/50 transition-colors group min-h-[350px] ${isShaking ? 'animate-shake' : ''}`}>
                                 <button type="submit" className="w-14 h-14 rounded-full bg-base-300 flex items-center justify-center text-slate-600 group-hover:bg-primary group-hover:text-primary-content transition-all shadow-md">
                                     <Icon name="Plus" size={28} />
                                 </button>

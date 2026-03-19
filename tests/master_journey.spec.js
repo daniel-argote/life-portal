@@ -1,3 +1,4 @@
+/* eslint-env node */
 import { test, expect } from '@playwright/test';
 
 test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', async ({ page }) => {

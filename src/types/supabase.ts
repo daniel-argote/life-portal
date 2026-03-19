@@ -494,7 +494,9 @@ export type Database = {
           balance: number | null
           created_at: string | null
           due_day: number | null
+          fixed_amount: number | null
           id: string
+          last_statement_amount: number | null
           name: string
           payoff_mode: string | null
           payoff_weeks: number | null
@@ -506,7 +508,9 @@ export type Database = {
           balance?: number | null
           created_at?: string | null
           due_day?: number | null
+          fixed_amount?: number | null
           id?: string
+          last_statement_amount?: number | null
           name: string
           payoff_mode?: string | null
           payoff_weeks?: number | null
@@ -518,7 +522,9 @@ export type Database = {
           balance?: number | null
           created_at?: string | null
           due_day?: number | null
+          fixed_amount?: number | null
           id?: string
+          last_statement_amount?: number | null
           name?: string
           payoff_mode?: string | null
           payoff_weeks?: number | null

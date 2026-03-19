@@ -79,20 +79,25 @@ const MoneyLedger = ({ user, notify, config }) => {
 
                         if (!isStale && account.statement_balance > 0) {
                             const queryStart = format(subDays(cycleStart, 7), 'yyyy-MM-dd');
+                            // Simplified query: find all unpaid items for this account in this cycle
                             const { data: cycleItems } = await supabase
                                 .from('money_items')
-                                .select(`amount, is_paid, money_weeks!inner (start_date)`)
+                                .select(`amount, money_weeks!inner (start_date)`)
                                 .eq('account_id', account.id)
                                 .eq('is_paid', false)
                                 .gte('money_weeks.start_date', queryStart)
                                 .lt('money_weeks.start_date', format(cycleEnd, 'yyyy-MM-dd'));
 
                             const plannedUnpaidTotal = (cycleItems || []).reduce((sum, item) => sum + Number(item.amount), 0);
-                            const weeklySlice = calculateWeeklyRequirement(account, calculationDate);
+                            const effectiveBalance = Math.max(0, Number(account.statement_balance) - plannedUnpaidTotal);
                             
-                            // Amount to insert is the stable slice, capped by what's left to plan
-                            const remainingToPlan = Math.max(0, account.statement_balance - plannedUnpaidTotal);
-                            amountToInsert = Math.ceil(Math.min(weeklySlice, remainingToPlan));
+                            // Pass the financialWeekStart config to the calculator
+                            const weeklySlice = calculateWeeklyRequirement(
+                                { ...account, statement_balance: effectiveBalance }, 
+                                calculationDate, 
+                                config.financialWeekStart || 0
+                            );
+                            amountToInsert = Math.ceil(weeklySlice);
                         }
 
                         itemsToInsert.push({
