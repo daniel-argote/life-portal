@@ -132,7 +132,10 @@ const MoneyLedger = ({ user, notify, config }) => {
                 
                 if (weightA !== weightB) return weightA - weightB;
                 return b.amount - a.amount;
-            }).map(({ account_type, ...item }) => item); // strip temp field
+            }).map(item => {
+                const { account_type: _, ...rest } = item;
+                return rest;
+            });
 
             // 2. Rollover Manual Items from previous week
             const manualItems = [];
@@ -305,8 +308,10 @@ const MoneyLedger = ({ user, notify, config }) => {
                 </div>
                 {activeWeek && (
                     <div className="text-right hidden md:block">
-                        <div className="text-2xl font-black text-base-content">${paidTotal}</div>
-                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Paid of ${weekTotal}</div>
+                        <div className="text-2xl font-black text-base-content">${paidTotal.toLocaleString()}</div>
+                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
+                            Paid of <span className="text-indigo-600 ml-1">${weekTotal.toLocaleString()}</span>
+                        </div>
                     </div>
                 )}
             </header>
