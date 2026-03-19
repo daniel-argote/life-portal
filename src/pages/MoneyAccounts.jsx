@@ -3,7 +3,8 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
-import { calculateWeeklyRequirement } from '../lib/moneyUtils';
+import { calculateWeeklyRequirement, getCycleRange } from '../lib/moneyUtils';
+import { format, startOfDay, parseISO, subDays } from 'date-fns';
 
 const MoneyAccounts = ({ user, notify }) => {
     const [accounts, setAccounts] = useState([]);
@@ -40,13 +41,54 @@ const MoneyAccounts = ({ user, notify }) => {
     };
 
     const updateAccount = async (id, updates) => {
+        // Optimistic UI update for immediate feedback
+        setAccounts(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+
         const { error } = await supabase.from('money_accounts').update(updates).eq('id', id);
         if (!error) { 
+            // CASCADE UPDATE: If statement_balance was updated, sync ALL unpaid ledger items for this account
+            if (updates.statement_balance !== undefined) {
+                console.log(`[Cascade] Starting update for account ${id} to $${updates.statement_balance}`);
+                
+                // Fetch the fully updated account for accurate context
+                const { data: updatedAccount } = await supabase.from('money_accounts').select('*').eq('id', id).single();
+                
+                const { data: existingItems, error: itemsError } = await supabase
+                    .from('money_items')
+                    .select(`
+                        id, 
+                        amount,
+                        money_weeks!inner (
+                            start_date
+                        )
+                    `)
+                    .eq('account_id', id)
+                    .eq('is_paid', false);
+
+                if (itemsError) console.error('[Cascade] Error fetching items:', itemsError);
+
+                if (existingItems && existingItems.length > 0) {
+                    console.log(`[Cascade] Found ${existingItems.length} unpaid items to potentially update.`);
+                    for (const item of existingItems) {
+                        const weekStart = parseISO(item.money_weeks.start_date);
+                        const newAmount = calculateWeeklyRequirement(updatedAccount, weekStart);
+                        
+                        console.log(`[Cascade] Item ${item.id} (Week ${item.money_weeks.start_date}): $${item.amount} -> $${Math.ceil(newAmount)}`);
+                        
+                        const { error: upError } = await supabase.from('money_items').update({ amount: Math.ceil(newAmount) }).eq('id', item.id);
+                        if (upError) console.error(`[Cascade] Failed to update item ${item.id}:`, upError);
+                    }
+                } else {
+                    console.log('[Cascade] No unpaid ledger items found for this account.');
+                }
+            }
+
             fetchAccounts(); 
             notify('Account updated'); 
         } else {
             console.error(error);
             notify('Failed to update account', 'error');
+            fetchAccounts(); // Rollback on error
         }
     };
 
@@ -110,39 +152,56 @@ const MoneyAccounts = ({ user, notify }) => {
                                                             <span className="text-2xl mr-1 opacity-50">$</span>
                                                             <input 
                                                                 className="bg-transparent w-full text-center outline-none"
-                                                                defaultValue={account.balance}
-                                                                onBlur={(e) => updateAccount(account.id, { balance: parseFloat(e.target.value) || 0 })}
+                                                                defaultValue={account.statement_balance || 0}
+                                                                onPointerDown={e => e.stopPropagation()}
+                                                                onFocus={e => e.target.select()}
+                                                                onBlur={(e) => {
+                                                                    const val = parseFloat(e.target.value) || 0;
+                                                                    updateAccount(account.id, { 
+                                                                        statement_balance: val,
+                                                                        last_statement_amount: val // Sync historical goal
+                                                                    });
+                                                                }}
                                                                 onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                                                             />
                                                         </div>
-                                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mt-1">Current Balance</p>
+                                                        <p className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter mt-1">Statement Balance (Due Day {account.due_day})</p>
                                                     </div>
 
                                                     <div className="mt-auto space-y-4 pt-6 border-t border-base-300/50">
-                                                        <div className="flex gap-2 mb-2">
-                                                            <button 
-                                                                onClick={() => updateAccount(account.id, { payoff_mode: 'monthly' })}
-                                                                className={`flex-1 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${account.payoff_mode === 'monthly' ? 'bg-primary text-primary-content shadow-sm' : 'bg-base-300 text-slate-500'}`}
-                                                            >
-                                                                Monthly
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => updateAccount(account.id, { payoff_mode: 'fixed' })}
-                                                                className={`flex-1 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${account.payoff_mode === 'fixed' ? 'bg-indigo-500 text-white shadow-sm' : 'bg-base-300 text-slate-500'}`}
-                                                            >
-                                                                Fixed Term
-                                                            </button>
+                                                        <div className="flex items-center justify-between px-4">
+                                                            <span className="text-[8px] font-black uppercase text-slate-400">Current Balance (Optional)</span>
+                                                            <div className="flex items-center text-slate-500 font-bold text-xs">
+                                                                <span className="mr-0.5">$</span>
+                                                                <input 
+                                                                    className="bg-transparent w-16 text-right outline-none"
+                                                                    defaultValue={account.balance || 0}
+                                                                    onPointerDown={e => e.stopPropagation()}
+                                                                    onFocus={e => e.target.select()}
+                                                                    onBlur={(e) => updateAccount(account.id, { balance: parseFloat(e.target.value) || 0 })}
+                                                                />
+                                                            </div>
                                                         </div>
 
-                                                        <div className="grid grid-cols-2 gap-4">
+                                                        <div className="grid grid-cols-2 gap-4 px-2">
                                                             <div className="space-y-1">
-                                                                <label className="text-[8px] font-black uppercase text-slate-500 ml-1">
-                                                                    {account.payoff_mode === 'fixed' ? 'Total Weeks' : 'Due Day'}
+                                                                <label className="text-[7px] font-black uppercase text-slate-500 ml-1">Strategy</label>
+                                                                <select 
+                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none appearance-none text-center cursor-pointer border border-transparent focus:border-indigo-500/30"
+                                                                    value={account.payoff_mode || 'monthly'}
+                                                                    onChange={(e) => updateAccount(account.id, { payoff_mode: e.target.value })}
+                                                                >
+                                                                    <option value="monthly">Monthly</option>
+                                                                    <option value="fixed">Fixed</option>
+                                                                </select>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[7px] font-black uppercase text-slate-500 ml-1">
+                                                                    {account.payoff_mode === 'fixed' ? 'Weeks' : 'Due Day'}
                                                                 </label>
                                                                 <input 
                                                                     type="number"
-                                                                    placeholder={account.payoff_mode === 'fixed' ? 'Weeks' : 'DD'}
-                                                                    className="w-full bg-base-100 p-2 rounded-xl text-center font-bold text-xs outline-none border-2 border-transparent focus:border-indigo-500/30"
+                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none text-center border border-transparent focus:border-indigo-500/30"
                                                                     defaultValue={account.payoff_mode === 'fixed' ? (account.payoff_weeks || '') : (account.due_day || '')}
                                                                     onBlur={(e) => {
                                                                         const val = parseInt(e.target.value) || null;
@@ -150,19 +209,6 @@ const MoneyAccounts = ({ user, notify }) => {
                                                                         updateAccount(account.id, update);
                                                                     }}
                                                                 />
-                                                            </div>
-                                                            <div className="space-y-1">
-                                                                <label className="text-[8px] font-black uppercase text-slate-500 ml-1">Statement</label>
-                                                                <div className="relative">
-                                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">$</span>
-                                                                    <input 
-                                                                        type="number"
-                                                                        placeholder="0.00"
-                                                                        className="w-full bg-base-100 p-2 pl-4 rounded-xl text-center font-bold text-xs outline-none border-2 border-transparent focus:border-indigo-500/30"
-                                                                        defaultValue={account.statement_balance || ''}
-                                                                        onBlur={(e) => updateAccount(account.id, { statement_balance: parseFloat(e.target.value) || 0 })}
-                                                                    />
-                                                                </div>
                                                             </div>
                                                         </div>
 

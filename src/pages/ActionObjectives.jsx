@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
@@ -470,7 +470,7 @@ const ActionObjectives = ({ user, notify, todos, todoLabels, fetchData }) => {
                     {filteredTodos
                         .filter(t => t.status === 'done')
                         .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))
-                        .map((todo, i) => (
+                        .map((todo) => (
                             <div key={todo.id} className="relative pl-8 border-l-4 border-slate-200 dark:border-slate-700 pb-8 last:pb-0">
                                 <div className="absolute -left-3 top-0 w-5 h-5 rounded-full bg-success ring-4 ring-white dark:ring-slate-900 shadow-sm" />
                                 <div className="bg-base-200 p-6 rounded-3xl border border-base-300 shadow-sm">

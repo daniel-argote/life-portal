@@ -7,16 +7,35 @@ function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
+  const [authInitialMode, setAuthInitialMode] = useState('login');
 
   useEffect(() => {
+    // Check if the user's ID actually exists in the database
+    // This handles the "Stale Session" problem after a local DB reset
+    const checkUserIntegrity = async (user) => {
+      if (!user) return;
+      const { data, error } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle();
+      
+      // If error or no data, it means the auth user doesn't exist in the current DB instance
+      if (error || !data) {
+        console.warn('Stale session detected. User ID not found in current database instance. Logging out...');
+        notify('Your session is stale (database reset). Please create your account again.', 'error');
+        setAuthInitialMode('signup');
+        supabase.auth.signOut();
+        setSession(null);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session?.user) checkUserIntegrity(session.user);
       setLoading(false);
     });
 
     // Initial session fetch
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session?.user) checkUserIntegrity(session.user);
       setLoading(false);
     });
 
@@ -44,7 +63,7 @@ function App() {
   return (
     <>
       {msg && <div className={`fixed top-6 right-6 z-[100] px-8 py-4 rounded-2xl text-white font-black shadow-2xl animate-in slide-in-from-top-4 duration-300 ${msg.type === 'error' ? 'bg-red-500' : 'bg-slate-900'}`}>{msg.text}</div>}
-      {!session ? <Auth onAuthError={notify} onAuthSuccess={notify} /> : <Layout key={session.user.id} user={session.user} />}
+      {!session ? <Auth onAuthError={notify} onAuthSuccess={notify} initialMode={authInitialMode} /> : <Layout key={session.user.id} user={session.user} />}
     </>
   )
 }

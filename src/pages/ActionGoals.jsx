@@ -5,7 +5,7 @@ import DatePicker from '../components/DatePicker';
 import { format } from 'date-fns';
 import PageContainer from '../components/PageContainer';
 
-const ActionGoals = ({ user, notify, todoLabels, fetchData: fetchGlobalData }) => {
+const ActionGoals = ({ user, notify, todoLabels }) => {
     const [goals, setGoals] = useState([]);
     const [showAdd, setShowAdd] = useState(false);
     const [loading, setLoading] = useState(false);

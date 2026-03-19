@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 
-const Auth = ({ onAuthSuccess, onAuthError }) => {
-    const [authMode, setAuthMode] = useState('login');
+const Auth = ({ onAuthSuccess, onAuthError, initialMode = 'login' }) => {
+    const [authMode, setAuthMode] = useState(initialMode);
     const [loading, setLoading] = useState(false);
 
     const handleAuth = async (e) => {

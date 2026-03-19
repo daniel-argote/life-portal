@@ -101,7 +101,9 @@ export type Database = {
           description: string | null
           frequency: string
           id: string
+          is_recurring: boolean | null
           last_completed: string | null
+          status: string | null
           title: string
           user_id: string
         }
@@ -110,7 +112,9 @@ export type Database = {
           description?: string | null
           frequency?: string
           id?: string
+          is_recurring?: boolean | null
           last_completed?: string | null
+          status?: string | null
           title: string
           user_id: string
         }
@@ -119,7 +123,9 @@ export type Database = {
           description?: string | null
           frequency?: string
           id?: string
+          is_recurring?: boolean | null
           last_completed?: string | null
+          status?: string | null
           title?: string
           user_id?: string
         }
@@ -188,29 +194,127 @@ export type Database = {
         }
         Relationships: []
       }
+      food_top_list_items: {
+        Row: {
+          created_at: string
+          dish_name: string | null
+          id: string
+          lat: number | null
+          list_id: string
+          lng: number | null
+          location_name: string | null
+          must_try_other_dishes: string | null
+          photo_url: string | null
+          price_point: number | null
+          rating_flavor: number | null
+          rating_value: number | null
+          rating_vibe: number | null
+          restaurant_name: string
+          review_notes: string | null
+          user_id: string
+          visited_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          dish_name?: string | null
+          id?: string
+          lat?: number | null
+          list_id: string
+          lng?: number | null
+          location_name?: string | null
+          must_try_other_dishes?: string | null
+          photo_url?: string | null
+          price_point?: number | null
+          rating_flavor?: number | null
+          rating_value?: number | null
+          rating_vibe?: number | null
+          restaurant_name: string
+          review_notes?: string | null
+          user_id: string
+          visited_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          dish_name?: string | null
+          id?: string
+          lat?: number | null
+          list_id?: string
+          lng?: number | null
+          location_name?: string | null
+          must_try_other_dishes?: string | null
+          photo_url?: string | null
+          price_point?: number | null
+          rating_flavor?: number | null
+          rating_value?: number | null
+          rating_vibe?: number | null
+          restaurant_name?: string
+          review_notes?: string | null
+          user_id?: string
+          visited_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_top_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "food_top_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_top_lists: {
+        Row: {
+          category_name: string
+          created_at: string
+          description: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          category_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          category_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
+          completed_at: string | null
           created_at: string | null
           description: string | null
           id: string
+          label_ids: string[] | null
           status: string | null
           target_date: string | null
           title: string
           user_id: string
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          label_ids?: string[] | null
           status?: string | null
           target_date?: string | null
           title: string
           user_id: string
         }
         Update: {
+          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          label_ids?: string[] | null
           status?: string | null
           target_date?: string | null
           title?: string
@@ -392,6 +496,8 @@ export type Database = {
           due_day: number | null
           id: string
           name: string
+          payoff_mode: string | null
+          payoff_weeks: number | null
           position: number | null
           statement_balance: number | null
           user_id: string
@@ -402,6 +508,8 @@ export type Database = {
           due_day?: number | null
           id?: string
           name: string
+          payoff_mode?: string | null
+          payoff_weeks?: number | null
           position?: number | null
           statement_balance?: number | null
           user_id: string
@@ -412,6 +520,8 @@ export type Database = {
           due_day?: number | null
           id?: string
           name?: string
+          payoff_mode?: string | null
+          payoff_weeks?: number | null
           position?: number | null
           statement_balance?: number | null
           user_id?: string
@@ -453,6 +563,7 @@ export type Database = {
       }
       money_items: {
         Row: {
+          account_id: string | null
           amount: number | null
           created_at: string | null
           id: string
@@ -463,6 +574,7 @@ export type Database = {
           week_id: string
         }
         Insert: {
+          account_id?: string | null
           amount?: number | null
           created_at?: string | null
           id?: string
@@ -473,6 +585,7 @@ export type Database = {
           week_id: string
         }
         Update: {
+          account_id?: string | null
           amount?: number | null
           created_at?: string | null
           id?: string
@@ -483,6 +596,13 @@ export type Database = {
           week_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "money_items_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "money_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "money_items_week_id_fkey"
             columns: ["week_id"]
@@ -699,35 +819,65 @@ export type Database = {
         }
         Relationships: []
       }
+      todo_labels: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       todos: {
         Row: {
+          completed_at: string | null
           created_at: string | null
           description: string | null
           due_date: string | null
           id: string
           is_complete: boolean | null
+          label_ids: string[] | null
           position: number | null
           status: string | null
           task: string | null
           user_id: string
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
           is_complete?: boolean | null
+          label_ids?: string[] | null
           position?: number | null
           status?: string | null
           task?: string | null
           user_id: string
         }
         Update: {
+          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
           is_complete?: boolean | null
+          label_ids?: string[] | null
           position?: number | null
           status?: string | null
           task?: string | null
