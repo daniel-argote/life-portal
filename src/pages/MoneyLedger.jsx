@@ -58,10 +58,10 @@ const MoneyLedger = ({ user, notify, config }) => {
             if (weekError) throw weekError;
 
             const newWeek = newWeekData[0];
-            const itemsToInsert = [];
+            const accountItems = [];
 
             // 1. Auto-populate from Accounts with Fulfillment & Unpaid Logic
-            const { data: accounts } = await supabase.from('money_accounts').select('*');
+            const { data: accounts } = await supabase.from('money_accounts').select('*').order('position', { ascending: true });
             if (accounts) {
                 const weekStartDate = parseISO(startDate);
                 const calculationDate = isAfter(new Date(), weekStartDate) ? new Date() : weekStartDate;
@@ -70,8 +70,6 @@ const MoneyLedger = ({ user, notify, config }) => {
                     if (account.payoff_mode === 'monthly' && account.due_day) {
                         const { start: cycleStart, end: cycleEnd } = getCycleRange(account.due_day, calculationDate);
                         
-                        // CYCLE RESET GUARD:
-                        // If we are planning for the NEXT month but haven't entered a new balance yet, default to $0
                         const isPlanningForNextMonth = isAfter(weekStartDate, setDate(new Date(weekStartDate), account.due_day));
                         const isStale = isPlanningForNextMonth && account.statement_balance < (account.last_statement_amount || 0) * 0.5;
                         
@@ -79,7 +77,6 @@ const MoneyLedger = ({ user, notify, config }) => {
 
                         if (!isStale && account.statement_balance > 0) {
                             const queryStart = format(subDays(cycleStart, 7), 'yyyy-MM-dd');
-                            // Simplified query: find all unpaid items for this account in this cycle
                             const { data: cycleItems } = await supabase
                                 .from('money_items')
                                 .select(`amount, money_weeks!inner (start_date)`)
@@ -91,7 +88,6 @@ const MoneyLedger = ({ user, notify, config }) => {
                             const plannedUnpaidTotal = (cycleItems || []).reduce((sum, item) => sum + Number(item.amount), 0);
                             const effectiveBalance = Math.max(0, Number(account.statement_balance) - plannedUnpaidTotal);
                             
-                            // Pass the financialWeekStart config to the calculator
                             const weeklySlice = calculateWeeklyRequirement(
                                 { ...account, statement_balance: effectiveBalance }, 
                                 calculationDate, 
@@ -100,21 +96,22 @@ const MoneyLedger = ({ user, notify, config }) => {
                             amountToInsert = Math.ceil(weeklySlice);
                         }
 
-                        itemsToInsert.push({
+                        accountItems.push({
                             title: account.name,
                             amount: amountToInsert,
                             account_id: account.id,
+                            account_type: account.account_type, // temporary for sorting
                             week_id: newWeek.id,
                             user_id: user.id,
                             is_paid: false
                         });
                     } else if (account.statement_balance >= 0) {
-                        // Handle fixed mode or fallback - always insert a row
                         const amount = calculateWeeklyRequirement(account, calculationDate);
-                        itemsToInsert.push({
+                        accountItems.push({
                             title: account.name,
                             amount: Math.ceil(amount || 0),
                             account_id: account.id,
+                            account_type: account.account_type, // temporary for sorting
                             week_id: newWeek.id,
                             user_id: user.id,
                             is_paid: false
@@ -123,12 +120,27 @@ const MoneyLedger = ({ user, notify, config }) => {
                 }
             }
 
+            // PRIORITY SORTING:
+            // 1. Loans/Leases first
+            // 2. Other Liabilities (credit) second
+            // 3. Assets last
+            // Tie-break: Amount descending
+            const sortedAccountItems = accountItems.sort((a, b) => {
+                const typeWeight = { 'loan': 0, 'credit': 1, 'cash': 2, 'savings': 2, 'investment': 2, 'other': 3 };
+                const weightA = typeWeight[a.account_type] || 99;
+                const weightB = typeWeight[b.account_type] || 99;
+                
+                if (weightA !== weightB) return weightA - weightB;
+                return b.amount - a.amount;
+            }).map(({ account_type, ...item }) => item); // strip temp field
+
             // 2. Rollover Manual Items from previous week
+            const manualItems = [];
             if (previousWeek) {
                 const { data: prevItems } = await supabase.from('money_items').select('*').eq('week_id', previousWeek.id).is('account_id', null);
                 if (prevItems) {
                     prevItems.forEach(item => {
-                        itemsToInsert.push({
+                        manualItems.push({
                             title: item.title,
                             amount: item.amount,
                             category: item.category,
@@ -139,6 +151,8 @@ const MoneyLedger = ({ user, notify, config }) => {
                     });
                 }
             }
+
+            const itemsToInsert = [...sortedAccountItems, ...manualItems];
 
             if (itemsToInsert.length > 0) {
                 const { error: insertError } = await supabase.from('money_items').insert(itemsToInsert);
