@@ -23,7 +23,17 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   }
 
   // Wait for Dashboard - more patient wait for remote DB
-  await expect(page.getByTestId('page-header')).toHaveText('Portal', { timeout: 45000 });
+  try {
+    await expect(page.getByTestId('page-header')).toHaveText('Portal', { timeout: 45000 });
+  } catch (e) {
+    // Diagnostic: If we failed to find the portal header, are we still on the auth page?
+    const isAuthVisible = await page.getByTestId('auth-page').isVisible();
+    if (isAuthVisible) {
+      const pageText = await page.innerText('body');
+      throw new Error(`Test failed to reach Dashboard. Still on Auth page. Current text: ${pageText.substring(0, 200)}...`);
+    }
+    throw e;
+  }
 
   // 2. Actions Module: Add an Objective
   await page.getByRole('button', { name: 'Actions', exact: true }).click();
