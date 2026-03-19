@@ -23,7 +23,10 @@ const Auth = ({ onAuthSuccess, onAuthError, initialMode = 'login' }) => {
             });
 
         if (error) onAuthError(error.message);
-        else if (authMode === 'signup') onAuthSuccess("Account created! Check email if required.");
+        else if (authMode === 'signup') {
+            sessionStorage.setItem('just_signed_up', 'true');
+            onAuthSuccess("Account created! Check email if required.");
+        }
         
         setLoading(false);
     };

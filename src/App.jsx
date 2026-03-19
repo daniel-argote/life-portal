@@ -15,12 +15,17 @@ function App() {
     const checkUserIntegrity = async (user, retryCount = 0) => {
       if (!user) return;
       
+      // If we just signed up in this session, skip the check to avoid race conditions with triggers
+      if (sessionStorage.getItem('just_signed_up') === 'true') {
+        sessionStorage.removeItem('just_signed_up');
+        return;
+      }
+
       const { data, error } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle();
       
-      // If we don't find the profile, it might be a race condition during signup
-      // We'll retry a few times before assuming the session is stale
-      if (!data && retryCount < 3) {
-        setTimeout(() => checkUserIntegrity(user, retryCount + 1), 1000);
+      // If we don't find the profile, it might be a race condition during signup or a slow CI environment
+      if (!data && retryCount < 5) {
+        setTimeout(() => checkUserIntegrity(user, retryCount + 1), 2000);
         return;
       }
 
