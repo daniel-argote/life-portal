@@ -50,6 +50,8 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   await expect(objectiveInput).toBeVisible({ timeout: 15000 });
   await objectiveInput.fill(objectiveTitle);
   await page.getByLabel('Add Objective').click();
+  // Wait for the network to settle to ensure the save is complete
+  await page.waitForLoadState('networkidle');
   // Verify data presence (most robust check)
   await expect(page.getByText(objectiveTitle)).toBeVisible({ timeout: 20000 });
 
