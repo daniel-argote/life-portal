@@ -1,18 +1,29 @@
 import { test, expect } from '@playwright/test';
 
 test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', async ({ page }) => {
-  const testEmail = `test_${Date.now()}@example.com`;
+  const isCI = process.env.VITE_CI === 'true';
+  const testEmail = isCI ? 'test@example.com' : `test_${Date.now()}@example.com`;
   const testPassword = 'Password123!';
 
-  // 1. Setup: Navigate and Signup
+  // 1. Setup: Navigate and Authenticate
   await page.goto('/');
-  await page.getByRole('button', { name: 'Request New Access' }).click();
+  
+  // In CI, we try to login first because signup might require email confirmation on remote DB
   await page.getByPlaceholder('Identity Email').fill(testEmail);
   await page.getByPlaceholder('Access Key').fill(testPassword);
-  await page.getByRole('button', { name: 'Register Identity' }).click();
+  await page.getByRole('button', { name: 'Authenticate' }).click();
 
-  // Wait for Dashboard
-  await expect(page.getByTestId('page-header')).toHaveText('Portal', { timeout: 30000 });
+  // If login fails (or we are local), try signup
+  const errorMsg = page.locator('.bg-red-500');
+  if (await errorMsg.isVisible({ timeout: 5000 }).catch(() => false) || !isCI) {
+    await page.getByRole('button', { name: 'Request New Access' }).click();
+    await page.getByPlaceholder('Identity Email').fill(testEmail);
+    await page.getByPlaceholder('Access Key').fill(testPassword);
+    await page.getByRole('button', { name: 'Register Identity' }).click();
+  }
+
+  // Wait for Dashboard - more patient wait for remote DB
+  await expect(page.getByTestId('page-header')).toHaveText('Portal', { timeout: 45000 });
 
   // 2. Actions Module: Add an Objective
   await page.getByRole('button', { name: 'Actions', exact: true }).click();
