@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 import Sidebar from './Sidebar';
@@ -218,6 +218,12 @@ const Layout = ({ user }) => {
     const [input, setInput] = useState("");
     const [noteForm, setNoteForm] = useState({ title: '', content: '' });
     const [msg, setMsg] = useState(null);
+    const undoRef = useRef(null);
+
+    // Sync the undo ref whenever msg changes
+    useEffect(() => {
+        undoRef.current = msg?.onUndo || null;
+    }, [msg]);
 
     // Helpers to find feature and its children
     const findFeature = useCallback((items, id) => {
@@ -235,18 +241,29 @@ const Layout = ({ user }) => {
         return hierarchy.filter(item => !config.hiddenFeatures.includes(item.id));
     }, [hierarchy, config.hiddenFeatures]);
 
-    const notify = useCallback((text, type = 'success') => {
+    const notify = useCallback((text, type = 'success', onUndo = null) => {
         // If text is an error object, extract message
         let displayMsg = text;
-        if (typeof text === 'object' && text !== null) {
+        if (typeof text === 'object' && text !== null && !text.$$typeof) {
             displayMsg = text.message || text.error_description || JSON.stringify(text);
         }
-        setMsg({ text: displayMsg, type });
+        
+        // Wrap the undo action to clear the message after restoration
+        const handleUndo = async () => {
+            if (onUndo) {
+                await onUndo();
+                setMsg(null);
+            }
+        };
+
+        setMsg({ text: displayMsg, type, onUndo: onUndo ? handleUndo : null });
         
         // If it's an error and dismissibleErrors is enabled, don't auto-dismiss
         if (type === 'error' && config.dismissibleErrors) return;
 
-        setTimeout(() => setMsg(null), type === 'error' ? 20000 : 3000);
+        // Give more time (10s) if an undo action is available, otherwise standard 5s
+        const duration = onUndo ? 10000 : (type === 'error' ? 20000 : 5000);
+        setTimeout(() => setMsg(null), duration);
     }, [config.dismissibleErrors]);
 
     const fetchData = useCallback(async () => {
@@ -420,15 +437,26 @@ const Layout = ({ user }) => {
         localStorage.setItem('style', style);
     }, [style]);
 
-    // Hotkey for sub-features (Alt+S)
+    // Hotkey for sub-features (Alt+S) and Undo (Ctrl+Z)
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.altKey && e.key.toLowerCase() === 's') {
                 updateConfig('showSubFeatures', !config.showSubFeatures);
             }
+            
+            // GLOBAL UNDO HOTKEY (Ctrl+Z)
+            // Using ref ensures we always have the freshest callback without re-binding the listener constantly
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                if (undoRef.current) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    undoRef.current();
+                }
+            }
         };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        // Use capture: true to ensure we catch it before other elements
+        window.addEventListener('keydown', handleKeyDown, true);
+        return () => window.removeEventListener('keydown', handleKeyDown, true);
     }, [config.showSubFeatures, updateConfig]);
 
     const addLog = async () => {
@@ -508,7 +536,15 @@ const Layout = ({ user }) => {
             {msg && (
                 <div className={`fixed top-6 right-6 z-[100] pl-8 pr-4 py-4 rounded-2xl text-primary-content font-black shadow-2xl animate-in slide-in-from-top-4 duration-300 flex items-center gap-4 ${msg.type === 'error' ? 'bg-danger' : 'bg-neutral'}`}>
                     <span>{msg.text}</span>
-                    <button onClick={() => setMsg(null)} className="p-1 hover:bg-white/20 rounded-lg transition-colors">
+                    {msg.onUndo && (
+                        <button 
+                            onClick={msg.onUndo}
+                            className="px-4 py-2 bg-white text-neutral rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg border border-white/20 ml-auto"
+                        >
+                            Undo
+                        </button>
+                    )}
+                    <button onClick={() => setMsg(null)} className="p-1 hover:bg-white/20 rounded-lg transition-colors ml-2">
                         <Icon name="X" size={16} />
                     </button>
                 </div>

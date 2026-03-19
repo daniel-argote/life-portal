@@ -491,8 +491,11 @@ export type Database = {
       }
       money_accounts: {
         Row: {
+          account_type: string | null
           balance: number | null
           created_at: string | null
+          custom_icon: string | null
+          deleted_at: string | null
           due_day: number | null
           fixed_amount: number | null
           id: string
@@ -505,8 +508,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_type?: string | null
           balance?: number | null
           created_at?: string | null
+          custom_icon?: string | null
+          deleted_at?: string | null
           due_day?: number | null
           fixed_amount?: number | null
           id?: string
@@ -519,8 +525,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_type?: string | null
           balance?: number | null
           created_at?: string | null
+          custom_icon?: string | null
+          deleted_at?: string | null
           due_day?: number | null
           fixed_amount?: number | null
           id?: string

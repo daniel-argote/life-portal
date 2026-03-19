@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
 import { calculateWeeklyRequirement } from '../lib/moneyUtils';
-import { parseISO, format, startOfDay, getDay, subDays } from 'date-fns';
+import { parseISO, startOfDay, getDay, subDays } from 'date-fns';
 
 const MoneyAccounts = ({ user, notify, config }) => {
     const [accounts, setAccounts] = useState([]);
@@ -15,7 +15,11 @@ const MoneyAccounts = ({ user, notify, config }) => {
 
     const fetchAccounts = useCallback(async () => {
         if (!user) return;
-        const { data } = await supabase.from('money_accounts').select('*').order('position', { ascending: true });
+        const { data } = await supabase
+            .from('money_accounts')
+            .select('*')
+            .is('deleted_at', null)
+            .order('position', { ascending: true });
         setAccounts(data || []);
     }, [user]);
 
@@ -27,7 +31,10 @@ const MoneyAccounts = ({ user, notify, config }) => {
         return true;
     });
 
-    const getTypeIcon = (type) => {
+    const getTypeIcon = (account) => {
+        if (account.custom_icon) return account.custom_icon;
+        
+        const type = account.account_type;
         if (type === 'credit') return 'CreditCard';
         if (type === 'loan') return 'Car';
         if (type === 'savings') return 'PiggyBank';
@@ -36,10 +43,27 @@ const MoneyAccounts = ({ user, notify, config }) => {
         return 'CircleDollarSign';
     };
 
+    const LOAN_ICONS = ['Car', 'Bike', 'Home', 'Landmark', 'Key', 'Briefcase', 'GraduationCap'];
+    const ASSET_ICONS = ['Wallet', 'PiggyBank', 'TrendingUp', 'Coins', 'Gem', 'Vault'];
+
+    const cycleIcon = async (account) => {
+        const icons = ['credit', 'loan'].includes(account.account_type) ? LOAN_ICONS : ASSET_ICONS;
+        const currentIdx = icons.indexOf(getTypeIcon(account));
+        const nextIcon = icons[(currentIdx + 1) % icons.length];
+        await updateAccount(account.id, { custom_icon: nextIcon });
+    };
+
     const getTypeColor = (type) => {
         if (['credit', 'loan'].includes(type)) return 'text-danger';
         if (['savings', 'investment'].includes(type)) return 'text-success';
         return 'text-primary';
+    };
+
+    // Helper to sanitize dollar inputs
+    const parseCurrency = (val) => {
+        if (typeof val === 'number') return val;
+        const clean = String(val).replace(/[^0-9.]/g, '');
+        return parseFloat(clean) || 0;
     };
 
     const addAccount = async (e) => {
@@ -76,60 +100,47 @@ const MoneyAccounts = ({ user, notify, config }) => {
 
         const { error } = await supabase.from('money_accounts').update(updates).eq('id', id);
         if (!error) { 
-            // CASCADE UPDATE: If statement_balance was updated, sync ALL unpaid ledger items for this account
             if (updates.statement_balance !== undefined) {
-                console.log(`[Cascade] Starting update for account ${id} to $${updates.statement_balance}`);
-                
-                // Fetch the fully updated account for accurate context
+                // CASCADE UPDATE
                 const { data: updatedAccount } = await supabase.from('money_accounts').select('*').eq('id', id).single();
-                
-                const { data: existingItems, error: itemsError } = await supabase
+                const { data: existingItems } = await supabase
                     .from('money_items')
-                    .select(`
-                        id, 
-                        amount,
-                        money_weeks!inner (
-                            start_date
-                        )
-                    `)
+                    .select(`id, amount, money_weeks!inner (start_date)`)
                     .eq('account_id', id)
                     .eq('is_paid', false);
 
-                if (itemsError) console.error('[Cascade] Error fetching items:', itemsError);
-
                 if (existingItems && existingItems.length > 0) {
-                    console.log(`[Cascade] Found ${existingItems.length} unpaid items to potentially update.`);
                     for (const item of existingItems) {
                         const weekStart = parseISO(item.money_weeks.start_date);
-                        const newAmount = calculateWeeklyRequirement(updatedAccount, weekStart);
-                        
-                        console.log(`[Cascade] Item ${item.id} (Week ${item.money_weeks.start_date}): $${item.amount} -> $${Math.ceil(newAmount)}`);
-                        
-                        const { error: upError } = await supabase.from('money_items').update({ amount: Math.ceil(newAmount) }).eq('id', item.id);
-                        if (upError) console.error(`[Cascade] Failed to update item ${item.id}:`, upError);
+                        const newAmount = calculateWeeklyRequirement(updatedAccount, weekStart, config?.financialWeekStart || 0);
+                        await supabase.from('money_items').update({ amount: Math.ceil(newAmount) }).eq('id', item.id);
                     }
-                } else {
-                    console.log('[Cascade] No unpaid ledger items found for this account.');
                 }
             }
-
             fetchAccounts(); 
             notify('Account updated'); 
         } else {
             console.error(error);
             notify('Failed to update account', 'error');
-            fetchAccounts(); // Rollback on error
+            fetchAccounts();
         }
     };
 
     const deleteAccount = async (id) => {
-        const { error } = await supabase.from('money_accounts').delete().eq('id', id);
+        const { error } = await supabase.from('money_accounts').update({ deleted_at: new Date().toISOString() }).eq('id', id);
         if (!error) { 
             fetchAccounts(); 
-            notify('Account deleted'); 
+            notify('Account deleted', 'success', () => undoDelete(id)); 
         } else {
-            console.error(error);
             notify('Failed to delete account', 'error');
+        }
+    };
+
+    const undoDelete = async (id) => {
+        const { error } = await supabase.from('money_accounts').update({ deleted_at: null }).eq('id', id);
+        if (!error) {
+            fetchAccounts();
+            notify('Account restored');
         }
     };
 
@@ -169,15 +180,15 @@ const MoneyAccounts = ({ user, notify, config }) => {
                     {(provided) => (
                         <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredAccounts.map((account, index) => {
-                                // Align calculation with the start of the CURRENT financial week
-                                // This matches exactly what the ledger sees for "Week 1"
+                                // Align calculation strictly with the start of the CURRENT financial week
+                                // this ensures stable math throughout the week.
                                 const targetDay = config?.financialWeekStart || 0;
-                                let calculationFloor = startOfDay(new Date());
-                                while (getDay(calculationFloor) !== targetDay) {
-                                    calculationFloor = subDays(calculationFloor, 1);
+                                let weekStartFloor = startOfDay(new Date());
+                                while (getDay(weekStartFloor) !== targetDay) {
+                                    weekStartFloor = subDays(weekStartFloor, 1);
                                 }
 
-                                const weeklyReq = calculateWeeklyRequirement(account, calculationFloor, targetDay);
+                                const weeklyReq = calculateWeeklyRequirement(account, weekStartFloor, targetDay);
                                 const isLiability = ['credit', 'loan'].includes(account.account_type);
 
                                 return (
@@ -200,9 +211,13 @@ const MoneyAccounts = ({ user, notify, config }) => {
 
                                                     <div className="text-center mb-6">
                                                         <div className="flex justify-center mb-4">
-                                                            <div className={`p-3 bg-base-100 rounded-2xl shadow-inner ${getTypeColor(account.account_type)}`}>
-                                                                <Icon name={getTypeIcon(account.account_type)} size={24} />
-                                                            </div>
+                                                            <button 
+                                                                onClick={() => cycleIcon(account)}
+                                                                className={`p-3 bg-base-100 rounded-2xl shadow-inner transition-all active:scale-95 hover:bg-base-300 ${getTypeColor(account.account_type)}`}
+                                                                title="Change Icon"
+                                                            >
+                                                                <Icon name={getTypeIcon(account)} size={24} />
+                                                            </button>
                                                         </div>
                                                         <input 
                                                             className="bg-transparent text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 text-center w-full outline-none focus:text-primary"
@@ -212,15 +227,17 @@ const MoneyAccounts = ({ user, notify, config }) => {
                                                         <div className="flex items-center justify-center text-primary font-black text-4xl">
                                                             <span className="text-2xl mr-1 opacity-50">$</span>
                                                             <input 
+                                                                type="number"
+                                                                step="0.01"
                                                                 className="bg-transparent w-full text-center outline-none"
                                                                 defaultValue={account.statement_balance || 0}
                                                                 onPointerDown={e => e.stopPropagation()}
                                                                 onFocus={e => e.target.select()}
                                                                 onBlur={(e) => {
-                                                                    const val = parseFloat(e.target.value) || 0;
+                                                                    const val = parseCurrency(e.target.value);
                                                                     updateAccount(account.id, { 
                                                                         statement_balance: val,
-                                                                        last_statement_amount: val // Sync historical goal
+                                                                        last_statement_amount: val 
                                                                     });
                                                                 }}
                                                                 onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
@@ -238,7 +255,7 @@ const MoneyAccounts = ({ user, notify, config }) => {
                                                                 <select 
                                                                     className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none appearance-none text-center cursor-pointer border border-transparent focus:border-primary/30"
                                                                     value={account.account_type || 'credit'}
-                                                                    onChange={(e) => updateAccount(account.id, { account_type: e.target.value })}
+                                                                    onChange={(e) => updateAccount(account.id, { account_type: e.target.value, custom_icon: null })}
                                                                 >
                                                                     <option value="credit">Credit Card</option>
                                                                     <option value="loan">Loan / Lease</option>
@@ -274,7 +291,7 @@ const MoneyAccounts = ({ user, notify, config }) => {
                                                                     onPointerDown={e => e.stopPropagation()}
                                                                     onFocus={e => e.target.select()}
                                                                     onBlur={(e) => {
-                                                                        const val = parseFloat(e.target.value) || 0;
+                                                                        const val = parseCurrency(e.target.value);
                                                                         const field = account.payoff_mode === 'fixed' ? 'payoff_weeks' : account.payoff_mode === 'fixed_amount' ? 'fixed_amount' : 'due_day';
                                                                         updateAccount(account.id, { [field]: val });
                                                                     }}
@@ -285,11 +302,13 @@ const MoneyAccounts = ({ user, notify, config }) => {
                                                                 <div className="relative">
                                                                     <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[8px] text-slate-400">$</span>
                                                                     <input 
+                                                                        type="number"
+                                                                        step="0.01"
                                                                         className="w-full bg-base-100 p-1.5 pl-4 rounded-lg text-[10px] font-bold outline-none text-center border border-transparent focus:border-primary/30"
                                                                         defaultValue={account.balance || 0}
                                                                         onPointerDown={e => e.stopPropagation()}
                                                                         onFocus={e => e.target.select()}
-                                                                        onBlur={(e) => updateAccount(account.id, { balance: parseFloat(e.target.value) || 0 })}
+                                                                        onBlur={(e) => updateAccount(account.id, { balance: parseCurrency(e.target.value) })}
                                                                     />
                                                                 </div>
                                                             </div>

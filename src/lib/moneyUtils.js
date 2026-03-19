@@ -1,4 +1,4 @@
-import { setDate, isAfter, addMonths, subMonths, startOfDay, addDays, getDay } from 'date-fns';
+import { setDate, isAfter, addMonths, subMonths, startOfDay, addDays, getDay, subDays } from 'date-fns';
 
 /**
  * Returns the start and end dates of the monthly cycle for a given due day and reference date.
@@ -6,11 +6,12 @@ import { setDate, isAfter, addMonths, subMonths, startOfDay, addDays, getDay } f
 export const getCycleRange = (dueDay, referenceDate = new Date()) => {
     const today = startOfDay(new Date(referenceDate));
     let nextTarget = setDate(new Date(today), dueDay);
-    
+
+    // If the due date for this reference month has passed, look at next month
     if (!isAfter(nextTarget, today)) {
         nextTarget = addMonths(nextTarget, 1);
     }
-    
+
     const prevTarget = subMonths(nextTarget, 1);
     return { start: prevTarget, end: nextTarget };
 };
@@ -23,14 +24,13 @@ export const countFinancialWeeks = (startDate, endDate, weekStartDay = 0) => {
     let current = startOfDay(new Date(startDate));
     const targetEnd = startOfDay(new Date(endDate));
 
-    // If we are starting on a week start day, count it as the first opportunity
     while (current < targetEnd) {
         if (getDay(current) === weekStartDay) {
             count++;
         }
         current = addDays(current, 1);
     }
-    
+
     return Math.max(1, count);
 };
 
@@ -39,7 +39,7 @@ export const countFinancialWeeks = (startDate, endDate, weekStartDay = 0) => {
  */
 export const calculateWeeklyRequirement = (account, referenceDate = new Date(), weekStartDay = 0) => {
     const { payoff_mode, statement_balance, due_day, payoff_weeks, fixed_amount } = account;
-    
+
     if (payoff_mode === 'fixed_amount') {
         return fixed_amount || 0;
     }
@@ -52,9 +52,19 @@ export const calculateWeeklyRequirement = (account, referenceDate = new Date(), 
     }
 
     if (!due_day) return 0;
-    
-    const { end } = getCycleRange(due_day, referenceDate);
-    const weeksLeft = countFinancialWeeks(referenceDate, end, weekStartDay);
-    
+
+    // STABILITY LOCK: Align the reference date to the start of its financial week
+    // This ensures that the math doesn't shift as you move through the days of the week.
+    let anchoredStart = startOfDay(new Date(referenceDate));
+    while (getDay(anchoredStart) !== weekStartDay) {
+        anchoredStart = subDays(anchoredStart, 1);
+    }
+
+    // Use the anchored start to determine the active cycle
+    const { end } = getCycleRange(due_day, anchoredStart);
+
+    // Count weeks from the locked week-start to the end of cycle
+    const weeksLeft = countFinancialWeeks(anchoredStart, end, weekStartDay);
+
     return statement_balance / weeksLeft;
 };

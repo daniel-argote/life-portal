@@ -158,7 +158,18 @@ const MoneyLedger = ({ user, notify, config }) => {
 
     const addItem = async () => {
         if (!activeWeek || !newItem.title || !newItem.amount) return;
-        const { error } = await supabase.from('money_items').insert([{ week_id: activeWeek.id, user_id: user.id, title: newItem.title, amount: newItem.amount, is_paid: false }]);
+        
+        // Sanitize amount before saving
+        const amount = parseFloat(String(newItem.amount).replace(/[^0-9.]/g, '')) || 0;
+        
+        const { error } = await supabase.from('money_items').insert([{ 
+            week_id: activeWeek.id, 
+            user_id: user.id, 
+            title: newItem.title, 
+            amount: amount, 
+            is_paid: false 
+        }]);
+        
         if (error) {
             notify(error, 'error');
         } else {
