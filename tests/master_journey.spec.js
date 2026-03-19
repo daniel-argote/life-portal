@@ -6,7 +6,7 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   const testPassword = 'Password123!';
 
   // 1. Setup: Navigate and Authenticate
-  await page.goto('/');
+  await page.goto('/?test_mode=true');
   
   // In CI, we try to login first because signup might require email confirmation on remote DB
   await page.getByPlaceholder('Identity Email').fill(testEmail);

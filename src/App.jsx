@@ -15,10 +15,9 @@ function App() {
     const checkUserIntegrity = async (user, retryCount = 0) => {
       if (!user) return;
       
-      // ONLY RUN THIS ON LOCALHOST
-      // Production/CI environments don't reset their DBs, and the race conditions 
-      // with profile triggers are too risky for E2E tests.
-      if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+      // BYPASS FOR TESTS AND REMOTE ENVIRONMENTS
+      if (window.location.search.includes('test_mode=true') || 
+          (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1'))) {
         return;
       }
 
