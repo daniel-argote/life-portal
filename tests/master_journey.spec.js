@@ -45,7 +45,7 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   const objectiveInput = page.getByPlaceholder('New Objective...');
   await expect(objectiveInput).toBeVisible({ timeout: 15000 });
   await objectiveInput.fill('Master the Portal E2E');
-  await page.getByRole('button', { name: 'Add Objective' }).click();
+  await page.getByLabel('Add Objective').click();
   // Verify data presence (most robust check)
   await expect(page.getByText('Master the Portal E2E')).toBeVisible({ timeout: 20000 });
 
@@ -94,7 +94,8 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
     await purgeBtn.click();
   } else {
     // In CI, just sign out so we don't delete the verified user
-    const signOutBtn = page.getByRole('button', { name: 'Sign Out' });
+    // Resolve ambiguity by using exact: true for the sidebar sign out button
+    const signOutBtn = page.getByRole('button', { name: 'Sign Out', exact: true });
     if (await signOutBtn.isVisible()) {
         await signOutBtn.click();
     }
