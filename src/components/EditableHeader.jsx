@@ -40,7 +40,7 @@ const EditableHeader = ({ value, subtext, onSave, className }) => {
     return (
         <header className={className}>
             <div className="flex items-center gap-4">
-                <h2 className="text-5xl font-black tracking-tighter dark:text-white">{value}</h2>
+                <h2 data-testid="page-header" className="text-5xl font-black tracking-tighter dark:text-white">{value}</h2>
                 <button 
                     onClick={() => setIsEditing(true)}
                     className="p-3 bg-base-300/30 hover:bg-primary hover:text-primary-content rounded-2xl text-base-content/20 transition-all active:scale-95"

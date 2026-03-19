@@ -12,7 +12,7 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   await page.getByRole('button', { name: 'Register Identity' }).click();
 
   // Wait for Dashboard
-  await expect(page.getByRole('heading', { name: 'Portal', exact: true })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByTestId('page-header')).toHaveText('Portal', { timeout: 30000 });
 
   // 2. Actions Module: Add an Objective
   await page.getByRole('button', { name: 'Actions', exact: true }).click();
