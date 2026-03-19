@@ -1,4 +1,4 @@
-# Life Portal v0.0.2
+# Life Portal v0.1.0
 Portal to one's life. Make it your own.
 
 **Live Demo:** [https://daniel-argote.github.io/life-portal/](https://daniel-argote.github.io/life-portal/)
