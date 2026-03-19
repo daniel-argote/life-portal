@@ -12,12 +12,20 @@ function App() {
   useEffect(() => {
     // Check if the user's ID actually exists in the database
     // This handles the "Stale Session" problem after a local DB reset
-    const checkUserIntegrity = async (user) => {
+    const checkUserIntegrity = async (user, retryCount = 0) => {
       if (!user) return;
+      
       const { data, error } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle();
       
-      // If error or no data, it means the auth user doesn't exist in the current DB instance
-      if (error || !data) {
+      // If we don't find the profile, it might be a race condition during signup
+      // We'll retry a few times before assuming the session is stale
+      if (!data && retryCount < 3) {
+        setTimeout(() => checkUserIntegrity(user, retryCount + 1), 1000);
+        return;
+      }
+
+      // If after retries we still have no data, it's likely a stale session from a DB reset
+      if (!data && !error) {
         console.warn('Stale session detected. User ID not found in current database instance. Logging out...');
         notify('Your session is stale (database reset). Please create your account again.', 'error');
         setAuthInitialMode('signup');
