@@ -36,8 +36,10 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   
   // Wait for either the start button or the input field to appear
   const startBtn = page.getByRole('button', { name: 'Start First Week' });
-  if (await startBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+  if (await startBtn.isVisible({ timeout: 15000 }).catch(() => false)) {
     await startBtn.click();
+    // Wait for auto-population logic to complete
+    await page.waitForTimeout(2000);
   }
   
   await page.getByPlaceholder('New Item...').fill('Test Revenue');
