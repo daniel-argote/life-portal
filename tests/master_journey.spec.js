@@ -36,6 +36,9 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   }
 
   // 2. Actions Module: Add an Objective
+  const runId = Date.now();
+  const objectiveTitle = `Master the Portal E2E - ${runId}`;
+  
   await page.getByRole('button', { name: 'Actions', exact: true }).click();
   // Ensure sub-navigation is visible before clicking
   const objectivesBtn = page.getByRole('button', { name: 'Objectives', exact: true });
@@ -44,17 +47,18 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   
   const objectiveInput = page.getByPlaceholder('New Objective...');
   await expect(objectiveInput).toBeVisible({ timeout: 15000 });
-  await objectiveInput.fill('Master the Portal E2E');
+  await objectiveInput.fill(objectiveTitle);
   await page.getByLabel('Add Objective').click();
   // Verify data presence (most robust check)
-  await expect(page.getByText('Master the Portal E2E')).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText(objectiveTitle)).toBeVisible({ timeout: 20000 });
 
   // 3. Journal Module: Add an Entry
+  const journalText = `Automated journey testing in progress. ID: ${runId}`;
   await page.getByRole('button', { name: 'Journal', exact: true }).click();
   const journalInput = page.getByPlaceholder('New update...');
-  await journalInput.fill('Automated journey testing in progress.');
+  await journalInput.fill(journalText);
   await page.getByRole('button', { name: 'Add Log Entry' }).click();
-  await expect(page.getByText('Automated journey testing in progress.')).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(journalText)).toBeVisible({ timeout: 15000 });
 
   // 4. Money Module: Start Ledger
   await page.getByRole('button', { name: 'Money', exact: true }).click();
@@ -68,20 +72,22 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
     await page.waitForTimeout(2000);
   }
   
-  await page.getByPlaceholder('New Item...').fill('Test Revenue');
+  const revenueTitle = `Test Revenue - ${runId}`;
+  await page.getByPlaceholder('New Item...').fill(revenueTitle);
   const amountInput = page.getByPlaceholder('0');
   await amountInput.fill('5000');
   await page.getByRole('button', { name: 'Add Ledger Item' }).click();
-  await expect(page.getByText('Test Revenue')).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(revenueTitle)).toBeVisible({ timeout: 15000 });
 
   // 5. Food Module: Add Culinary Standing
+  const foodCategory = `Sushi - ${runId}`;
   await page.getByRole('button', { name: 'Food', exact: true }).click();
   await page.getByRole('button', { name: 'Culinary Standings', exact: true }).click();
   await page.getByRole('button', { name: 'New Category', exact: true }).click();
-  await page.getByPlaceholder('Category (e.g. Reubens, Best Burgers)').fill('Sushi');
+  await page.getByPlaceholder('Category (e.g. Reubens, Best Burgers)').fill(foodCategory);
   await page.getByRole('button', { name: 'Create Standings' }).click();
   // Verify category creation
-  await expect(page.getByRole('button', { name: 'Sushi' })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole('button', { name: foodCategory })).toBeVisible({ timeout: 15000 });
 
   // 6. Cleanup: Sign Out (Skip purge for CI user to keep account active)
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
