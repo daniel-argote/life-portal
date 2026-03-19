@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', async ({ page }) => {
   const isCI = process.env.VITE_CI === 'true';
-  const testEmail = isCI ? 'test@example.com' : `test_${Date.now()}@example.com`;
-  const testPassword = 'Password123!';
+  const testEmail = isCI ? 'therealdannybrown+test@gmail.com' : `test_${Date.now()}@example.com`;
+  const testPassword = isCI ? 'H9sa5jmssAc7eMa' : 'Password123!';
 
   // 1. Setup: Navigate and Authenticate
   await page.goto('/?test_mode=true');
@@ -78,16 +78,23 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   // Verify category creation
   await expect(page.getByRole('button', { name: 'Sushi' })).toBeVisible({ timeout: 15000 });
 
-  // 6. Cleanup: Prune and Sign Out
+  // 6. Cleanup: Sign Out (Skip purge for CI user to keep account active)
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   
-  // Listen for the dialog and accept it
-  page.on('dialog', dialog => dialog.accept());
-  
-  const purgeBtn = page.getByRole('button', { name: 'Execute Purge' });
-  await purgeBtn.scrollIntoViewIfNeeded();
-  await purgeBtn.click();
+  if (!isCI) {
+    // Locally, we still purge to keep the DB clean
+    page.on('dialog', dialog => dialog.accept());
+    const purgeBtn = page.getByRole('button', { name: 'Execute Purge' });
+    await purgeBtn.scrollIntoViewIfNeeded();
+    await purgeBtn.click();
+  } else {
+    // In CI, just sign out so we don't delete the verified user
+    const signOutBtn = page.getByRole('button', { name: 'Sign Out' });
+    if (await signOutBtn.isVisible()) {
+        await signOutBtn.click();
+    }
+  }
 
-  // Wait for automatic sign-out after purge
-  await expect(page.getByRole('button', { name: 'Authenticate' })).toBeVisible({ timeout: 20000 });
+  // Wait for automatic sign-out
+  await expect(page.getByTestId('auth-page')).toBeVisible({ timeout: 20000 });
 });
