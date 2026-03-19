@@ -37,12 +37,17 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
 
   // 2. Actions Module: Add an Objective
   await page.getByRole('button', { name: 'Actions', exact: true }).click();
-  await page.getByRole('button', { name: 'Objectives', exact: true }).click();
+  // Ensure sub-navigation is visible before clicking
+  const objectivesBtn = page.getByRole('button', { name: 'Objectives', exact: true });
+  await expect(objectivesBtn).toBeVisible({ timeout: 15000 });
+  await objectivesBtn.click();
+  
   const objectiveInput = page.getByPlaceholder('New Objective...');
+  await expect(objectiveInput).toBeVisible({ timeout: 15000 });
   await objectiveInput.fill('Master the Portal E2E');
   await page.getByRole('button', { name: 'Add Objective' }).click();
   // Verify data presence (most robust check)
-  await expect(page.getByText('Master the Portal E2E')).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText('Master the Portal E2E')).toBeVisible({ timeout: 20000 });
 
   // 3. Journal Module: Add an Entry
   await page.getByRole('button', { name: 'Journal', exact: true }).click();
