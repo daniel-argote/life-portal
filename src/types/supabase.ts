@@ -505,6 +505,7 @@ export type Database = {
           payoff_weeks: number | null
           position: number | null
           statement_balance: number | null
+          target_balance: number | null
           user_id: string
         }
         Insert: {
@@ -522,6 +523,7 @@ export type Database = {
           payoff_weeks?: number | null
           position?: number | null
           statement_balance?: number | null
+          target_balance?: number | null
           user_id: string
         }
         Update: {
@@ -539,6 +541,7 @@ export type Database = {
           payoff_weeks?: number | null
           position?: number | null
           statement_balance?: number | null
+          target_balance?: number | null
           user_id?: string
         }
         Relationships: []

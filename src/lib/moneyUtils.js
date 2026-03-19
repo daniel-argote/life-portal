@@ -35,15 +35,33 @@ export const countFinancialWeeks = (startDate, endDate, weekStartDay = 0) => {
 };
 
 /**
- * Calculates the weekly requirement for an account payoff.
+ * Calculates the weekly requirement for an account payoff or savings goal.
  */
 export const calculateWeeklyRequirement = (account, referenceDate = new Date(), weekStartDay = 0) => {
-    const { payoff_mode, statement_balance, due_day, payoff_weeks, fixed_amount } = account;
+    const { payoff_mode, statement_balance, due_day, payoff_weeks, fixed_amount, account_type, balance, target_balance } = account;
+    const isAsset = ['cash', 'savings', 'investment'].includes(account_type);
 
     if (payoff_mode === 'fixed_amount') {
         return fixed_amount || 0;
     }
 
+    // Math for Savings Goals (Assets)
+    if (isAsset) {
+        if (!target_balance || target_balance <= balance) return 0;
+
+        if (payoff_mode === 'fixed') {
+            const weeks = Math.max(1, payoff_weeks || 1);
+            return (target_balance - balance) / weeks;
+        }
+
+        // Monthly assets target the next occurrence of 'due_day' as a milestone
+        if (!due_day) return 0;
+        const { end } = getCycleRange(due_day, referenceDate);
+        const weeksLeft = countFinancialWeeks(referenceDate, end, weekStartDay);
+        return Math.max(0, target_balance - balance) / weeksLeft;
+    }
+
+    // Math for Liabilities
     if (!statement_balance || statement_balance <= 0) return 0;
 
     if (payoff_mode === 'fixed') {
@@ -53,18 +71,40 @@ export const calculateWeeklyRequirement = (account, referenceDate = new Date(), 
 
     if (!due_day) return 0;
 
-    // STABILITY LOCK: Align the reference date to the start of its financial week
-    // This ensures that the math doesn't shift as you move through the days of the week.
     let anchoredStart = startOfDay(new Date(referenceDate));
     while (getDay(anchoredStart) !== weekStartDay) {
         anchoredStart = subDays(anchoredStart, 1);
     }
 
-    // Use the anchored start to determine the active cycle
     const { end } = getCycleRange(due_day, anchoredStart);
-
-    // Count weeks from the locked week-start to the end of cycle
     const weeksLeft = countFinancialWeeks(anchoredStart, end, weekStartDay);
 
     return statement_balance / weeksLeft;
+};
+
+/**
+ * Estimates when a goal will be reached or a debt paid off.
+ */
+export const estimateCompletionDate = (account, weeklyAmount, referenceDate = new Date(), weekStartDay = 0) => {
+    if (!weeklyAmount || weeklyAmount <= 0) return null;
+
+    const { account_type, balance, target_balance, statement_balance } = account;
+    const isAsset = ['cash', 'savings', 'investment'].includes(account_type);
+
+    const amountRemaining = isAsset 
+        ? Math.max(0, (target_balance || 0) - (balance || 0))
+        : (statement_balance || 0);
+
+    if (amountRemaining <= 0) return null;
+
+    const weeksNeeded = Math.ceil(amountRemaining / weeklyAmount);
+
+    // Find the current week start
+    let current = startOfDay(new Date(referenceDate));
+    while (getDay(current) !== weekStartDay) {
+        current = subDays(current, 1);
+    }
+
+    // Add the number of weeks
+    return addDays(current, weeksNeeded * 7);
 };

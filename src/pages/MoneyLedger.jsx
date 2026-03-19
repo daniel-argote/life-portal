@@ -186,11 +186,21 @@ const MoneyLedger = ({ user, notify, config }) => {
         if (!error) {
             // Update the statement balance in real-time
             if (item.account_id) {
-                const { data: account } = await supabase.from('money_accounts').select('statement_balance').eq('id', item.account_id).single();
+                const { data: account } = await supabase.from('money_accounts').select('*').eq('id', item.account_id).single();
                 if (account) {
-                    const adjustment = newPaidStatus ? -Number(item.amount) : Number(item.amount);
-                    const newBalance = Math.max(0, Number(account.statement_balance) + adjustment);
-                    await supabase.from('money_accounts').update({ statement_balance: newBalance }).eq('id', item.account_id);
+                    const isAsset = ['cash', 'savings', 'investment'].includes(account.account_type);
+                    
+                    // If paying a liability, subtract from statement balance
+                    // If funding an asset, add to current balance
+                    if (isAsset) {
+                        const adjustment = newPaidStatus ? Number(item.amount) : -Number(item.amount);
+                        const newBalance = Number(account.balance) + adjustment;
+                        await supabase.from('money_accounts').update({ balance: newBalance }).eq('id', item.account_id);
+                    } else {
+                        const adjustment = newPaidStatus ? -Number(item.amount) : Number(item.amount);
+                        const newBalance = Math.max(0, Number(account.statement_balance) + adjustment);
+                        await supabase.from('money_accounts').update({ statement_balance: newBalance }).eq('id', item.account_id);
+                    }
                 }
             }
             fetchWeekItems();
@@ -205,12 +215,20 @@ const MoneyLedger = ({ user, notify, config }) => {
         if (error) {
             notify(error, 'error');
         } else {
-            // If it was a PAID account item, we restore the statement balance
+            // If it was a PAID account item, we restore the balance obligation
             if (item && item.account_id && item.is_paid) {
-                const { data: account } = await supabase.from('money_accounts').select('statement_balance').eq('id', item.account_id).single();
+                const { data: account } = await supabase.from('money_accounts').select('*').eq('id', item.account_id).single();
                 if (account) {
-                    const newBalance = Number(account.statement_balance) + Number(item.amount);
-                    await supabase.from('money_accounts').update({ statement_balance: newBalance }).eq('id', item.account_id);
+                    const isAsset = ['cash', 'savings', 'investment'].includes(account.account_type);
+                    if (isAsset) {
+                        // Undo the addition to the asset balance
+                        const newBalance = Number(account.balance) - Number(item.amount);
+                        await supabase.from('money_accounts').update({ balance: newBalance }).eq('id', item.account_id);
+                    } else {
+                        // Restore the liability debt
+                        const newBalance = Number(account.statement_balance) + Number(item.amount);
+                        await supabase.from('money_accounts').update({ statement_balance: newBalance }).eq('id', item.account_id);
+                    }
                 }
             }
             fetchWeekItems(); 

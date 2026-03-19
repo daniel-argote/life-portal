@@ -3,8 +3,8 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
-import { calculateWeeklyRequirement } from '../lib/moneyUtils';
-import { parseISO, startOfDay, getDay, subDays } from 'date-fns';
+import { calculateWeeklyRequirement, estimateCompletionDate } from '../lib/moneyUtils';
+import { parseISO, startOfDay, getDay, subDays, format } from 'date-fns';
 
 const MoneyAccounts = ({ user, notify, config }) => {
     const [accounts, setAccounts] = useState([]);
@@ -59,7 +59,6 @@ const MoneyAccounts = ({ user, notify, config }) => {
         return 'text-primary';
     };
 
-    // Helper to sanitize dollar inputs
     const parseCurrency = (val) => {
         if (typeof val === 'number') return val;
         const clean = String(val).replace(/[^0-9.]/g, '');
@@ -95,12 +94,11 @@ const MoneyAccounts = ({ user, notify, config }) => {
     };
 
     const updateAccount = async (id, updates) => {
-        // Optimistic UI update for immediate feedback
         setAccounts(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
 
         const { error } = await supabase.from('money_accounts').update(updates).eq('id', id);
         if (!error) { 
-            if (updates.statement_balance !== undefined) {
+            if (updates.statement_balance !== undefined || updates.target_balance !== undefined || updates.balance !== undefined) {
                 // CASCADE UPDATE
                 const { data: updatedAccount } = await supabase.from('money_accounts').select('*').eq('id', id).single();
                 const { data: existingItems } = await supabase
@@ -157,7 +155,6 @@ const MoneyAccounts = ({ user, notify, config }) => {
 
     return (
         <PageContainer>
-            {/* Filter Hub */}
             <div className="flex gap-4 mb-10 overflow-x-auto no-scrollbar pb-2">
                 {[
                     { id: 'all', label: 'All Accounts', icon: 'LayoutGrid' },
@@ -180,16 +177,16 @@ const MoneyAccounts = ({ user, notify, config }) => {
                     {(provided) => (
                         <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredAccounts.map((account, index) => {
-                                // Align calculation strictly with the start of the CURRENT financial week
-                                // this ensures stable math throughout the week.
                                 const targetDay = config?.financialWeekStart || 0;
                                 let weekStartFloor = startOfDay(new Date());
                                 while (getDay(weekStartFloor) !== targetDay) {
                                     weekStartFloor = subDays(weekStartFloor, 1);
                                 }
 
-                                const weeklyReq = calculateWeeklyRequirement(account, weekStartFloor, targetDay);
+                                const isAsset = ['cash', 'savings', 'investment'].includes(account.account_type);
                                 const isLiability = ['credit', 'loan'].includes(account.account_type);
+                                const weeklyReq = calculateWeeklyRequirement(account, weekStartFloor, targetDay);
+                                const finishDate = estimateCompletionDate(account, weeklyReq, weekStartFloor, targetDay);
 
                                 return (
                                     <Draggable key={account.id} draggableId={account.id} index={index}>
@@ -202,49 +199,34 @@ const MoneyAccounts = ({ user, notify, config }) => {
                                                         <Icon name="GripVertical" size={16} />
                                                     </div>
 
-                                                    <button 
-                                                        onClick={() => deleteAccount(account.id)} 
-                                                        className="absolute top-6 left-6 text-base-content/20 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-1"
-                                                    >
-                                                        <Icon name="X" size={14} />
-                                                    </button>
+                                                    <button onClick={() => deleteAccount(account.id)} className="absolute top-6 left-6 text-base-content/20 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-1"><Icon name="X" size={14} /></button>
 
                                                     <div className="text-center mb-6">
                                                         <div className="flex justify-center mb-4">
-                                                            <button 
-                                                                onClick={() => cycleIcon(account)}
-                                                                className={`p-3 bg-base-100 rounded-2xl shadow-inner transition-all active:scale-95 hover:bg-base-300 ${getTypeColor(account.account_type)}`}
-                                                                title="Change Icon"
-                                                            >
-                                                                <Icon name={getTypeIcon(account)} size={24} />
-                                                            </button>
+                                                            <button onClick={() => cycleIcon(account)} className={`p-3 bg-base-100 rounded-2xl shadow-inner transition-all active:scale-95 hover:bg-base-300 ${getTypeColor(account.account_type)}`}><Icon name={getTypeIcon(account)} size={24} /></button>
                                                         </div>
-                                                        <input 
-                                                            className="bg-transparent text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 text-center w-full outline-none focus:text-primary"
-                                                            defaultValue={account.name}
-                                                            onBlur={(e) => updateAccount(account.id, { name: e.target.value })}
-                                                        />
+                                                        <input className="bg-transparent text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 text-center w-full outline-none focus:text-primary" defaultValue={account.name} onBlur={(e) => updateAccount(account.id, { name: e.target.value })} />
+                                                        
+                                                        {/* Target Display */}
                                                         <div className="flex items-center justify-center text-primary font-black text-4xl">
                                                             <span className="text-2xl mr-1 opacity-50">$</span>
                                                             <input 
                                                                 type="number"
                                                                 step="0.01"
                                                                 className="bg-transparent w-full text-center outline-none"
-                                                                defaultValue={account.statement_balance || 0}
+                                                                defaultValue={isAsset ? account.target_balance : account.statement_balance}
                                                                 onPointerDown={e => e.stopPropagation()}
                                                                 onFocus={e => e.target.select()}
                                                                 onBlur={(e) => {
                                                                     const val = parseCurrency(e.target.value);
-                                                                    updateAccount(account.id, { 
-                                                                        statement_balance: val,
-                                                                        last_statement_amount: val 
-                                                                    });
+                                                                    const updates = isAsset ? { target_balance: val } : { statement_balance: val, last_statement_amount: val };
+                                                                    updateAccount(account.id, updates);
                                                                 }}
                                                                 onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                                                             />
                                                         </div>
                                                         <p className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter mt-1">
-                                                            {isLiability ? `Statement Balance (Due Day ${account.due_day})` : 'Available Balance'}
+                                                            {isAsset ? 'Savings Goal' : `Statement Balance (Due Day ${account.due_day})`}
                                                         </p>
                                                     </div>
 
@@ -252,29 +234,14 @@ const MoneyAccounts = ({ user, notify, config }) => {
                                                         <div className="grid grid-cols-2 gap-4 px-2">
                                                             <div className="space-y-1">
                                                                 <label className="text-[7px] font-black uppercase text-slate-500 ml-1">Account Type</label>
-                                                                <select 
-                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none appearance-none text-center cursor-pointer border border-transparent focus:border-primary/30"
-                                                                    value={account.account_type || 'credit'}
-                                                                    onChange={(e) => updateAccount(account.id, { account_type: e.target.value, custom_icon: null })}
-                                                                >
-                                                                    <option value="credit">Credit Card</option>
-                                                                    <option value="loan">Loan / Lease</option>
-                                                                    <option value="cash">Cash / Checking</option>
-                                                                    <option value="savings">Savings</option>
-                                                                    <option value="investment">Investment</option>
-                                                                    <option value="other">Other</option>
+                                                                <select className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none appearance-none text-center cursor-pointer border border-transparent focus:border-primary/30" value={account.account_type || 'credit'} onChange={(e) => updateAccount(account.id, { account_type: e.target.value, custom_icon: null })}>
+                                                                    <option value="credit">Credit Card</option><option value="loan">Loan / Lease</option><option value="cash">Cash / Checking</option><option value="savings">Savings</option><option value="investment">Investment</option><option value="other">Other</option>
                                                                 </select>
                                                             </div>
                                                             <div className="space-y-1">
                                                                 <label className="text-[7px] font-black uppercase text-slate-500 ml-1">Strategy</label>
-                                                                <select 
-                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none appearance-none text-center cursor-pointer border border-transparent focus:border-primary/30"
-                                                                    value={account.payoff_mode || 'monthly'}
-                                                                    onChange={(e) => updateAccount(account.id, { payoff_mode: e.target.value })}
-                                                                >
-                                                                    <option value="monthly">Monthly</option>
-                                                                    <option value="fixed">Fixed Term</option>
-                                                                    <option value="fixed_amount">Fixed Amount</option>
+                                                                <select className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none appearance-none text-center cursor-pointer border border-transparent focus:border-primary/30" value={account.payoff_mode || 'monthly'} onChange={(e) => updateAccount(account.id, { payoff_mode: e.target.value })}>
+                                                                    <option value="monthly">Monthly</option><option value="fixed">Fixed Term</option><option value="fixed_amount">Fixed Amount</option>
                                                                 </select>
                                                             </div>
                                                         </div>
@@ -284,40 +251,32 @@ const MoneyAccounts = ({ user, notify, config }) => {
                                                                 <label className="text-[7px] font-black uppercase text-slate-500 ml-1">
                                                                     {account.payoff_mode === 'fixed' ? 'Weeks' : account.payoff_mode === 'fixed_amount' ? 'Fixed Amt' : 'Due Day'}
                                                                 </label>
-                                                                <input 
-                                                                    type="number"
-                                                                    className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none text-center border border-transparent focus:border-primary/30"
-                                                                    defaultValue={account.payoff_mode === 'fixed' ? (account.payoff_weeks || '') : account.payoff_mode === 'fixed_amount' ? (account.fixed_amount || '') : (account.due_day || '')}
-                                                                    onPointerDown={e => e.stopPropagation()}
-                                                                    onFocus={e => e.target.select()}
-                                                                    onBlur={(e) => {
-                                                                        const val = parseCurrency(e.target.value);
-                                                                        const field = account.payoff_mode === 'fixed' ? 'payoff_weeks' : account.payoff_mode === 'fixed_amount' ? 'fixed_amount' : 'due_day';
-                                                                        updateAccount(account.id, { [field]: val });
-                                                                    }}
-                                                                />
+                                                                <input type="number" className="w-full bg-base-100 p-1.5 rounded-lg text-[10px] font-bold outline-none text-center border border-transparent focus:border-primary/30" defaultValue={account.payoff_mode === 'fixed' ? (account.payoff_weeks || '') : account.payoff_mode === 'fixed_amount' ? (account.fixed_amount || '') : (account.due_day || '')} onPointerDown={e => e.stopPropagation()} onFocus={e => e.target.select()} onBlur={(e) => {
+                                                                    const val = parseCurrency(e.target.value);
+                                                                    const field = account.payoff_mode === 'fixed' ? 'payoff_weeks' : account.payoff_mode === 'fixed_amount' ? 'fixed_amount' : 'due_day';
+                                                                    updateAccount(account.id, { [field]: val });
+                                                                }} />
                                                             </div>
                                                             <div className="space-y-1">
                                                                 <label className="text-[7px] font-black uppercase text-slate-500 ml-1">Current Balance</label>
                                                                 <div className="relative">
                                                                     <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[8px] text-slate-400">$</span>
-                                                                    <input 
-                                                                        type="number"
-                                                                        step="0.01"
-                                                                        className="w-full bg-base-100 p-1.5 pl-4 rounded-lg text-[10px] font-bold outline-none text-center border border-transparent focus:border-primary/30"
-                                                                        defaultValue={account.balance || 0}
-                                                                        onPointerDown={e => e.stopPropagation()}
-                                                                        onFocus={e => e.target.select()}
-                                                                        onBlur={(e) => updateAccount(account.id, { balance: parseCurrency(e.target.value) })}
-                                                                    />
+                                                                    <input type="number" step="0.01" className="w-full bg-base-100 p-1.5 pl-4 rounded-lg text-[10px] font-bold outline-none text-center border border-transparent focus:border-primary/30" defaultValue={account.balance || 0} onPointerDown={e => e.stopPropagation()} onFocus={e => e.target.select()} onBlur={(e) => updateAccount(account.id, { balance: parseCurrency(e.target.value) })} />
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        {isLiability && weeklyReq > 0 && (
+                                                        {weeklyReq > 0 && (
                                                             <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl text-center animate-in fade-in zoom-in-95 duration-300">
                                                                 <p className="text-[8px] font-black uppercase text-primary tracking-widest mb-1">Weekly Requirement</p>
                                                                 <div className="text-xl font-black text-primary">${Number(weeklyReq).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                                                {account.payoff_mode === 'fixed_amount' && finishDate && (
+                                                                    <div className="mt-3 pt-3 border-t border-primary/10">
+                                                                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-tight">
+                                                                            {isAsset ? 'Target Reached by' : 'Debt Paid by'} <span className="text-indigo-600 ml-1">{format(finishDate, 'MMM do, yyyy')}</span>
+                                                                        </p>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
@@ -329,16 +288,8 @@ const MoneyAccounts = ({ user, notify, config }) => {
                             })}
                             {provided.placeholder}
                             <form onSubmit={addAccount} className={`bg-base-200/50 p-8 rounded-[2.5rem] border-2 border-dashed border-base-300 flex flex-col justify-center items-center gap-4 hover:border-primary/50 transition-colors group min-h-[350px] ${isShaking ? 'animate-shake' : ''}`}>
-                                <button type="submit" className="w-14 h-14 rounded-full bg-base-300 flex items-center justify-center text-slate-600 group-hover:bg-primary group-hover:text-primary-content transition-all shadow-md">
-                                    <Icon name="Plus" size={28} />
-                                </button>
-                                <input 
-                                    ref={accountInputRef}
-                                    value={newAccountName}
-                                    onChange={e => setNewAccountName(e.target.value)}
-                                    placeholder="Add New Account"
-                                    className="bg-transparent text-center text-sm font-black uppercase tracking-widest w-full outline-none placeholder:text-slate-400"
-                                />
+                                <button type="submit" className="w-14 h-14 rounded-full bg-base-300 flex items-center justify-center text-slate-600 group-hover:bg-primary group-hover:text-primary-content transition-all shadow-md"><Icon name="Plus" size={28} /></button>
+                                <input ref={accountInputRef} value={newAccountName} onChange={e => setNewAccountName(e.target.value)} placeholder="Add New Account" className="bg-transparent text-center text-sm font-black uppercase tracking-widest w-full outline-none placeholder:text-slate-400" />
                             </form>
                         </div>
                     )}
