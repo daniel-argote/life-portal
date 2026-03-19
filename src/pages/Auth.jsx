@@ -32,7 +32,7 @@ const Auth = ({ onAuthSuccess, onAuthError, initialMode = 'login' }) => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-900 fade-in">
+        <div data-testid="auth-page" className="min-h-screen flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-900 fade-in">
             <div className="w-full max-w-sm">
                 <div className="text-center mb-12">
                     <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] mx-auto flex items-center justify-center text-white shadow-2xl shadow-indigo-100 mb-6">

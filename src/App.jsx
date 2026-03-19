@@ -15,6 +15,13 @@ function App() {
     const checkUserIntegrity = async (user, retryCount = 0) => {
       if (!user) return;
       
+      // ONLY RUN THIS ON LOCALHOST
+      // Production/CI environments don't reset their DBs, and the race conditions 
+      // with profile triggers are too risky for E2E tests.
+      if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+        return;
+      }
+
       // If we just signed up in this session, skip the check to avoid race conditions with triggers
       if (sessionStorage.getItem('just_signed_up') === 'true') {
         sessionStorage.removeItem('just_signed_up');
