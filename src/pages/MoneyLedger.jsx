@@ -24,7 +24,12 @@ const MoneyLedger = ({ user, notify, config }) => {
             setWeekItems([]);
             return;
         }
-        const { data } = await supabase.from('money_items').select('*').eq('week_id', activeWeek.id).order('created_at', { ascending: true });
+        const { data } = await supabase
+            .from('money_items')
+            .select('*')
+            .eq('week_id', activeWeek.id)
+            .order('position', { ascending: true })
+            .order('created_at', { ascending: true });
         setWeekItems(data || []);
     }, [activeWeek]);
 
@@ -100,7 +105,7 @@ const MoneyLedger = ({ user, notify, config }) => {
                             title: account.name,
                             amount: amountToInsert,
                             account_id: account.id,
-                            account_type: account.account_type, // temporary for sorting
+                            account_type: account.account_type, 
                             week_id: newWeek.id,
                             user_id: user.id,
                             is_paid: false
@@ -111,7 +116,7 @@ const MoneyLedger = ({ user, notify, config }) => {
                             title: account.name,
                             amount: Math.ceil(amount || 0),
                             account_id: account.id,
-                            account_type: account.account_type, // temporary for sorting
+                            account_type: account.account_type, 
                             week_id: newWeek.id,
                             user_id: user.id,
                             is_paid: false
@@ -132,9 +137,6 @@ const MoneyLedger = ({ user, notify, config }) => {
                 
                 if (weightA !== weightB) return weightA - weightB;
                 return b.amount - a.amount;
-            }).map(item => {
-                const { account_type: _, ...rest } = item;
-                return rest;
             });
 
             // 2. Rollover Manual Items from previous week
@@ -155,7 +157,11 @@ const MoneyLedger = ({ user, notify, config }) => {
                 }
             }
 
-            const itemsToInsert = [...sortedAccountItems, ...manualItems];
+            // Combine and assign explicit positions
+            const itemsToInsert = [...sortedAccountItems, ...manualItems].map((item, idx) => {
+                const { account_type: _, ...rest } = item;
+                return { ...rest, position: idx };
+            });
 
             if (itemsToInsert.length > 0) {
                 const { error: insertError } = await supabase.from('money_items').insert(itemsToInsert);
