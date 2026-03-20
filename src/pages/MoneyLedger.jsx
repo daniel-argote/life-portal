@@ -5,7 +5,7 @@ import { format, addDays, parseISO, getDay, subDays, startOfDay, isAfter, setDat
 import PageContainer from '../components/PageContainer';
 import { calculateWeeklyRequirement, getCycleRange } from '../lib/moneyUtils';
 
-const MoneyLedger = ({ user, notify, config }) => {
+const MoneyLedger = ({ user, notify, config, fetchData }) => {
     const [weeks, setWeeks] = useState([]);
     const [weekItems, setWeekItems] = useState([]);
     const [activeWeekIndex, setActiveWeekIndex] = useState(0);
@@ -227,6 +227,7 @@ const MoneyLedger = ({ user, notify, config }) => {
                 }
             }
             fetchWeekItems();
+            if (fetchData) fetchData();
         }
     };
 
@@ -255,6 +256,7 @@ const MoneyLedger = ({ user, notify, config }) => {
                 }
             }
             fetchWeekItems(); 
+            if (fetchData) fetchData();
             notify('Item removed'); 
         }
     };

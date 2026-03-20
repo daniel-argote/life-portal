@@ -9,4 +9,9 @@ const clientKey = supabaseAnonKey || "placeholder"
 
 export const supabase = createClient(clientUrl, clientKey)
 
+// Expose to window for console debugging and manual seeding
+if (import.meta.env.DEV) {
+    window.supabase = supabase;
+}
+
 export const isConfigured = supabaseUrl && (supabaseUrl.includes("supabase.co") || supabaseUrl.includes("127.0.0.1") || supabaseUrl.includes("localhost")) && supabaseAnonKey && supabaseAnonKey.length > 10;

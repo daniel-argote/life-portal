@@ -1,9 +1,10 @@
 import Icon from '../components/Icon';
 import MoneySummary from '../components/MoneySummary';
 import PageContainer from '../components/PageContainer';
+import LedgerCurrentWeek from '../components/LedgerCurrentWeek';
 import { format, isAfter, parseISO } from 'date-fns';
 
-const Money = ({ accounts = [], bills = [], config = {}, dismissWelcome }) => {
+const Money = ({ user, notify, accounts = [], bills = [], config = {}, dismissWelcome, setTab, fetchData }) => {
     const today = new Date();
     const upcomingBills = bills
         .filter(b => !b.is_paid && isAfter(parseISO(b.due_date), today))
@@ -31,6 +32,10 @@ const Money = ({ accounts = [], bills = [], config = {}, dismissWelcome }) => {
             )}
 
             <MoneySummary accounts={accounts} bills={bills} />
+
+            <div className="mb-6">
+                <LedgerCurrentWeek user={user} notify={notify} config={config} setTab={setTab} fetchData={fetchData} />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Next Obligation */}
