@@ -2,7 +2,7 @@ import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
 import { format, isAfter, parseISO } from 'date-fns';
 
-const Health = ({ appointments = [], biometrics = [], config = {}, dismissWelcome }) => {
+const Health = ({ appointments = [], biometrics = [], config = {}, dismissWelcome, setTab }) => {
     const today = new Date();
     const upcoming = appointments
         .filter(a => isAfter(parseISO(a.date), today))
@@ -66,6 +66,42 @@ const Health = ({ appointments = [], biometrics = [], config = {}, dismissWelcom
                     ) : (
                         <p className="text-slate-500 font-bold text-sm italic flex-1 flex items-center justify-center text-center">No data logged yet</p>
                     )}
+                </div>
+
+                {/* Weight Training Summary */}
+                <div className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm flex flex-col transition-all hover:border-primary/30">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                                <Icon name="Dumbbell" size={24} />
+                            </div>
+                            <h3 className="font-black text-lg">Weight Training</h3>
+                        </div>
+                        <button onClick={() => setTab('health_weight')} className="text-primary font-black text-[10px] uppercase tracking-widest hover:underline">Manage</button>
+                    </div>
+                    <div className="bg-base-100 p-6 rounded-3xl border border-base-300/50 flex-1 flex flex-col justify-center">
+                        <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Consistency</p>
+                        <h4 className="text-2xl font-black text-base-content">Plan & Track</h4>
+                        <p className="text-xs font-bold text-slate-600 mt-1">Manage supersets and strength stats</p>
+                    </div>
+                </div>
+
+                {/* Cardio Summary */}
+                <div className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm flex flex-col transition-all hover:border-primary/30">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                                <Icon name="Zap" size={24} />
+                            </div>
+                            <h3 className="font-black text-lg">Cardio Log</h3>
+                        </div>
+                        <button onClick={() => setTab('health_cardio')} className="text-primary font-black text-[10px] uppercase tracking-widest hover:underline">Log</button>
+                    </div>
+                    <div className="bg-base-100 p-6 rounded-3xl border border-base-300/50 flex-1 flex flex-col justify-center">
+                        <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Performance</p>
+                        <h4 className="text-2xl font-black text-base-content">Limiting Factors</h4>
+                        <p className="text-xs font-bold text-slate-600 mt-1">Monitor duration and intensity</p>
+                    </div>
                 </div>
             </div>
         </PageContainer>

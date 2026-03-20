@@ -21,6 +21,8 @@ import MoneyBills from '../pages/MoneyBills';
 import Health from '../pages/Health';
 import HealthMetrics from '../pages/HealthMetrics';
 import HealthAppointments from '../pages/HealthAppointments';
+import HealthWeightTraining from '../pages/HealthWeightTraining';
+import HealthCardio from '../pages/HealthCardio';
 import Food from '../pages/Food';
 import FoodJournal from '../pages/FoodJournal';
 import FoodPlanner from '../pages/FoodPlanner';
@@ -61,6 +63,8 @@ const PAGE_MAP = {
     health: Health,
     health_metrics: HealthMetrics,
     health_appointments: HealthAppointments,
+    health_weight: HealthWeightTraining,
+    health_cardio: HealthCardio,
     food: Food,
     food_journal: FoodJournal,
     food_planner: FoodPlanner,
@@ -122,7 +126,9 @@ const DEFAULT_HIERARCHY = [
         label: 'Health',
         children: [
             { id: 'health_metrics', icon: 'Activity', label: 'Biometrics' },
-            { id: 'health_appointments', icon: 'CalendarDays', label: 'Appointments' }
+            { id: 'health_appointments', icon: 'CalendarDays', label: 'Appointments' },
+            { id: 'health_weight', icon: 'Dumbbell', label: 'Weight Training' },
+            { id: 'health_cardio', icon: 'Zap', label: 'Cardio' }
         ]
     },
     { 
@@ -514,6 +520,8 @@ const Layout = ({ user }) => {
         if (tab === 'money_bills') return 'Recurring Obligations';
         if (tab === 'health_metrics') return 'Biometric Tracking';
         if (tab === 'health_appointments') return 'Professional Care Schedule';
+        if (tab === 'health_weight') return 'Strength & Template Training';
+        if (tab === 'health_cardio') return 'Endurance & Limiting Factors';
         if (tab === 'knowledge_vault') return 'Central Intelligence Store';
         if (tab === 'knowledge_reading') return 'Resource Queue';
         if (tab === 'vehicle_fleet') return 'Fleet Management';
