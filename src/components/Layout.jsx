@@ -29,7 +29,6 @@ import FoodPlanner from '../pages/FoodPlanner';
 import FoodRecipes from '../pages/FoodRecipes';
 import FoodInventory from '../pages/FoodInventory';
 import FoodTopLists from '../pages/FoodTopLists';
-import CalendarHub from '../pages/CalendarHub';
 import CalendarGrid from '../pages/CalendarGrid';
 import CalendarTimeline from '../pages/CalendarTimeline';
 import Vehicles from '../pages/Vehicles';
@@ -71,8 +70,7 @@ const PAGE_MAP = {
     food_recipes: FoodRecipes,
     food_inventory: FoodInventory,
     food_top_lists: FoodTopLists,
-    calendar: CalendarHub,
-    calendar_grid: CalendarGrid,
+    calendar: CalendarGrid,
     calendar_timeline: CalendarTimeline,
     vehicles: Vehicles,
     vehicle_fleet: VehicleFleet,
@@ -143,7 +141,14 @@ const DEFAULT_HIERARCHY = [
             { id: 'food_top_lists', icon: 'Trophy', label: 'Culinary Standings' }
         ]
     },
-    { id: 'calendar', icon: 'Calendar', label: 'Calendar' },
+    { 
+        id: 'calendar', 
+        icon: 'Calendar', 
+        label: 'Calendar',
+        children: [
+            { id: 'calendar_timeline', icon: 'History', label: 'Timeline' }
+        ]
+    },
     { 
         id: 'vehicles', 
         icon: 'Car', 
@@ -278,7 +283,7 @@ const Layout = ({ user }) => {
         let { data: prof, error: fetchError } = await supabase.from('profiles').select('*').eq('id', user.id).single();
         
         if (fetchError && fetchError.code === 'PGRST116') {
-            const { data: newProf, error: insertError } = await supabase.from('profiles').insert([{ id: user.id }]).select().single();
+            const { data: newProf, error: insertError = null } = await supabase.from('profiles').insert([{ id: user.id }]).select().single();
             if (!insertError) prof = newProf;
         }
 
@@ -507,7 +512,7 @@ const Layout = ({ user }) => {
         if (tab === 'dashboard') return 'Your Personal Command Center';
         if (tab === 'food_journal') return 'Daily Nutrition Log';
         if (tab === 'food_inventory') return 'Kitchen Stock Tracking';
-        if (tab === 'calendar_grid') return 'Monthly Planning Grid';
+        if (tab === 'calendar') return 'Agenda & Monthly Planning';
         if (tab === 'calendar_timeline') return 'Chronological Event Flow';
         if (tab === 'food_recipes') return 'Your Culinary Library';
         if (tab === 'food_planner') return 'Weekly Meal Schedule';
