@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
+import TabNav from './TabNav';
 import Icon from './Icon';
 import EditableHeader from './EditableHeader';
 import Dashboard from '../pages/Dashboard';
@@ -196,7 +197,9 @@ const Layout = ({ user }) => {
         showWelcomes: false,
         dismissedWelcomes: [],
         debugMode: false,
-        dismissibleErrors: false
+        dismissibleErrors: false,
+        travelBucketCategories: ['dream', 'attainable', 'local'],
+        travelBucketPriorities: ['low', 'medium', 'high']
     });
 
     const [darkMode, setDarkMode] = useState(false);
@@ -400,6 +403,16 @@ const Layout = ({ user }) => {
         saveProfileUpdate({ feature_hierarchy: newHierarchy });
     };
 
+    const handleReorderChildren = (parentId, newChildren) => {
+        const newHierarchy = hierarchy.map(item => {
+            if (item.id === parentId) {
+                return { ...item, children: newChildren };
+            }
+            return item;
+        });
+        updateHierarchy(newHierarchy);
+    };
+
     const updateDashboardWidgets = (newWidgets) => {
         setDashboardWidgets(newWidgets);
         saveProfileUpdate({ dashboard_widgets: newWidgets });
@@ -590,23 +603,13 @@ const Layout = ({ user }) => {
 
                 {/* Unified Tab Navigation for Parents and their Children */}
                 {(isParentSelected || parentOfCurrent) && (
-                    <div className="flex gap-2 p-1 bg-base-200 rounded-2xl w-fit border border-base-300 mb-10 overflow-x-auto no-scrollbar max-w-full shadow-inner">
-                        {(() => {
-                            const parent = isParentSelected ? currentFeature : parentOfCurrent;
-                            // The "Hub" Overview is always the first tab
-                            const tabItems = [{ id: parent.id, label: 'Overview', icon: 'LayoutGrid' }, ...parent.children];
-                            return tabItems.map(item => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => setTab(item.id)}
-                                    className={`px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${tab === item.id ? 'bg-primary text-primary-content shadow-md' : 'text-slate-600 hover:text-primary hover:bg-base-300/50'}`}
-                                >
-                                    <Icon name={item.icon === parent.icon && item.id !== parent.id ? 'Circle' : item.icon} size={14} />
-                                    {pageNames[item.id] || item.label}
-                                </button>
-                            ));
-                        })()}
-                    </div>
+                    <TabNav 
+                        parent={isParentSelected ? currentFeature : parentOfCurrent}
+                        activeTab={tab}
+                        setTab={setTab}
+                        onReorder={(newChildren) => handleReorderChildren(isParentSelected ? currentFeature.id : parentOfCurrent.id, newChildren)}
+                        pageNames={pageNames}
+                    />
                 )}
 
                 <ActiveComponent
