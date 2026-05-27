@@ -159,7 +159,8 @@ const MoneyLedger = ({ user, notify, config, fetchData }) => {
 
             // Combine and assign explicit positions
             const itemsToInsert = [...sortedAccountItems, ...manualItems].map((item, idx) => {
-                const { account_type: _, ...rest } = item;
+                // eslint-disable-next-line no-unused-vars
+                const { account_type: unused_type, ...rest } = item;
                 return { ...rest, position: idx };
             });
 

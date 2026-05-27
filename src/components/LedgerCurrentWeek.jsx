@@ -220,6 +220,3 @@ const LedgerCurrentWeek = ({ user, notify, setTab, fetchData }) => {
 };
 
 export default LedgerCurrentWeek;
-};
-
-export default LedgerCurrentWeek;
