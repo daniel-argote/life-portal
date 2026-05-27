@@ -111,7 +111,7 @@ const MoneyLedger = ({ user, notify, config, fetchData }) => {
                             is_paid: false
                         });
                     } else if (account.statement_balance >= 0) {
-                        const amount = calculateWeeklyRequirement(account, calculationDate);
+                        const amount = calculateWeeklyRequirement(account, calculationDate, config.financialWeekStart || 0);
                         accountItems.push({
                             title: account.name,
                             amount: Math.ceil(amount || 0),

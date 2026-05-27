@@ -45,6 +45,12 @@ export const calculateWeeklyRequirement = (account, referenceDate = new Date(), 
         return fixed_amount || 0;
     }
 
+    // Anchor the reference date to the start of the week for consistent calculations
+    let anchoredStart = startOfDay(new Date(referenceDate));
+    while (getDay(anchoredStart) !== weekStartDay) {
+        anchoredStart = subDays(anchoredStart, 1);
+    }
+
     // Math for Savings Goals (Assets)
     if (isAsset) {
         if (!target_balance || target_balance <= balance) return 0;
@@ -56,8 +62,8 @@ export const calculateWeeklyRequirement = (account, referenceDate = new Date(), 
 
         // Monthly assets target the next occurrence of 'due_day' as a milestone
         if (!due_day) return 0;
-        const { end } = getCycleRange(due_day, referenceDate);
-        const weeksLeft = countFinancialWeeks(referenceDate, end, weekStartDay);
+        const { end } = getCycleRange(due_day, anchoredStart);
+        const weeksLeft = countFinancialWeeks(anchoredStart, end, weekStartDay);
         return Math.max(0, target_balance - balance) / weeksLeft;
     }
 
@@ -70,11 +76,6 @@ export const calculateWeeklyRequirement = (account, referenceDate = new Date(), 
     }
 
     if (!due_day) return 0;
-
-    let anchoredStart = startOfDay(new Date(referenceDate));
-    while (getDay(anchoredStart) !== weekStartDay) {
-        anchoredStart = subDays(anchoredStart, 1);
-    }
 
     const { end } = getCycleRange(due_day, anchoredStart);
     const weeksLeft = countFinancialWeeks(anchoredStart, end, weekStartDay);
