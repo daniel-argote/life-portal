@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 
 const HealthCardio = ({ user, notify }) => {
     const [logs, setLogs] = useState([]);
-    const [loading, setLoading] = useState(false);
+
     const [form, setForm] = useState({
         activity_type: 'Running',
         duration_minutes: '',
@@ -17,7 +17,7 @@ const HealthCardio = ({ user, notify }) => {
 
     const fetchLogs = useCallback(async () => {
         if (!user) return;
-        setLoading(true);
+
         const { data, error } = await supabase
             .from('health_cardio_logs')
             .select('*')
@@ -25,7 +25,7 @@ const HealthCardio = ({ user, notify }) => {
         
         if (error) notify(error.message, 'error');
         else setLogs(data || []);
-        setLoading(false);
+
     }, [user, notify]);
 
     useEffect(() => { fetchLogs(); }, [fetchLogs]);
@@ -204,3 +204,4 @@ const HealthCardio = ({ user, notify }) => {
 };
 
 export default HealthCardio;
+

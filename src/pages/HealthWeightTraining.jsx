@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
-import { format } from 'date-fns';
+
 
 const HealthWeightTraining = ({ user, notify }) => {
     const [workouts, setWorkouts] = useState([]);
@@ -68,15 +68,11 @@ const HealthWeightTraining = ({ user, notify }) => {
         setLogEntries(initialLogs);
     };
 
-    const handleStartWorkout = (workout) => {
-        setActiveWorkout(workout);
-        fetchWorkoutItems(workout.id);
-        setIsLogging(true);
-    };
+;
 
     const handleCreateWorkout = async (e) => {
         e.preventDefault();
-        const { data, error } = await supabase.from('health_workouts').insert([{ ...newWorkout, user_id: user.id }]).select();
+        const { error } = await supabase.from('health_workouts').insert([{ ...newWorkout, user_id: user.id }]).select();
         if (error) notify(error.message, 'error');
         else {
             notify('Workout created');
@@ -647,3 +643,4 @@ const HealthWeightTraining = ({ user, notify }) => {
 };
 
 export default HealthWeightTraining;
+

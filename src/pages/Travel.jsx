@@ -149,3 +149,4 @@ const Travel = ({ travelTrips = [], travelBucketList = [], travelPacking = [], c
 };
 
 export default Travel;
+

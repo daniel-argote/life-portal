@@ -132,3 +132,4 @@ const Settings = ({ user, config, updateConfig, featureList, pageNames, setPageN
 };
 
 export default Settings;
+

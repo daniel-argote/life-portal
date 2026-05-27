@@ -190,7 +190,7 @@ const LedgerCurrentWeek = ({ user, notify, setTab, fetchData }) => {
                         </div>
                     ))
                 ) : (
-                    <p className="text-slate-500 font-bold text-sm italic py-4 text-center">No items in this week's ledger</p>
+                    <p className="text-slate-500 font-bold text-sm italic py-4 text-center">No items in this week&apos;s ledger</p>
                 )}
                 
                 <form onSubmit={addItem} className="flex items-center gap-3 pt-4 mt-2 border-t border-dashed border-base-content/5">
@@ -220,3 +220,4 @@ const LedgerCurrentWeek = ({ user, notify, setTab, fetchData }) => {
 };
 
 export default LedgerCurrentWeek;
+
