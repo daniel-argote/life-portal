@@ -68,7 +68,7 @@ const HealthWeightTraining = ({ user, notify }) => {
         setLogEntries(initialLogs);
     };
 
-;
+
 
     const handleCreateWorkout = async (e) => {
         e.preventDefault();

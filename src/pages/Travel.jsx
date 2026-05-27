@@ -1,6 +1,6 @@
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
-import { format, isAfter, parseISO, differenceInDays } from 'date-fns';
+import { isAfter, parseISO, differenceInDays } from 'date-fns';
 
 const Travel = ({ travelTrips = [], travelBucketList = [], travelPacking = [], config = {}, updateConfig, setTab }) => {
     // Find next trip
@@ -68,7 +68,7 @@ const Travel = ({ travelTrips = [], travelBucketList = [], travelPacking = [], c
                         <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-10 space-y-4">
                             <Icon name="Compass" size={48} className="opacity-50" />
                             <h2 className="text-3xl font-black">Where to next?</h2>
-                            <p className="max-w-xs font-bold opacity-80">You don't have any upcoming journeys planned yet.</p>
+                            <p className="max-w-xs font-bold opacity-80">You don&apos;t have any upcoming journeys planned yet.</p>
                             <button 
                                 onClick={() => setTab('travel_trips')}
                                 className="bg-white text-primary px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
@@ -149,4 +149,6 @@ const Travel = ({ travelTrips = [], travelBucketList = [], travelPacking = [], c
 };
 
 export default Travel;
+
+
 

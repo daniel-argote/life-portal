@@ -179,7 +179,7 @@ const HealthCardio = ({ user, notify }) => {
                                     <p className="text-slate-500 font-bold text-sm">
                                         {format(new Date(log.created_at), 'EEEE, MMM do')} • {log.duration_minutes}m {log.distance_km ? `• ${log.distance_km}km` : ''}
                                     </p>
-                                    {log.notes && <p className="mt-2 text-slate-600 font-medium italic text-sm">"{log.notes}"</p>}
+                                    {log.notes && <p className="mt-2 text-slate-600 font-medium italic text-sm">&quot;{log.notes}&quot;</p>}
                                 </div>
 
                                 <button 
@@ -204,4 +204,5 @@ const HealthCardio = ({ user, notify }) => {
 };
 
 export default HealthCardio;
+
 

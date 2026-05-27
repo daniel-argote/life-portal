@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
 
-const Settings = ({ user, config, updateConfig, featureList, pageNames, setPageName, style, setStyle, resetHierarchy }) => {
+const Settings = ({ config, updateConfig, featureList, pageNames, setPageName, style, setStyle, resetHierarchy }) => {
     const [localPageNames, setLocalPageNames] = useState(pageNames || {});
 
     const updateTabName = (id, name) => {
@@ -132,4 +132,6 @@ const Settings = ({ user, config, updateConfig, featureList, pageNames, setPageN
 };
 
 export default Settings;
+
+
 
