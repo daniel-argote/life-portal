@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from './Icon';
-import { format, parseISO } from 'date-fns';
 
-const LedgerCurrentWeek = ({ user, notify, config, setTab, fetchData }) => {
+const LedgerCurrentWeek = ({ user, notify, setTab, fetchData }) => {
     const [week, setWeek] = useState(null);
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -218,6 +217,9 @@ const LedgerCurrentWeek = ({ user, notify, config, setTab, fetchData }) => {
             </div>
         </div>
     );
+};
+
+export default LedgerCurrentWeek;
 };
 
 export default LedgerCurrentWeek;
