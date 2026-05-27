@@ -110,7 +110,7 @@ const MoneyAccounts = ({ user, notify, config }) => {
                 if (existingItems && existingItems.length > 0) {
                     for (const item of existingItems) {
                         const weekStart = parseISO(item.money_weeks.start_date);
-                        const newAmount = calculateWeeklyRequirement(updatedAccount, weekStart, config?.financialWeekStart || 0);
+                        const newAmount = calculateWeeklyRequirement(updatedAccount, weekStart, ((config?.financialWeekStart !== undefined ? config.financialWeekStart : 3) !== undefined ? config.financialWeekStart : 3));
                         await supabase.from('money_items').update({ amount: Math.ceil(newAmount) }).eq('id', item.id);
                     }
                 }
@@ -177,7 +177,7 @@ const MoneyAccounts = ({ user, notify, config }) => {
                     {(provided) => (
                         <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredAccounts.map((account, index) => {
-                                const targetDay = config?.financialWeekStart || 0;
+                                const targetDay = ((config?.financialWeekStart !== undefined ? config.financialWeekStart : 3) !== undefined ? config.financialWeekStart : 3);
                                 let weekStartFloor = startOfDay(new Date());
                                 while (getDay(weekStartFloor) !== targetDay) {
                                     weekStartFloor = subDays(weekStartFloor, 1);
@@ -300,3 +300,6 @@ const MoneyAccounts = ({ user, notify, config }) => {
 };
 
 export default MoneyAccounts;
+
+
+

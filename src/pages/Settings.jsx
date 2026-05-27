@@ -48,6 +48,38 @@ const Settings = ({ config, updateConfig, featureList, pageNames, setPageName, s
                     </div>
                 </section>
 
+                {/* Financial Week Configuration */}
+                <section className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm">
+                    <h3 className="text-xl font-black mb-2 flex items-center gap-3">
+                        <Icon name="Calendar" size={24} className="text-primary" />
+                        Financial Preferences
+                    </h3>
+                    <p className="text-xs font-bold text-slate-400 mb-8 ml-9 uppercase tracking-widest">Configure your weekly payment cycle</p>
+
+                    <div className="max-w-md">
+                        <label className="text-[10px] font-black uppercase text-slate-500 ml-4 mb-2 block">Weekly Payment Day</label>
+                        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                            {[
+                                { id: 0, label: 'Sun' },
+                                { id: 1, label: 'Mon' },
+                                { id: 2, label: 'Tue' },
+                                { id: 3, label: 'Wed' },
+                                { id: 4, label: 'Thu' },
+                                { id: 5, label: 'Fri' },
+                                { id: 6, label: 'Sat' }
+                            ].map(day => (
+                                <button
+                                    key={day.id}
+                                    onClick={() => updateConfig('financialWeekStart', day.id)}
+                                    className={`p-3 rounded-xl font-black text-[10px] uppercase transition-all ${(config.financialWeekStart || 0) === day.id ? 'bg-primary text-primary-content shadow-md scale-105' : 'bg-base-100 text-slate-400 hover:bg-base-300'}`}
+                                >
+                                    {day.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
                 {/* Custom Travel Labels */}
                 <section className="bg-base-200 p-8 rounded-[2.5rem] border border-base-300 shadow-sm">
                     <h3 className="text-xl font-black mb-2 flex items-center gap-3">
