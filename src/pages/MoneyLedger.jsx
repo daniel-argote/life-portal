@@ -39,7 +39,7 @@ const MoneyLedger = ({ user, notify, config, fetchData }) => {
     const createNextWeek = async () => {
         let startDate;
         const previousWeek = weeks.length > 0 ? weeks[0] : null;
-        const targetDay = config.financialWeekStart || 0;
+        const targetDay = (config?.financialWeekStart !== undefined ? config.financialWeekStart : 3);
 
         if (previousWeek) {
             const prevStart = parseISO(previousWeek.start_date);
@@ -96,7 +96,7 @@ const MoneyLedger = ({ user, notify, config, fetchData }) => {
                             const weeklySlice = calculateWeeklyRequirement(
                                 { ...account, statement_balance: effectiveBalance }, 
                                 calculationDate, 
-                                config.financialWeekStart || 0
+                                (config?.financialWeekStart !== undefined ? config.financialWeekStart : 3)
                             );
                             amountToInsert = Math.ceil(weeklySlice);
                         }
@@ -111,7 +111,7 @@ const MoneyLedger = ({ user, notify, config, fetchData }) => {
                             is_paid: false
                         });
                     } else if (account.statement_balance >= 0) {
-                        const amount = calculateWeeklyRequirement(account, calculationDate, config.financialWeekStart || 0);
+                        const amount = calculateWeeklyRequirement(account, calculationDate, (config?.financialWeekStart !== undefined ? config.financialWeekStart : 3));
                         accountItems.push({
                             title: account.name,
                             amount: Math.ceil(amount || 0),
@@ -372,3 +372,4 @@ const MoneyLedger = ({ user, notify, config, fetchData }) => {
 };
 
 export default MoneyLedger;
+
