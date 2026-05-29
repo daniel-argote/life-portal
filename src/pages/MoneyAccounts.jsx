@@ -108,10 +108,21 @@ const MoneyAccounts = ({ user, notify, config }) => {
                     .eq('is_paid', false);
 
                 if (existingItems && existingItems.length > 0) {
+                    // Sort by date to find the earliest item
+                    const sortedItems = [...existingItems].sort((a, b) => 
+                        new Date(a.money_weeks.start_date).getTime() - new Date(b.money_weeks.start_date).getTime()
+                    );
+                    
+                    const earliestWeekStart = parseISO(sortedItems[0].money_weeks.start_date);
+                    const targetWeeklyAmount = calculateWeeklyRequirement(
+                        updatedAccount, 
+                        earliestWeekStart, 
+                        ((config?.financialWeekStart !== undefined ? config.financialWeekStart : 3) !== undefined ? config.financialWeekStart : 3)
+                    );
+                    
+                    const amount = Math.ceil(targetWeeklyAmount);
                     for (const item of existingItems) {
-                        const weekStart = parseISO(item.money_weeks.start_date);
-                        const newAmount = calculateWeeklyRequirement(updatedAccount, weekStart, ((config?.financialWeekStart !== undefined ? config.financialWeekStart : 3) !== undefined ? config.financialWeekStart : 3));
-                        await supabase.from('money_items').update({ amount: Math.ceil(newAmount) }).eq('id', item.id);
+                        await supabase.from('money_items').update({ amount }).eq('id', item.id);
                     }
                 }
             }

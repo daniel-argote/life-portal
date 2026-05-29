@@ -12,3 +12,6 @@
 - [x] **Actions:** Create To Do list module
 - [x] **Settings:** Add profile management (email update)
 - [ ] **Money:** Add visualization charts
+- [ ] **Testing:** Implement Playwright "existence checks" for critical Settings sections (Safety Net)
+- [ ] **Testing:** Add Snapshot testing for core modules to prevent UI regressions
+- [ ] **Architecture:** Refactor `Settings.jsx` into smaller, atomic components (Profile, Financial, Assistant) to prevent accidental deletions during refactors
