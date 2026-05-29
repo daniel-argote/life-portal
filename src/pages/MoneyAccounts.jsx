@@ -101,11 +101,19 @@ const MoneyAccounts = ({ user, notify, config }) => {
             if (updates.statement_balance !== undefined || updates.target_balance !== undefined || updates.balance !== undefined) {
                 // CASCADE UPDATE
                 const { data: updatedAccount } = await supabase.from('money_accounts').select('*').eq('id', id).single();
+                
+                // Calculate current cycle range
+                const { start: cycleStart, end: cycleEnd } = getCycleRange(updatedAccount.due_day);
+                const queryStart = format(cycleStart, 'yyyy-MM-dd');
+                const queryEnd = format(cycleEnd, 'yyyy-MM-dd');
+
                 const { data: existingItems } = await supabase
                     .from('money_items')
                     .select(`id, amount, money_weeks!inner (start_date)`)
                     .eq('account_id', id)
-                    .eq('is_paid', false);
+                    .eq('is_paid', false)
+                    .gte('money_weeks.start_date', queryStart)
+                    .lt('money_weeks.start_date', queryEnd);
 
                 if (existingItems && existingItems.length > 0) {
                     // Sort by date to find the earliest item
