@@ -92,23 +92,13 @@ test('Comprehensive User Journey: Setup, Multi-Module Data Entry, and Cleanup', 
   // Verify category creation
   await expect(page.getByRole('button', { name: foodCategory })).toBeVisible({ timeout: 15000 });
 
-  // 6. Cleanup: Sign Out (Skip purge for CI user to keep account active)
+  // 6. Cleanup: Sign Out
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   
-  if (!isCI) {
-    // Locally, we still purge to keep the DB clean
-    page.on('dialog', dialog => dialog.accept());
-    const purgeBtn = page.getByRole('button', { name: 'Execute Purge' });
-    await purgeBtn.scrollIntoViewIfNeeded();
-    await purgeBtn.click();
-  } else {
-    // In CI, just sign out so we don't delete the verified user
-    // Resolve ambiguity by using exact: true for the sidebar sign out button
-    const signOutBtn = page.getByRole('button', { name: 'Sign Out', exact: true });
-    if (await signOutBtn.isVisible()) {
-        await signOutBtn.click();
-    }
-  }
+  // Resolve ambiguity by using exact: true for the sidebar sign out button
+  const signOutBtn = page.getByRole('button', { name: 'Sign Out', exact: true });
+  await expect(signOutBtn).toBeVisible({ timeout: 15000 });
+  await signOutBtn.click();
 
   // Wait for automatic sign-out
   await expect(page.getByTestId('auth-page')).toBeVisible({ timeout: 20000 });
