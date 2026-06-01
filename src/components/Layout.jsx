@@ -643,7 +643,7 @@ const Layout = ({ user }) => {
                     darkMode={darkMode}
                     setDarkMode={setDarkMode}
                     style={style}
-                    setStyle={setStyle}
+                    setStyle={updateStyle}
                     resetHierarchy={resetHierarchy}
                     dismissWelcome={dismissWelcome}
                     travelTrips={travelTrips}

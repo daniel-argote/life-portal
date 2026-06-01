@@ -24,7 +24,7 @@ export const countFinancialWeeks = (startDate, endDate, weekStartDay = 0) => {
     let current = startOfDay(new Date(startDate));
     const targetEnd = startOfDay(new Date(endDate));
 
-    while (current < targetEnd) {
+    while (current <= targetEnd) {
         if (getDay(current) === weekStartDay) {
             count++;
         }
