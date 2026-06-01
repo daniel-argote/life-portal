@@ -8,7 +8,6 @@ import { parseISO, startOfDay, getDay, subDays, format } from 'date-fns';
 
 const MoneyAccounts = ({ user, notify, config }) => {
     const [accounts, setAccounts] = useState([]);
-    const [currentWeekItems, setCurrentWeekItems] = useState([]);
     const [filter, setFilter] = useState('all'); // 'all', 'liabilities', 'assets'
     const [newAccountName, setNewAccountName] = useState('');
     const [isShaking, setIsShaking] = useState(false);
@@ -22,15 +21,52 @@ const MoneyAccounts = ({ user, notify, config }) => {
             .is('deleted_at', null)
             .order('position', { ascending: true });
         
-        setAccounts(accs || []);
+        if (!accs) return;
 
         // Fetch current week items to see what's already been paid
         const { data: weeks } = await supabase.from('money_weeks').select('id').order('start_date', { ascending: false }).limit(1);
         if (weeks && weeks.length > 0) {
-            const { data: items } = await supabase.from('money_items').select('*').eq('week_id', weeks[0].id);
-            setCurrentWeekItems(items || []);
+            await supabase.from('money_items').select('*').eq('week_id', weeks[0].id);
         }
-    }, [user]);
+
+        // Calculate stable requirements for each account
+        const targetDay = ((config?.financialWeekStart !== undefined ? config.financialWeekStart : 3) !== undefined ? config.financialWeekStart : 3);
+        let weekStartFloor = startOfDay(new Date());
+        while (getDay(weekStartFloor) !== targetDay) {
+            weekStartFloor = subDays(weekStartFloor, 1);
+        }
+
+        const enrichedAccounts = await Promise.all(accs.map(async (account) => {
+            const isLiability = ['credit', 'loan'].includes(account.account_type);
+            
+            let adjustedAccount = { ...account };
+            if (isLiability && account.due_day) {
+                const { start: cycleStart, end: cycleEnd } = getCycleRange(account.due_day);
+                const queryStart = format(cycleStart, 'yyyy-MM-dd');
+                const queryEnd = format(cycleEnd, 'yyyy-MM-dd');
+
+                const { data: cycleItems } = await supabase
+                    .from('money_items')
+                    .select(`amount, is_paid, money_weeks!inner (start_date)`)
+                    .eq('account_id', account.id)
+                    .gte('money_weeks.start_date', queryStart)
+                    .lt('money_weeks.start_date', queryEnd);
+
+                const paidInCycle = (cycleItems || [])
+                    .filter(i => i.is_paid)
+                    .reduce((sum, i) => sum + Number(i.amount), 0);
+
+                adjustedAccount.statement_balance = Number(account.statement_balance) + paidInCycle;
+            }
+
+            const weeklyReq = calculateWeeklyRequirement(adjustedAccount, weekStartFloor, targetDay);
+            const finishDate = estimateCompletionDate(account, weeklyReq, weekStartFloor, targetDay);
+
+            return { ...account, weeklyReq, finishDate };
+        }));
+
+        setAccounts(enrichedAccounts);
+    }, [user, config.financialWeekStart]);
 
     useEffect(() => { fetchAccounts(); }, [fetchAccounts]);
 
@@ -205,26 +241,10 @@ const MoneyAccounts = ({ user, notify, config }) => {
                     {(provided) => (
                         <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredAccounts.map((account, index) => {
-                                const targetDay = ((config?.financialWeekStart !== undefined ? config.financialWeekStart : 3) !== undefined ? config.financialWeekStart : 3);
-                                let weekStartFloor = startOfDay(new Date());
-                                while (getDay(weekStartFloor) !== targetDay) {
-                                    weekStartFloor = subDays(weekStartFloor, 1);
-                                }
-
                                 const isAsset = ['cash', 'savings', 'investment'].includes(account.account_type);
                                 const isLiability = ['credit', 'loan'].includes(account.account_type);
-
-                                // Adjust balance for stable display: if we already paid this week, add it back to the numerator
-                                let adjustedAccount = { ...account };
-                                if (isLiability) {
-                                    const itemThisWeek = currentWeekItems.find(i => i.account_id === account.id);
-                                    if (itemThisWeek && itemThisWeek.is_paid) {
-                                        adjustedAccount.statement_balance = Number(account.statement_balance) + Number(itemThisWeek.amount);
-                                    }
-                                }
-
-                                const weeklyReq = calculateWeeklyRequirement(adjustedAccount, weekStartFloor, targetDay);
-                                const finishDate = estimateCompletionDate(account, weeklyReq, weekStartFloor, targetDay);
+                                const weeklyReq = account.weeklyReq || 0;
+                                const finishDate = account.finishDate;
 
                                 return (
                                     <Draggable key={account.id} draggableId={account.id} index={index}>
