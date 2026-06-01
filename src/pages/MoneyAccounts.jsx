@@ -45,26 +45,27 @@ const MoneyAccounts = ({ user, notify, config }) => {
                 const queryStart = format(cycleStart, 'yyyy-MM-dd');
                 const queryEnd = format(cycleEnd, 'yyyy-MM-dd');
 
+                // Get only UNPAID items in the ledger for this cycle
                 const { data: cycleItems } = await supabase
                     .from('money_items')
                     .select(`amount, is_paid, money_weeks!inner (start_date)`)
                     .eq('account_id', account.id)
+                    .eq('is_paid', false)
                     .gte('money_weeks.start_date', queryStart)
                     .lt('money_weeks.start_date', queryEnd);
 
-                // We add back EVERYTHING already in the ledger for this cycle
-                // This gives us the "Original Statement Balance" before any payments or pre-generations
-                const totalLedgerItemsInCycle = (cycleItems || [])
+                // The effective balance is the current statement_balance PLUS any unpaid items in the ledger
+                // (since those unpaid items were already subtracted from the statement_balance by the DB trigger)
+                const unpaidLedgerTotal = (cycleItems || [])
                     .reduce((sum, i) => sum + Number(i.amount), 0);
 
-                adjustedAccount.statement_balance = Number(account.statement_balance) + totalLedgerItemsInCycle;
+                adjustedAccount.statement_balance = Number(account.statement_balance) + unpaidLedgerTotal;
             }
 
-            // Reference date for the stable calculation should always be the START of the current billing cycle
-            // for the denominator (weeksLeft) to stay constant throughout the month.
-            // But we need to use a consistent "cycle reference" in moneyUtils.
-            const { start: cycleStart } = getCycleRange(account.due_day);
-            const weeklyReq = calculateWeeklyRequirement(adjustedAccount, cycleStart, targetDay);
+            // We use the CURRENT week start as the reference point for the denominator.
+            // This ensures that pre-generating future weeks doesn't change the "weeks left" count 
+            // from the perspective of the current week.
+            const weeklyReq = calculateWeeklyRequirement(adjustedAccount, weekStartFloor, targetDay);
             const finishDate = estimateCompletionDate(account, weeklyReq, weekStartFloor, targetDay);
 
             return { ...account, weeklyReq, finishDate };
