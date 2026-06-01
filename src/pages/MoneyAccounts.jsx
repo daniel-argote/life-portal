@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
 import PageContainer from '../components/PageContainer';
-import { calculateWeeklyRequirement, estimateCompletionDate } from '../lib/moneyUtils';
+import { calculateWeeklyRequirement, estimateCompletionDate, getCycleRange } from '../lib/moneyUtils';
 import { parseISO, startOfDay, getDay, subDays, format } from 'date-fns';
 
 const MoneyAccounts = ({ user, notify, config }) => {

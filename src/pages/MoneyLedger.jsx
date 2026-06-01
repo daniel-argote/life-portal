@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Icon from '../components/Icon';
-import { format, addDays, parseISO, getDay, subDays, startOfDay, isAfter, setDate } from 'date-fns';
+import { format, addDays, parseISO, getDay, subDays, startOfDay, isAfter } from 'date-fns';
 import PageContainer from '../components/PageContainer';
 import { calculateWeeklyRequirement, getCycleRange } from '../lib/moneyUtils';
 
@@ -75,13 +75,10 @@ const MoneyLedger = ({ user, notify, config, fetchData }) => {
                     if (account.payoff_mode === 'monthly' && account.due_day) {
                         const { start: cycleStart, end: cycleEnd } = getCycleRange(account.due_day, calculationDate);
                         
-                        const isPlanningForNextMonth = isAfter(weekStartDate, setDate(new Date(weekStartDate), account.due_day));
-                        const isStale = isPlanningForNextMonth && account.statement_balance < (account.last_statement_amount || 0) * 0.5;
-                        
                         let amountToInsert = 0;
 
-                        if (!isStale && account.statement_balance > 0) {
-                            const queryStart = format(subDays(cycleStart, 7), 'yyyy-MM-dd');
+                        if (account.statement_balance > 0) {
+                            const queryStart = format(cycleStart, 'yyyy-MM-dd');
                             const { data: cycleItems } = await supabase
                                 .from('money_items')
                                 .select(`amount, money_weeks!inner (start_date)`)
