@@ -23,12 +23,6 @@ const MoneyAccounts = ({ user, notify, config }) => {
         
         if (!accs) return;
 
-        // Fetch current week items to see what's already been paid
-        const { data: weeks } = await supabase.from('money_weeks').select('id').order('start_date', { ascending: false }).limit(1);
-        if (weeks && weeks.length > 0) {
-            await supabase.from('money_items').select('*').eq('week_id', weeks[0].id);
-        }
-
         // Calculate stable requirements for each account
         const targetDay = ((config?.financialWeekStart !== undefined ? config.financialWeekStart : 3) !== undefined ? config.financialWeekStart : 3);
         let weekStartFloor = startOfDay(new Date());
@@ -36,35 +30,38 @@ const MoneyAccounts = ({ user, notify, config }) => {
             weekStartFloor = subDays(weekStartFloor, 1);
         }
 
+        const queryStart = format(weekStartFloor, 'yyyy-MM-dd');
+        const { data: currentWeek } = await supabase
+            .from('money_weeks')
+            .select('id')
+            .eq('start_date', queryStart)
+            .maybeSingle();
+
+        let currentWeekPaidItems = [];
+        if (currentWeek) {
+            const { data: items } = await supabase
+                .from('money_items')
+                .select('*')
+                .eq('week_id', currentWeek.id)
+                .eq('is_paid', true);
+            currentWeekPaidItems = items || [];
+        }
+
         const enrichedAccounts = await Promise.all(accs.map(async (account) => {
             const isLiability = ['credit', 'loan'].includes(account.account_type);
             
             let adjustedAccount = { ...account };
-            if (isLiability && account.due_day) {
-                const { start: cycleStart, end: cycleEnd } = getCycleRange(account.due_day);
-                const queryStart = format(cycleStart, 'yyyy-MM-dd');
-                const queryEnd = format(cycleEnd, 'yyyy-MM-dd');
-
-                // To keep the "Weekly Requirement" stable as a target for the whole month:
-                // 1. We reconstruct the "Original Statement Balance" by adding back ONLY items already PAID in this cycle.
-                const { data: cycleItems } = await supabase
-                    .from('money_items')
-                    .select(`amount, is_paid, money_weeks!inner (start_date)`)
-                    .eq('account_id', account.id)
-                    .eq('is_paid', true)
-                    .gte('money_weeks.start_date', queryStart)
-                    .lt('money_weeks.start_date', queryEnd);
-
-                const paidLedgerTotal = (cycleItems || [])
+            if (isLiability) {
+                // To keep the "Weekly Requirement" stable during the current week:
+                // We add back ONLY items already PAID in the chronologically current week.
+                const paidThisWeek = currentWeekPaidItems
+                    .filter(i => i.account_id === account.id)
                     .reduce((sum, i) => sum + Number(i.amount), 0);
 
-                adjustedAccount.statement_balance = Number(account.statement_balance) + paidLedgerTotal;
+                adjustedAccount.statement_balance = Number(account.statement_balance) + paidThisWeek;
             }
 
-            // 2. We use the START of the billing cycle as the reference for the denominator.
-            // This ensures that 'weeksLeft' is actually 'total weeks in cycle', keeping the slice constant.
-            const { start: cycleStart } = getCycleRange(account.due_day);
-            const weeklyReq = calculateWeeklyRequirement(adjustedAccount, cycleStart, targetDay);
+            const weeklyReq = calculateWeeklyRequirement(adjustedAccount, weekStartFloor, targetDay);
             const finishDate = estimateCompletionDate(account, weeklyReq, weekStartFloor, targetDay);
 
             return { ...account, weeklyReq, finishDate };
