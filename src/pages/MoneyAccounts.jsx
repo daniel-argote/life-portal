@@ -8,6 +8,7 @@ import { parseISO, startOfDay, getDay, subDays, format } from 'date-fns';
 
 const MoneyAccounts = ({ user, notify, config }) => {
     const [accounts, setAccounts] = useState([]);
+    const [currentWeekItems, setCurrentWeekItems] = useState([]);
     const [filter, setFilter] = useState('all'); // 'all', 'liabilities', 'assets'
     const [newAccountName, setNewAccountName] = useState('');
     const [isShaking, setIsShaking] = useState(false);
@@ -15,12 +16,20 @@ const MoneyAccounts = ({ user, notify, config }) => {
 
     const fetchAccounts = useCallback(async () => {
         if (!user) return;
-        const { data } = await supabase
+        const { data: accs } = await supabase
             .from('money_accounts')
             .select('*')
             .is('deleted_at', null)
             .order('position', { ascending: true });
-        setAccounts(data || []);
+        
+        setAccounts(accs || []);
+
+        // Fetch current week items to see what's already been paid
+        const { data: weeks } = await supabase.from('money_weeks').select('id').order('start_date', { ascending: false }).limit(1);
+        if (weeks && weeks.length > 0) {
+            const { data: items } = await supabase.from('money_items').select('*').eq('week_id', weeks[0].id);
+            setCurrentWeekItems(items || []);
+        }
     }, [user]);
 
     useEffect(() => { fetchAccounts(); }, [fetchAccounts]);
@@ -204,7 +213,17 @@ const MoneyAccounts = ({ user, notify, config }) => {
 
                                 const isAsset = ['cash', 'savings', 'investment'].includes(account.account_type);
                                 const isLiability = ['credit', 'loan'].includes(account.account_type);
-                                const weeklyReq = calculateWeeklyRequirement(account, weekStartFloor, targetDay);
+
+                                // Adjust balance for stable display: if we already paid this week, add it back to the numerator
+                                let adjustedAccount = { ...account };
+                                if (isLiability) {
+                                    const itemThisWeek = currentWeekItems.find(i => i.account_id === account.id);
+                                    if (itemThisWeek && itemThisWeek.is_paid) {
+                                        adjustedAccount.statement_balance = Number(account.statement_balance) + Number(itemThisWeek.amount);
+                                    }
+                                }
+
+                                const weeklyReq = calculateWeeklyRequirement(adjustedAccount, weekStartFloor, targetDay);
                                 const finishDate = estimateCompletionDate(account, weeklyReq, weekStartFloor, targetDay);
 
                                 return (
