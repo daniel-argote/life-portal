@@ -52,14 +52,19 @@ const MoneyAccounts = ({ user, notify, config }) => {
                     .gte('money_weeks.start_date', queryStart)
                     .lt('money_weeks.start_date', queryEnd);
 
-                const paidInCycle = (cycleItems || [])
-                    .filter(i => i.is_paid)
+                // We add back EVERYTHING already in the ledger for this cycle
+                // This gives us the "Original Statement Balance" before any payments or pre-generations
+                const totalLedgerItemsInCycle = (cycleItems || [])
                     .reduce((sum, i) => sum + Number(i.amount), 0);
 
-                adjustedAccount.statement_balance = Number(account.statement_balance) + paidInCycle;
+                adjustedAccount.statement_balance = Number(account.statement_balance) + totalLedgerItemsInCycle;
             }
 
-            const weeklyReq = calculateWeeklyRequirement(adjustedAccount, weekStartFloor, targetDay);
+            // Reference date for the stable calculation should always be the START of the current billing cycle
+            // for the denominator (weeksLeft) to stay constant throughout the month.
+            // But we need to use a consistent "cycle reference" in moneyUtils.
+            const { start: cycleStart } = getCycleRange(account.due_day);
+            const weeklyReq = calculateWeeklyRequirement(adjustedAccount, cycleStart, targetDay);
             const finishDate = estimateCompletionDate(account, weeklyReq, weekStartFloor, targetDay);
 
             return { ...account, weeklyReq, finishDate };
